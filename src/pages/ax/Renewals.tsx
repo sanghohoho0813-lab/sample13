@@ -41,7 +41,7 @@ export default function Renewals() {
               stage === 'Risk' || stage === 'D-7 긴급확인' ? 'text-danger' : stage.startsWith('D-30') ? 'text-warning' : 'text-ink')}>
               <RefreshCcw size={17} /> {stage} <span className="text-[0.8rem] font-bold text-ink-faint">{groups[stage].length}건</span>
             </h2>
-            <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
+            <div data-tour="renewal" className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
               {groups[stage].map((c) => {
                 const h = SEED_HEALTH.find((x) => x.customerId === c.id)
                 const retentionAction = c.id === 'C01' ? actions.find((a) => a.id === 'A-02') : c.id === 'C09' ? actions.find((a) => a.id === 'A-05') : undefined

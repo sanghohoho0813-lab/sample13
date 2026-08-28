@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cx } from '../../lib/utils'
 
@@ -33,9 +34,10 @@ export function DemoBadge({ label = 'DEMO DATA' }: { label?: string }) {
 }
 
 // ─── Card ────────────────────────────────────────────────
-export function Card({ children, className, onClick, hover }: { children: ReactNode; className?: string; onClick?: () => void; hover?: boolean }) {
+export function Card({ children, className, onClick, hover, tour }: { children: ReactNode; className?: string; onClick?: () => void; hover?: boolean; tour?: string }) {
   return (
     <div
+      data-tour={tour}
       onClick={onClick}
       className={cx(
         'rounded-2xl bg-card border border-line shadow-card',
@@ -124,7 +126,8 @@ export function Modal({ open, onClose, title, children, wide }: {
   open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; wide?: boolean
 }) {
   if (!open) return null
-  return (
+  // 조상 요소의 backdrop-filter/transform이 fixed의 containing block이 되는 것을 방지
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-shell/50 backdrop-blur-sm p-0 sm:p-6" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
@@ -141,7 +144,8 @@ export function Modal({ open, onClose, title, children, wide }: {
         </div>
         <div className="p-5">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

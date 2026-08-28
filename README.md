@@ -26,11 +26,19 @@ npm run preview  # 빌드 결과 미리보기
 | | `/renewals` `/upsell` `/profitability` | 재계약 · Upsell · 수익성(대표 전용) |
 | | `/ai` | AI Operations Center (6 Engine) |
 | | `/evidence` `/why-ax` | AX Evidence Log · 기획의도 16 Section |
-| | `/presentation` | 시연 모드 (12 Step) |
+| | `/presentation` | 시연 모드 (Guided Demo 11 Step) |
 | Employee Mobile | `/field` | 현장직원 Action UX (체크인→체크리스트→사진→완료) |
 | Customer Portal | `/care` | Public Landing |
 | | `/care/home` | 고객 Home + Quick Action (Closed Loop) |
 | | `/care/reports` `/care/requests` | Service Report · 요청 현황 |
+
+## Product Shell (v1.1)
+
+- **Theme 6종** — Settings → 화면에서 전환. `html[data-theme]` 토큰 교체 방식이라 본문·표 가독성은 고정
+- **Guided Tutorial (5 Step) / 시연 모드 (11 Step)** — 실제 Route를 이동하며 실제 화면을 Spotlight
+- **Device Preview** — PC에서 `모바일 보기`, 모바일에서 `PC 보기`. 동일 Route·데이터·설정을 다른 Viewport로 렌더 (재귀 Preview 차단, ESC/닫기/Backdrop 종료)
+- **모바일 `더보기`** — Bottom Sheet 추가 메뉴 15항목 (기획의도·설정·고객화면·데모 초기화 등)
+- **Date/Time Parity** — 모바일에서도 날짜를 삭제하지 않고 압축 표시 (`08.29 토` + 초 단위 시각)
 
 ## 핵심 구조
 
@@ -39,7 +47,6 @@ npm run preview  # 빌드 결과 미리보기
 - **Closed Loop** — Customer Portal 추가서비스 요청 → AX Opportunity 자동 생성 / 일정변경 요청 → Dispatch 재검토
 - **Action Lifecycle** — 추천됨 → 확인 → 실행중 → 완료 (+보류/무시) → AX Evidence 기록
 - **Data Adapter** — `src/lib/demo/` Seed + `DemoStore`(localStorage). 실서비스 전환 시 이 Layer만 Supabase/API로 교체
-- **Device Preview** — PC 헤더의 `[PC][Mobile]`로 실제 Responsive CSS 기반 모바일 미리보기
 
 ## 문서
 
@@ -47,4 +54,4 @@ npm run preview  # 빌드 결과 미리보기
 - `PROJECT_STATE.md` — 진행상황 · USER ACTION QUEUE
 - `DECISIONS.md` — 주요 설계결정
 
-기준 규격: 미래AI랩 AX Design & Development System v6.0
+기준 규격: 미래AI랩 AX Design & Development System v6.0 + AX/Platform Unified System v1.1

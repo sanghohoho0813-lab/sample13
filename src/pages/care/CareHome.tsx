@@ -77,7 +77,7 @@ export default function CareHome() {
         </Card>
 
         {/* Quick Actions */}
-        <section>
+        <section data-tour="care-quick">
           <h2 className="mb-2.5 text-[1.05rem] font-extrabold">빠른 요청</h2>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             {([

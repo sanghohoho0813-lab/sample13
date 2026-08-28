@@ -17,7 +17,7 @@ export default function Evidence() {
       {evidence.length === 0 ? (
         <EmptyState title="기록된 Evidence가 없습니다." />
       ) : (
-        <Card className="p-5">
+        <Card tour="evidence" className="p-5">
           <ol className="relative space-y-5 border-l-2 border-line pl-6 ml-2">
             {evidence.map((e) => (
               <li key={e.id} className="relative">

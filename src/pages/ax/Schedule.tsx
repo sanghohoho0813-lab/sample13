@@ -160,7 +160,7 @@ export default function Schedule() {
 
           {/* Right: AI Smart Dispatch / Risk */}
           <div className="space-y-4">
-            <Card className="overflow-hidden">
+            <Card tour="dispatch" className="overflow-hidden">
               <div className="flex items-center justify-between gap-2 border-b border-line bg-ai-soft px-4 py-3">
                 <p className="flex items-center gap-1.5 text-[0.92rem] font-extrabold text-ai-strong"><Sparkles size={16} /> AI Smart Dispatch</p>
                 <AIReadyBadge small />

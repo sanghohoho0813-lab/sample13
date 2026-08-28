@@ -57,7 +57,7 @@ export default function Dashboard() {
       </div>
 
       {/* 01 Executive KPI */}
-      <div className="grid grid-cols-2 gap-3.5 md:grid-cols-3 xl:grid-cols-6">
+      <div data-tour="kpi" className="grid grid-cols-2 gap-3.5 md:grid-cols-3 xl:grid-cols-6">
         <KpiCard icon={<CalendarCheck size={21} />} label="오늘 예정" value={today.length} unit="건" tone="brand" onClick={() => nav('/schedule')} sub="전체 현장 일정" />
         <KpiCard icon={<Loader2 size={21} />} label="진행중" value={inProgress} unit="건" tone="info" onClick={() => nav('/work')} sub="이동중 · 작업중" />
         <KpiCard icon={<CheckCircle2 size={21} />} label="완료" value={done} unit="건" tone="success" onClick={() => nav('/work')} sub={`완료율 ${Math.round((done / today.length) * 100)}%`} />
@@ -67,7 +67,7 @@ export default function Dashboard() {
       </div>
 
       {/* 02 AI 오늘의 운영 브리핑 */}
-      <Card className="overflow-hidden">
+      <Card tour="ai-briefing" className="overflow-hidden">
         <div className="border-b border-line bg-gradient-to-r from-ai-soft to-mint px-5 py-4 flex flex-wrap items-center justify-between gap-2">
           <p className="flex items-center gap-2 text-[1.05rem] font-extrabold"><Sparkles size={19} className="text-ai-strong" /> AI 오늘의 운영 브리핑</p>
           <div className="flex items-center gap-2"><AIReadyBadge /><WhyAIButton dataViewed={['오늘 일정 24건', '팀별 진행상황', '계약 갱신일', '품질·문의 기록', '수익성 Snapshot']} /></div>

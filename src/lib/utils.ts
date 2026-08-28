@@ -15,6 +15,16 @@ export const nowDateLong = () =>
     year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
   }).format(new Date())
 
+/** 모바일용 압축 날짜 — 정보를 삭제하지 않고 압축한다 (예: 08.29 토) */
+export const nowDateCompact = () => {
+  const d = new Date()
+  const parts = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', weekday: 'short',
+  }).formatToParts(d)
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? ''
+  return `${get('month')}.${get('day')} ${get('weekday').replace(/요일/, '')}`
+}
+
 export const nowDateShort = () =>
   new Intl.DateTimeFormat('ko-KR', {
     timeZone: 'Asia/Seoul', month: 'long', day: 'numeric', weekday: 'short',

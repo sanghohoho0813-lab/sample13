@@ -17,8 +17,24 @@ import { nowTimeHM } from '../utils'
 
 const LS_KEY = 'cleanway-ax-demo-v1'
 
+// ── Theme 6종 (index.css의 html[data-theme] 블록과 1:1 대응) ──
+export type ThemeId = 'signature' | 'navy' | 'tealchampagne' | 'graphite' | 'indigo' | 'forest'
+export type FontScale = 'sm' | 'md' | 'lg'
+
+export const THEMES: Array<{ id: ThemeId; name: string; desc: string; dots: string[] }> = [
+  { id: 'signature', name: 'CLEANWAY SIGNATURE', desc: 'Deep Teal · Champagne', dots: ['#08343A', '#0E6D71', '#D7BC86', '#52A7A3', '#DDEDEA', '#F7F5F0'] },
+  { id: 'navy', name: 'EXECUTIVE NAVY', desc: 'Deep Navy · Muted Gold', dots: ['#0D1B33', '#23479B', '#C9A961', '#5B7BA8', '#DFE7F3', '#F7F8FA'] },
+  { id: 'tealchampagne', name: 'TEAL CHAMPAGNE', desc: 'Dark Teal · Champagne Gold', dots: ['#103C3A', '#12756E', '#DCC182', '#7FA38C', '#DCEDE6', '#F8F6EF'] },
+  { id: 'graphite', name: 'GRAPHITE COPPER', desc: 'Graphite · Copper', dots: ['#23262B', '#454B54', '#B4703F', '#7C8794', '#E8E6E2', '#F7F4EF'] },
+  { id: 'indigo', name: 'INDIGO LAVENDER', desc: 'Midnight Indigo · Lavender', dots: ['#1E1B39', '#4A3E9E', '#B7A3DC', '#6C77B5', '#E8E5F5', '#F7F6FB'] },
+  { id: 'forest', name: 'FOREST SAND', desc: 'Deep Forest · Sand Gold', dots: ['#14322A', '#2C6B4F', '#CBA968', '#7C9C82', '#DFEDE0', '#F8F6EE'] },
+]
+
 interface DemoState {
   role: Role
+  theme: ThemeId
+  fontScale: FontScale
+  reduceMotion: boolean
   schedules: Schedule[]
   work: Record<string, WorkSession>
   actions: ActionItem[]
@@ -31,6 +47,9 @@ interface DemoState {
 
 const initialState = (): DemoState => ({
   role: 'ceo',
+  theme: 'signature',
+  fontScale: 'md',
+  reduceMotion: false,
   schedules: SEED_SCHEDULES.map((s) => ({ ...s })),
   work: {},
   actions: SEED_ACTIONS.map((a) => ({ ...a })),
@@ -54,7 +73,11 @@ const load = (): DemoState => {
 
 interface DemoStore extends DemoState {
   setRole: (r: Role) => void
+  setTheme: (t: ThemeId) => void
+  setFontScale: (f: FontScale) => void
+  setReduceMotion: (v: boolean) => void
   markTutorialSeen: () => void
+  replayTutorial: () => void
   resetDemo: () => void
   // 일정 / 배정
   assignTeam: (scheduleId: string, teamId: string) => void
@@ -84,6 +107,27 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(LS_KEY, JSON.stringify(state)) } catch { /* noop */ }
   }, [state])
 
+  // Theme / Font / Motion → <html> data-attribute (PC·Mobile·Preview iframe 공통 적용)
+  useEffect(() => {
+    const el = document.documentElement
+    el.setAttribute('data-theme', state.theme)
+    el.setAttribute('data-font', state.fontScale)
+    el.setAttribute('data-motion', state.reduceMotion ? 'reduce' : 'normal')
+  }, [state.theme, state.fontScale, state.reduceMotion])
+
+  // 다른 탭/Preview iframe에서 바뀐 설정을 동기화 (Cross-device Parity)
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== LS_KEY || !e.newValue) return
+      try {
+        const next = JSON.parse(e.newValue) as DemoState
+        setState((s) => ({ ...s, ...next }))
+      } catch { /* noop */ }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
   const store = useMemo<DemoStore>(() => {
     const patch = (p: Partial<DemoState>) => setState((s) => ({ ...s, ...p }))
     const patchSchedule = (id: string, p: Partial<Schedule>) =>
@@ -109,10 +153,14 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     return {
       ...state,
       setRole: (role) => patch({ role }),
+      setTheme: (theme) => patch({ theme }),
+      setFontScale: (fontScale) => patch({ fontScale }),
+      setReduceMotion: (reduceMotion) => patch({ reduceMotion }),
       markTutorialSeen: () => patch({ tutorialSeen: true }),
+      replayTutorial: () => patch({ tutorialSeen: false }),
       resetDemo: () => {
-        try { localStorage.removeItem(LS_KEY) } catch { /* noop */ }
-        setState(initialState())
+        // 화면 설정(Theme/Font/Motion)은 사용자 선호이므로 유지, 업무 Demo 상태만 원복
+        setState((s) => ({ ...initialState(), theme: s.theme, fontScale: s.fontScale, reduceMotion: s.reduceMotion }))
       },
       assignTeam: (scheduleId, teamId) => {
         patchSchedule(scheduleId, { teamId })

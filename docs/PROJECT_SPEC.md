@@ -174,3 +174,82 @@ aiInsights · actions · evidenceLogs
 - **F Role**: 대표 전체 수익성 / 직원 본인 현장만 / 고객 본인 계약·Report만
 
 추가: 실시간 시계 · Demo Reset · AI Ready Modal · Loading/Empty/Error · 한글 줄바꿈 · Mobile Overflow 없음
+
+---
+
+# v1.1 Product Shell Upgrade (2026-08-29)
+
+기존 Business Core / Field / Customer 기능은 보존하고 Product Shell(주변 UX)을 완성한 작업.
+Source of Truth: 「미래AI랩 AX + Platform Unified Design & Development System v1.1」
+
+## A. CROSS-DEVICE FEATURE PARITY MATRIX
+
+| 기능 | Desktop | 실제 Mobile | 반대 Device Preview | Discoverable | Behavior Parity |
+|---|---|---|---|---|---|
+| 날짜 | O (2026년 8월 29일 토요일) | O (08.29 토 — 압축) | O | Header 상시 | 필수 · 충족 |
+| 현재시각(초) | O | O | O | Header 상시 | 필수 · 충족 |
+| Theme 6종 | O | O | O (상태 공유) | 설정 / More Sheet | 필수 · 충족 |
+| Font Scale | O | O | O | 설정 | 필수 · 충족 |
+| Motion 줄이기 | O | O | O | 설정 | 필수 · 충족 |
+| Tutorial | O | O | 미실행(의도) | Sidebar / More / 설정 | 필수 · 충족 |
+| Presentation | O | O | 미실행(의도) | Sidebar / More / 설정 | 필수 · 충족 |
+| Why AX | O | O | O | Sidebar + Drawer + More | 필수 · 충족 |
+| Role Switch | O | O | O | Header / 설정 | 필수 · 충족 |
+| Demo Reset | O | O | — | 설정 / More Sheet | 필수 · 충족 |
+| Customer 전환 | O (Header) | O (More Sheet) | O | 양쪽 진입점 | 역할조건 · 충족 |
+| AX 복귀 | O (Care Header) | O (Care Header) | O | 상시 | 필수 · 충족 |
+| Device Preview | O → Mobile만 | O → PC만 | 차단(재귀 금지) | Header 상시 | 조건부 · 충족 |
+| 전체 Navigation | O (Sidebar 280px) | O (Hamburger Drawer) | O | 상시 | 필수 · 충족 |
+| 추가 메뉴 | Sidebar 전체 노출 | More Sheet 15항목 | O | Bottom Nav | 필수 · 충족 |
+
+Preview 내부에서는 Device Switch Control을 렌더하지 않는다(재귀 Preview 금지).
+
+## B. Device Preview 정의
+
+- 동일 Route · 동일 Data · 동일 State · 동일 Role · 동일 Theme를 다른 Viewport에서 렌더
+- 구현: `iframe src = 현재 pathname + ?preview=mobile|pc`, 상태는 localStorage 공유
+- Mobile Preview 390×844 (Fit) / PC Preview 1440×900 (세로 맞춤 + 가로 Pan, `폭 맞춤` 토글 제공)
+- 모달은 `document.body`로 portal — Header의 `backdrop-filter`가 fixed containing block이 되는 문제 회피
+- 종료: X 버튼 / Backdrop / ESC → overlay·scroll lock·Route 원복
+
+## C. Guided Tour 엔진 (Tutorial 5 / Presentation 11)
+
+`src/components/tour/TourProvider.tsx` — 실제 Route 이동 → 대상 DOM(`data-tour`) 렌더 대기 →
+`scrollIntoView` → Spotlight(주변 30% Dim) → 설명 Card → Next → 다음 Route 자동 이동.
+Presentation은 Role 전환(field/customer)까지 포함해 Surface를 넘나든다.
+
+### data-tour 앵커
+`kpi` · `ai-briefing` · `dispatch` · `customer-health` · `renewal` · `upsell` ·
+`requests` · `evidence` · `why-hero` · `field-next` · `care-quick`
+
+## D. Theme System
+
+`html[data-theme]`로 6개 토큰(Shell/Primary/Accent/Secondary/Soft/Canvas)을 교체.
+Neutral(본문·Table·Card·Border)과 의미색(Success/Warning/Danger/Info)은 Theme와 분리 고정.
+
+signature · navy · tealchampagne · graphite · indigo · forest
+
+## E. Navigation Semantics
+
+| Label | Behavior |
+|---|---|
+| 더보기 | Bottom Sheet 추가 메뉴 (Route 직접 이동 아님) |
+| Hamburger | 전체 Navigation Drawer |
+| 모바일 보기 / PC 보기 | 반대 Device Preview |
+| 고객 화면 보기 | Customer Care Portal |
+| 기획의도 | Why AX Story |
+| 설정 · 테마 | Settings |
+
+## F. Settings 구조
+
+화면(Theme·Font·Motion) / 사용자·권한(Role·Permission Matrix) / Demo(초기화·Tutorial·Presentation) /
+Data(Freshness·CSV·연결상태) / AI(동작방식·AI READY) / 연결(Portal·Field·알림)
+
+## G. Why AX Story (16 Section)
+
+Hero → 01 서비스업 변화 → 02 AX 정의 → 03 현장서비스 필요성 → 04 보유 Data → 05 문제 →
+06 현재 Flow → 07 변화 Flow(Before/After) → 08 효율화가 끝이 아니다 → 09 재계약 → 10 추가서비스 →
+11 AI 6 Engine → 12 Action Lifecycle → 13 Customer Platform → 14 Data 자산화 → 15 정책·사업화 →
+16 5개 성장경로 + Escape Path(Dashboard 복귀)
+
+일반론 뒤에 반드시 `CLEANWAY라면` 회사 맞춤 해석 블록을 배치(5개소).

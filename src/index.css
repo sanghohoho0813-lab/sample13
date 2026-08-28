@@ -1,26 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  /* CLEANWAY Premium Service Palette */
-  --color-shell: #08343A;        /* Deep Teal — Sidebar */
+  /* ── Theme tokens (Theme 전환 시 값이 교체되는 6+ 토큰) ── */
+  --color-shell: #08343A;        /* Sidebar / Shell */
   --color-shell-soft: #0C424A;
   --color-shell-line: #14525B;
-  --color-primary: #0E6D71;      /* Premium Teal */
+  --color-primary: #0E6D71;      /* Primary */
   --color-primary-strong: #0A5A5E;
-  --color-aqua: #52A7A3;         /* Clean Aqua */
-  --color-mint: #DDEDEA;         /* Soft Mint */
-  --color-champagne: #D7BC86;    /* Champagne Sand — Wordmark accent */
+  --color-aqua: #52A7A3;         /* Secondary */
+  --color-mint: #DDEDEA;         /* Soft */
+  --color-champagne: #D7BC86;    /* Accent — Wordmark */
   --color-champagne-soft: #EFE3C6;
-  --color-ivory: #F7F5F0;        /* Warm Ivory — Workspace bg */
+  --color-ivory: #F7F5F0;        /* Canvas */
 
-  /* Neutral — 테마와 분리, 항상 고정 */
+  /* ── Neutral — 항상 고정, Theme와 분리 (가독성 보장) ── */
   --color-ink: #1B2430;
   --color-ink-soft: #47525F;
   --color-ink-faint: #6B7684;
   --color-line: #E4E4DC;
   --color-card: #FFFFFF;
 
-  /* 의미색 고정 */
+  /* ── 의미색 고정 ── */
   --color-success: #1E8A5E;
   --color-success-soft: #E3F3EB;
   --color-warning: #B97E14;
@@ -30,7 +30,7 @@
   --color-info: #2563AE;
   --color-info-soft: #E7F0FB;
 
-  /* AI Accent */
+  /* ── AI Accent ── */
   --color-ai: #5965D8;
   --color-ai-soft: #ECEEFB;
   --color-ai-strong: #4650C4;
@@ -42,10 +42,83 @@
   --shadow-pop: 0 8px 40px rgba(8, 52, 58, 0.18);
 }
 
-html {
-  font-size: 19px; /* v6.0 Executive Readability — Root 19px */
-  overflow-x: clip;
+/* ═══════════ THEME 6종 — Shell / Primary / Accent / Secondary / Soft / Canvas ═══════════ */
+/* 01 CLEANWAY SIGNATURE = 기본값(:root) */
+
+/* 02 EXECUTIVE NAVY */
+html[data-theme="navy"] {
+  --color-shell: #0D1B33;
+  --color-shell-soft: #14243F;
+  --color-shell-line: #223450;
+  --color-primary: #23479B;
+  --color-primary-strong: #1B3A83;
+  --color-aqua: #5B7BA8;
+  --color-mint: #DFE7F3;
+  --color-champagne: #C9A961;
+  --color-champagne-soft: #EEE2C4;
+  --color-ivory: #F7F8FA;
 }
+
+/* 03 TEAL CHAMPAGNE */
+html[data-theme="tealchampagne"] {
+  --color-shell: #103C3A;
+  --color-shell-soft: #164B48;
+  --color-shell-line: #1F5D59;
+  --color-primary: #12756E;
+  --color-primary-strong: #0D615B;
+  --color-aqua: #7FA38C;
+  --color-mint: #DCEDE6;
+  --color-champagne: #DCC182;
+  --color-champagne-soft: #F0E5C8;
+  --color-ivory: #F8F6EF;
+}
+
+/* 04 GRAPHITE COPPER */
+html[data-theme="graphite"] {
+  --color-shell: #23262B;
+  --color-shell-soft: #2E3238;
+  --color-shell-line: #3C4149;
+  --color-primary: #454B54;
+  --color-primary-strong: #343941;
+  --color-aqua: #7C8794;
+  --color-mint: #E8E6E2;
+  --color-champagne: #B4703F;
+  --color-champagne-soft: #EBD6C4;
+  --color-ivory: #F7F4EF;
+}
+
+/* 05 INDIGO LAVENDER */
+html[data-theme="indigo"] {
+  --color-shell: #1E1B39;
+  --color-shell-soft: #2A2650;
+  --color-shell-line: #3A3568;
+  --color-primary: #4A3E9E;
+  --color-primary-strong: #3C3286;
+  --color-aqua: #6C77B5;
+  --color-mint: #E8E5F5;
+  --color-champagne: #B7A3DC;
+  --color-champagne-soft: #E4DBF3;
+  --color-ivory: #F7F6FB;
+}
+
+/* 06 FOREST SAND */
+html[data-theme="forest"] {
+  --color-shell: #14322A;
+  --color-shell-soft: #1C4236;
+  --color-shell-line: #275446;
+  --color-primary: #2C6B4F;
+  --color-primary-strong: #235841;
+  --color-aqua: #7C9C82;
+  --color-mint: #DFEDE0;
+  --color-champagne: #CBA968;
+  --color-champagne-soft: #EDE0C4;
+  --color-ivory: #F8F6EE;
+}
+
+/* ═══════════ Font Scale (v6.0 Executive Readability) ═══════════ */
+html { font-size: 19px; overflow-x: clip; }
+html[data-font="sm"] { font-size: 17.5px; }
+html[data-font="lg"] { font-size: 21px; }
 
 body {
   font-family: var(--font-sans);
@@ -56,13 +129,9 @@ body {
   overflow-x: hidden;
 }
 
-* {
-  min-width: 0;
-}
+* { min-width: 0; }
 
-.tnum {
-  font-variant-numeric: tabular-nums;
-}
+.tnum { font-variant-numeric: tabular-nums; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: #C6CDD2; border-radius: 8px; }
@@ -80,6 +149,12 @@ body {
 }
 .pop-in { animation: popIn 0.22s ease both; }
 
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.slide-up { animation: slideUp 0.26s cubic-bezier(0.32, 0.72, 0, 1) both; }
+
 @keyframes shimmer {
   0% { background-position: -400px 0; }
   100% { background-position: 400px 0; }
@@ -91,12 +166,44 @@ body {
   border-radius: 10px;
 }
 
-/* Phone frame for device preview */
+/* Motion 줄이기 — 사용자 설정 또는 OS 설정 */
+html[data-motion="reduce"] *,
+html[data-motion="reduce"] *::before,
+html[data-motion="reduce"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Device Preview phone frame */
 .phone-frame {
-  width: 400px;
   border: 10px solid #10181D;
   border-radius: 42px;
   box-shadow: var(--shadow-pop);
   overflow: hidden;
   background: #fff;
+}
+.desk-frame {
+  border: 8px solid #10181D;
+  border-radius: 14px;
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+  background: #fff;
+}
+
+/* Guided Tour spotlight */
+.tour-spot {
+  position: fixed;
+  border-radius: 16px;
+  box-shadow: 0 0 0 9999px rgba(10, 32, 36, 0.30), 0 0 0 3px var(--color-champagne);
+  pointer-events: none;
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 71;
 }

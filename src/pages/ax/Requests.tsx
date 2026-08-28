@@ -19,7 +19,7 @@ export default function Requests() {
       {requests.length === 0 ? (
         <EmptyState title="접수된 요청이 없습니다." desc="Customer Portal에서 요청이 들어오면 이곳에 표시됩니다." />
       ) : (
-        <div className="grid gap-3.5 md:grid-cols-2">
+        <div data-tour="requests" className="grid gap-3.5 md:grid-cols-2">
           {requests.map((r) => {
             const c = customerById(r.customerId)
             return (

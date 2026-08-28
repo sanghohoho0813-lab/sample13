@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
+import { TourProvider } from './components/tour/TourProvider'
+import { useDemo } from './lib/data/store'
 import AxLayout from './components/layout/AxLayout'
 import Dashboard from './pages/ax/Dashboard'
 import TodayAx from './pages/ax/TodayAx'
@@ -35,8 +37,9 @@ function ScrollToTop() {
 const ax = (el: React.ReactNode) => <AxLayout>{el}</AxLayout>
 
 export default function App() {
+  const { setRole } = useDemo()
   return (
-    <>
+    <TourProvider onRole={setRole}>
       <ScrollToTop />
       <Routes>
         <Route path="/" element={ax(<Dashboard />)} />
@@ -65,6 +68,6 @@ export default function App() {
         <Route path="/care/requests" element={<CareRequests />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+    </TourProvider>
   )
 }

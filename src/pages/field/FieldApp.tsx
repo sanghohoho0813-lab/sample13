@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Navigation, MapPin, CheckCircle2, Camera, Sparkles, Bell, FileText, User,
@@ -8,7 +8,7 @@ import { Badge, Btn, Card, DemoBadge, StatusPill, useToast } from '../../compone
 import { useDemo } from '../../lib/data/store'
 import { customerById, teamMemberNames } from '../../lib/demo/company'
 import { CHECKLIST_TEMPLATE } from '../../lib/demo/operations'
-import { cx, nowDateShort } from '../../lib/utils'
+import { cx, nowClock, nowDateCompact } from '../../lib/utils'
 
 type Tab = 'today' | 'site' | 'alerts' | 'reports' | 'me'
 
@@ -22,6 +22,11 @@ export default function FieldApp() {
   const toast = useToast()
   const [tab, setTab] = useState<Tab>('today')
   const [noteDraft, setNoteDraft] = useState('')
+  const [clock, setClock] = useState(nowClock())
+  useEffect(() => {
+    const id = setInterval(() => setClock(nowClock()), 1000)
+    return () => clearInterval(id)
+  }, [])
 
   const myJobs = useMemo(
     () => schedules.filter((s) => s.dayOffset === 0 && s.teamId === MY_TEAM).sort((a, b) => a.time.localeCompare(b.time)),
@@ -48,15 +53,19 @@ export default function FieldApp() {
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
         {/* Header */}
         <header className="sticky top-0 z-30 border-b border-line bg-shell px-4 py-3 text-white">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
               <p className="text-[0.92rem] font-extrabold tracking-wide">CLEANWAY <span className="text-champagne">FIELD</span></p>
-              <p className="text-[0.68rem] text-white/70">{nowDateShort()} · {MY_NAME} · Clean Team B</p>
+              <p className="tnum text-[0.68rem] text-white/75">{nowDateCompact()} · {clock} · {MY_NAME}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1.5">
               <DemoBadge label="DEMO" />
-              <button onClick={() => { setRole('manager'); nav('/') }} className="rounded-lg bg-white/10 p-1.5 hover:bg-white/20" title="Business AX 보기 (Demo)">
-                <ArrowLeft size={16} />
+              <button
+                onClick={() => { setRole('manager'); nav('/') }}
+                className="flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1.5 text-[0.72rem] font-bold hover:bg-white/20"
+                title="Business AX 보기 (Demo)"
+              >
+                <ArrowLeft size={14} /> AX
               </button>
             </div>
           </div>
@@ -67,7 +76,7 @@ export default function FieldApp() {
             <>
               {/* 다음 현장 */}
               {nextJob && nextCustomer ? (
-                <Card className="overflow-hidden">
+                <Card tour="field-next" className="overflow-hidden">
                   <div className="bg-primary px-4 py-3 text-white">
                     <p className="text-[0.72rem] font-bold text-white/80">다음 현장</p>
                     <p className="mt-0.5 text-[1.2rem] font-extrabold leading-tight">{nextCustomer.name}</p>

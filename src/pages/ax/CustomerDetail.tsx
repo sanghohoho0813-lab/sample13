@@ -37,7 +37,7 @@ export default function CustomerDetail() {
         <div className="space-y-5">
           {/* Customer Health */}
           {h && (
-            <Card className="p-5">
+            <Card tour="customer-health" className="p-5">
               <SectionTitle right={<AIReadyBadge small />}>Customer Health</SectionTitle>
               <div className="flex flex-wrap items-center gap-5">
                 <div className="relative flex h-28 w-28 items-center justify-center">
