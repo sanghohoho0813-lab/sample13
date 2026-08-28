@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+@theme {
+  /* CLEANWAY Premium Service Palette */
+  --color-shell: #08343A;        /* Deep Teal — Sidebar */
+  --color-shell-soft: #0C424A;
+  --color-shell-line: #14525B;
+  --color-primary: #0E6D71;      /* Premium Teal */
+  --color-primary-strong: #0A5A5E;
+  --color-aqua: #52A7A3;         /* Clean Aqua */
+  --color-mint: #DDEDEA;         /* Soft Mint */
+  --color-champagne: #D7BC86;    /* Champagne Sand — Wordmark accent */
+  --color-champagne-soft: #EFE3C6;
+  --color-ivory: #F7F5F0;        /* Warm Ivory — Workspace bg */
+
+  /* Neutral — 테마와 분리, 항상 고정 */
+  --color-ink: #1B2430;
+  --color-ink-soft: #47525F;
+  --color-ink-faint: #6B7684;
+  --color-line: #E4E4DC;
+  --color-card: #FFFFFF;
+
+  /* 의미색 고정 */
+  --color-success: #1E8A5E;
+  --color-success-soft: #E3F3EB;
+  --color-warning: #B97E14;
+  --color-warning-soft: #FBF1DC;
+  --color-danger: #C24A3F;
+  --color-danger-soft: #FBE9E6;
+  --color-info: #2563AE;
+  --color-info-soft: #E7F0FB;
+
+  /* AI Accent */
+  --color-ai: #5965D8;
+  --color-ai-soft: #ECEEFB;
+  --color-ai-strong: #4650C4;
+
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", "Malgun Gothic", sans-serif;
+
+  --shadow-card: 0 1px 2px rgba(16, 34, 40, 0.05), 0 4px 14px rgba(16, 34, 40, 0.06);
+  --shadow-card-hover: 0 2px 4px rgba(16, 34, 40, 0.07), 0 10px 28px rgba(16, 34, 40, 0.11);
+  --shadow-pop: 0 8px 40px rgba(8, 52, 58, 0.18);
+}
+
+html {
+  font-size: 19px; /* v6.0 Executive Readability — Root 19px */
+  overflow-x: clip;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-ivory);
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+* {
+  min-width: 0;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #C6CDD2; border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.35s ease both; }
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.pop-in { animation: popIn 0.22s ease both; }
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #EDEDE6 25%, #F6F6F1 50%, #EDEDE6 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 10px;
+}
+
+/* Phone frame for device preview */
+.phone-frame {
+  width: 400px;
+  border: 10px solid #10181D;
+  border-radius: 42px;
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+  background: #fff;
+}
