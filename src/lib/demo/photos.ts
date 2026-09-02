@@ -105,3 +105,20 @@ export const beforeAfterFor = (note?: string) => {
     ? { before: PHOTO.beforeGlass, after: PHOTO.afterGlass, subject: '유리 · 공용공간' }
     : { before: PHOTO.beforeFloor, after: PHOTO.afterFloor, subject: '바닥' }
 }
+
+/**
+ * 현장 유형 → 대표 사진
+ * 현장 카드/배너는 "오늘의 작업"이 아니라 "이 현장이 어떤 공간인가"를 나타내야
+ * 배지(병의원/사무실/…)와 의미가 어긋나지 않는다.
+ */
+export const SITE_TYPE_PHOTO: Record<string, string> = {
+  병의원: PHOTO.clinic,
+  사무실: PHOTO.office,
+  학원: PHOTO.academy,
+  상가: PHOTO.retail,
+  빌딩: PHOTO.commonArea,
+  프랜차이즈: PHOTO.retail,
+}
+
+export const photoForSite = (type?: string, service?: string) =>
+  (type && SITE_TYPE_PHOTO[type]) || photoOf(service)

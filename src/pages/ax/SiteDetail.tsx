@@ -6,7 +6,7 @@ import { useDemo } from '../../lib/data/store'
 import { customerById, siteByCustomer, teamById, teamMemberNames } from '../../lib/demo/company'
 import { CHECKLIST_TEMPLATE } from '../../lib/demo/operations'
 import { SEED_QUALITY } from '../../lib/demo/intelligence'
-import { beforeAfterFor, altOf, photoOf } from '../../lib/demo/photos'
+import { beforeAfterFor, altOf, photoForSite } from '../../lib/demo/photos'
 
 function WorkPhoto({ label, taken, src }: { label: string; taken: boolean; src: string }) {
   if (!taken) {
@@ -46,7 +46,7 @@ export default function SiteDetail() {
   const issues = SEED_QUALITY.filter((q) => q.customerId === customer.id)
   const checklist = ws?.checklist ?? Object.fromEntries(CHECKLIST_TEMPLATE.map((c) => [c, mainJob?.status === '완료']))
   const ba = beforeAfterFor(`${mainJob?.service ?? ''} ${site.note ?? ''} ${ws?.note ?? ''}`)
-  const siteHero = photoOf(mainJob?.service)
+  const siteHero = photoForSite(customer.type, mainJob?.service)
 
   return (
     <div className="fade-up">
