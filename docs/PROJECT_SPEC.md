@@ -298,3 +298,38 @@ AX Dashboard · 오늘의 AX · 일정/배정 · 작업현황 · 고객/계약 �
 ## Before / After 선택 규칙
 `beforeAfterFor(note)` — 작업/특이사항 텍스트에 `유리·창·공용·로비`가 포함되면 유리 쌍(14/15),
 그 외에는 바닥 쌍(12/13)을 사용한다.
+
+---
+
+# I. 제작사 브랜드(미래AI랩) 노출 규칙 (2026-09-02)
+
+`public/brand/` 에 원본 로고를 보존하고, `src/components/brand/MiraeLogo.tsx` 한 곳에서만 참조한다.
+
+| 파일 | 크기 | 용도 |
+|---|---|---|
+| `mirae-ai-lab-logo.png` | 828×250 | 가로형 로고 (크레딧 전용) |
+| `mirae-mark.png` | 256×256 | M 심볼 — favicon · apple-touch-icon |
+
+## 원본 보존 원칙
+전달받은 로고는 이미 배경이 투명했으나 **투명 픽셀에 흰색 RGB가 남아 있어**
+Deep Teal 위로 축소될 때 흰 테두리(fringe)가 생겼다. 이를 alpha bleed(투명 픽셀의 RGB를
+인접 불투명 픽셀 색으로 채움)로 제거했고, **보이는(불투명) 픽셀은 원본과 바이트 단위로 동일**하다.
+로고의 색·형태·비율은 어떤 화면에서도 재가공하지 않는다.
+
+## 다크 배경 처리
+로고 워드마크가 진한 남색이라 Deep Teal 사이드바에서는 판독이 되지 않는다.
+로고를 흰색으로 바꾸는 대신 **흰색 칩(plate) 위에 원본을 그대로** 올린다 (`MiraeCredit tone="dark"`).
+
+## 노출 위치 (의도적으로 절제 — 4곳 + favicon)
+| 위치 | 형태 | 이유 |
+|---|---|---|
+| AX 사이드바 / 모바일 Drawer 하단 | `Powered by` + 흰 칩 로고 | 전 AX 화면에 상시 노출되는 단 하나의 지점 |
+| Customer Portal Footer | `Powered by` (밝은 배경) | 고객 접점의 마지막 신뢰 요소 |
+| Field Mobile · 내 정보 | `Powered by` (밝은 배경) | 직원 앱에서 유일한 제작사 표기 |
+| Why AX 하단 | `Designed & Built by` | Story의 마지막 = 제작사 서명 |
+| 브라우저 탭 / 홈 화면 | `mirae-mark.png` | favicon · apple-touch-icon |
+
+## 넣지 않는 곳
+AX 화면 본문(Dashboard·오늘의 AX·일정·현장·고객·AI·Evidence)·모든 카드 헤더·시연 모드 오버레이.
+사이드바 크레딧이 이미 상시 노출되므로 같은 화면에 로고가 두 번 나오지 않게 한다.
+설정 화면 Footer는 로고 대신 `POWERED BY 미래AI랩` 텍스트만 사용한다.

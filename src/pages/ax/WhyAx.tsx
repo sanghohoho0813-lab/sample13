@@ -8,6 +8,7 @@ import { Card, PageHeader, Badge, Btn, DemoBadge } from '../../components/ui'
 import { COMPANY } from '../../lib/demo/company'
 import { cx } from '../../lib/utils'
 import { PHOTO, altOf } from '../../lib/demo/photos'
+import { MiraeCredit } from '../../components/brand/MiraeLogo'
 
 // ─── Story building blocks ───────────────────────────────
 function Section({ no, title, children, tour }: { no: string; title: string; children: ReactNode; tour?: string }) {
@@ -450,6 +451,11 @@ export default function WhyAx() {
         <Btn size="lg" variant="outline" onClick={() => nav('/evidence')}>
           AX Evidence 보기 <ArrowRight size={15} className="inline" />
         </Btn>
+      </div>
+
+      <div className="mt-8 flex flex-col items-center gap-2 border-t border-line pt-6">
+        <MiraeCredit label="Designed & Built by" height={26} />
+        <p className="text-[0.72rem] text-ink-faint">Service Intelligence AX · Website Reference MVP</p>
       </div>
     </div>
   )

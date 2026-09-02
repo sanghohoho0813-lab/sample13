@@ -12,6 +12,7 @@ import { Badge, Freshness } from '../ui'
 import { cx, nowClock, nowDateLong, nowDateCompact } from '../../lib/utils'
 import DevicePreview from './DevicePreview'
 import { useTour, useAutoTutorial } from '../tour/TourProvider'
+import { MiraeCredit } from '../brand/MiraeLogo'
 
 // ─── Nav model — Role 접근제어(RLS Preview) + Module Icon Color ──
 interface NavItem { to: string; label: string; icon: ReactNode; roles: Role[]; color: string }
@@ -203,8 +204,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <BadgeCheck size={12} className="text-champagne" /> TECH ASSET · AX 기술자산 연계 검토중
         </p>
         <p className="text-[0.66rem] leading-relaxed text-[#6E9595]">
-          미래AI랩 Reference MVP<br />모든 데이터는 가상의 Sample Data입니다.
+          모든 데이터는 가상의 Sample Data입니다.
         </p>
+        <MiraeCredit tone="dark" height={18} className="pt-0.5" />
       </div>
     </div>
   )

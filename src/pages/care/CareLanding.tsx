@@ -4,6 +4,7 @@ import CareShell from './CareShell'
 import { Card, Btn, Badge } from '../../components/ui'
 import { SERVICE_TYPES } from '../../lib/demo/operations'
 import { PHOTO, altOf, photoOf } from '../../lib/demo/photos'
+import { MiraeCredit } from '../../components/brand/MiraeLogo'
 
 export default function CareLanding() {
   const nav = useNavigate()
@@ -158,9 +159,9 @@ export default function CareLanding() {
         </div>
       </section>
 
-      <footer className="mt-12 border-t border-line pt-6 text-center text-[0.74rem] leading-relaxed text-ink-faint">
-        클린웨이파트너스㈜ · 사업시설 유지관리 및 현장 서비스<br />
-        본 페이지는 미래AI랩 Reference MVP의 가상 회사 데모입니다.
+      <footer className="mt-12 flex flex-col items-center gap-3 border-t border-line pt-6 text-center text-[0.74rem] leading-relaxed text-ink-faint">
+        <p>클린웨이파트너스㈜ · 사업시설 유지관리 및 현장 서비스<br />본 페이지는 가상 회사 데모입니다.</p>
+        <MiraeCredit height={22} />
       </footer>
     </CareShell>
   )

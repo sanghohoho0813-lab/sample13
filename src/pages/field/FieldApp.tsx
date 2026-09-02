@@ -10,6 +10,7 @@ import { customerById, teamMemberNames } from '../../lib/demo/company'
 import { CHECKLIST_TEMPLATE } from '../../lib/demo/operations'
 import { cx, nowClock, nowDateCompact } from '../../lib/utils'
 import { beforeAfterFor, altOf } from '../../lib/demo/photos'
+import { MiraeCredit } from '../../components/brand/MiraeLogo'
 
 type Tab = 'today' | 'site' | 'alerts' | 'reports' | 'me'
 
@@ -291,6 +292,7 @@ export default function FieldApp() {
               <p className="text-center text-[0.72rem] leading-relaxed text-ink-faint">
                 현장직원 화면에는 경영 지표·수익성·전체 고객 정보가 표시되지 않습니다.<br />(Role 기반 접근 제어 — RLS Preview)
               </p>
+              <div className="flex justify-center pt-1"><MiraeCredit height={19} /></div>
             </div>
           )}
         </main>

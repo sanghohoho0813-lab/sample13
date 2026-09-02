@@ -241,9 +241,15 @@ export default function SettingsPage() {
         </Group>
       </div>
 
-      <p className="mt-6 flex items-center gap-1.5 text-[0.76rem] text-ink-faint">
-        <Users size={13} /> 본 시스템은 미래AI랩 Website Reference MVP입니다. 실제 회사·고객 정보가 아닙니다.
-      </p>
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
+        <p className="flex items-center gap-1.5 text-[0.76rem] text-ink-faint">
+          <Users size={13} /> 본 시스템은 Website Reference MVP입니다. 실제 회사·고객 정보가 아닙니다.
+        </p>
+        {/* 사이드바 하단에 이미 제작사 크레딧이 상시 노출되므로 여기서는 텍스트로만 표기한다 */}
+        <p className="text-[0.7rem] font-bold tracking-[0.12em] text-ink-faint">
+          POWERED BY 미래AI랩
+        </p>
+      </div>
     </div>
   )
 }

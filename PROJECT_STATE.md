@@ -49,12 +49,22 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 데이터 UI 화면(Dashboard·오늘의 AX·작업현황·Upsell·Evidence 등)에는 사진 미적용
 - 접근성/성능: 전 이미지 한국어 alt · width/height(CLS 방지) · Hero 외 lazy loading
 
+## 완료 — 제작사 브랜드(미래AI랩) 반영 (2026-09-02)
+- 원본 로고를 `public/brand/`에 보존 (`mirae-ai-lab-logo.png` 828×250 · `mirae-mark.png` 256×256)
+- 투명 픽셀의 흰색 잔여 RGB를 alpha bleed로 제거 — **보이는 픽셀은 원본과 100% 동일**
+- `src/components/brand/MiraeLogo.tsx` — `MiraeLogo` / `MiraeMark` / `MiraeCredit(tone)` 단일 참조점
+- 다크 배경(사이드바)에서는 로고 재가공 없이 **흰색 칩 위 원본** 방식으로 판독성 확보
+- 노출 4곳 + favicon: AX 사이드바·Drawer 하단 / Customer Portal Footer / Field 내 정보 / Why AX 하단
+- 설정 Footer는 로고 중복을 피해 `POWERED BY 미래AI랩` 텍스트로 대체
+- favicon·apple-touch-icon을 M 심볼로 교체
+
 ## QA 결과 (Whole-App Acceptance Run)
 - 자동 검증 **51 PASS / 0 FAIL** (Playwright)
 - Gate A~N 전부 충족 · P0 Bug 0건
 - 360 / 390 / 430px 가로 스크롤 0 (More Sheet 포함)
 - Desktop·Mobile pageerror 0 · 빌드 Green
 - 사진 반영 후 재검증: 51 PASS / 0 FAIL · 이미지 404 0건 · 깨진 이미지 0건
+- 로고 반영 후 재검증: 51 PASS / 0 FAIL · tsc·build Green
 
 ## 미완료 (PLUS — 범위 외)
 - 고급 Map UX / Route Visualization
@@ -75,7 +85,7 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 
 ## USER ACTION QUEUE
 (이번 Reference MVP에서는 불필요 — 실서비스 전환 시)
-- [ASSET] 실제 회사 Logo / 현장 사진
+- [ASSET] 실제 회사(고객사) Logo — 제작사 로고·현장 사진은 반영 완료
 - [DATA] 실제 고객·서비스·직원·일정 데이터 (CSV 1~3종이면 시작 가능)
 - [ENV] Supabase URL·ANON KEY
 - [ENV] LLM API Key (OpenAI 또는 Anthropic)
@@ -86,3 +96,4 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 2026-08-28: PASS 1 설계 잠금 → PASS 2 CORE 구현 → 1차 MVP 완료
 - 2026-08-29: v1.1 Product Shell Upgrade (Tutorial·Preview·Theme·Navigation·Why AX·Parity) 완료
 - 2026-09-02: 실제 현장 사진 20장 반영 (Customer Portal·리포트·현장·Field·Why AX)
+- 2026-09-02: 제작사 브랜드(미래AI랩) 로고 반영 — 사이드바·Portal·Field·Why AX·favicon

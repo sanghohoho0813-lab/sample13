@@ -40,6 +40,15 @@ npm run preview  # 빌드 결과 미리보기
   현장관리/현장 Detail · Field Mobile 사진 등록 · Why AX Hero 및 Story
 - Dashboard·오늘의 AX·작업현황·Upsell·Evidence 등 운영 판단 화면은 데이터 UI를 유지
 
+## 제작사 브랜드 (미래AI랩)
+
+- `public/brand/` — 로고 원본 (`mirae-ai-lab-logo.png` 828×250 · `mirae-mark.png` 256×256)
+- 투명 픽셀에 남아 있던 흰색 RGB만 alpha bleed로 제거 — **보이는 픽셀은 원본과 100% 동일**
+- `src/components/brand/MiraeLogo.tsx` 한 곳에서만 참조 (`MiraeLogo` / `MiraeMark` / `MiraeCredit`)
+- 노출 4곳 + favicon: AX 사이드바·Drawer 하단 · Customer Portal Footer · Field 내 정보 ·
+  Why AX 하단(`Designed & Built by`) · 브라우저 탭 아이콘
+- 다크 배경에서는 로고를 재가공하지 않고 **흰색 칩 위에 원본**을 올려 판독성을 확보
+
 ## Product Shell (v1.1)
 
 - **Theme 6종** — Settings → 화면에서 전환. `html[data-theme]` 토큰 교체 방식이라 본문·표 가독성은 고정
