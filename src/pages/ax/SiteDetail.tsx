@@ -6,14 +6,25 @@ import { useDemo } from '../../lib/data/store'
 import { customerById, siteByCustomer, teamById, teamMemberNames } from '../../lib/demo/company'
 import { CHECKLIST_TEMPLATE } from '../../lib/demo/operations'
 import { SEED_QUALITY } from '../../lib/demo/intelligence'
+import { beforeAfterFor, altOf, photoOf } from '../../lib/demo/photos'
 
-function PhotoPlaceholder({ label, taken }: { label: string; taken: boolean }) {
+function WorkPhoto({ label, taken, src }: { label: string; taken: boolean; src: string }) {
+  if (!taken) {
+    return (
+      <div className="flex aspect-[4/3] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-ivory">
+        <ImageOff size={22} className="text-ink-faint" />
+        <p className="text-[0.78rem] font-bold text-ink-soft">{label}</p>
+        <p className="text-[0.65rem] text-ink-faint">미등록</p>
+      </div>
+    )
+  }
   return (
-    <div className={`flex aspect-[4/3] flex-col items-center justify-center gap-1.5 rounded-xl border ${taken ? 'border-primary/40 bg-mint/50' : 'border-dashed border-line bg-ivory'}`}>
-      {taken ? <Camera size={22} className="text-primary" /> : <ImageOff size={22} className="text-ink-faint" />}
-      <p className="text-[0.78rem] font-bold text-ink-soft">{label}</p>
-      <p className="text-[0.65rem] text-ink-faint">{taken ? 'DEMO PHOTO 등록됨' : '미등록'}</p>
-    </div>
+    <figure className="relative aspect-[4/3] overflow-hidden rounded-xl border border-line bg-ivory">
+      <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
+      <figcaption className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-ink/75 px-2 py-0.5 text-[0.66rem] font-extrabold text-white">
+        <Camera size={11} /> {label}
+      </figcaption>
+    </figure>
   )
 }
 
@@ -34,6 +45,8 @@ export default function SiteDetail() {
   const report = reports.find((r) => r.customerId === customer.id)
   const issues = SEED_QUALITY.filter((q) => q.customerId === customer.id)
   const checklist = ws?.checklist ?? Object.fromEntries(CHECKLIST_TEMPLATE.map((c) => [c, mainJob?.status === '완료']))
+  const ba = beforeAfterFor(`${mainJob?.service ?? ''} ${site.note ?? ''} ${ws?.note ?? ''}`)
+  const siteHero = photoOf(mainJob?.service)
 
   return (
     <div className="fade-up">
@@ -43,6 +56,12 @@ export default function SiteDetail() {
         desc={`${customer.address} · ${site.areaPyeong}평 · ${customer.contract.serviceSummary}`}
         right={<><Badge tone="brand">{customer.type}</Badge><DemoBadge /></>}
       />
+
+      {mainJob && (
+        <figure className="mb-4 overflow-hidden rounded-2xl border border-line">
+          <img src={siteHero} alt={altOf(siteHero)} width={1448} height={1086} className="h-40 w-full object-cover object-[50%_30%] sm:h-56" />
+        </figure>
+      )}
 
       {site.note && (
         <p className="mb-4 flex items-center gap-2 rounded-xl bg-warning-soft px-4 py-2.5 text-[0.85rem] font-bold text-warning"><AlertTriangle size={15} /> {site.note}</p>
@@ -95,8 +114,8 @@ export default function SiteDetail() {
                 </div>
                 {/* Before / After */}
                 <div className="grid grid-cols-2 gap-3">
-                  <PhotoPlaceholder label="Before Photo" taken={!!ws?.beforePhoto || mainJob.status === '완료'} />
-                  <PhotoPlaceholder label="After Photo" taken={!!ws?.afterPhoto || mainJob.status === '완료'} />
+                  <WorkPhoto label="Before" taken={!!ws?.beforePhoto || mainJob.status === '완료'} src={ba.before} />
+                  <WorkPhoto label="After" taken={!!ws?.afterPhoto || mainJob.status === '완료'} src={ba.after} />
                 </div>
                 {ws?.note && <p className="rounded-xl bg-ivory p-3 text-[0.85rem]"><b>특이사항</b> — {ws.note}</p>}
               </div>

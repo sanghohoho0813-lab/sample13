@@ -32,6 +32,14 @@ npm run preview  # 빌드 결과 미리보기
 | | `/care/home` | 고객 Home + Quick Action (Closed Loop) |
 | | `/care/reports` `/care/requests` | Service Report · 요청 현황 |
 
+## 현장 사진
+
+- `public/photos/` — 실제 현장 사진 20장 (1448×1086 PNG **원본 그대로**, 재인코딩 없음)
+- `src/lib/demo/photos.ts` — 서비스명 → 사진, Before/After 쌍, 한국어 alt 매핑
+- 배치: Customer Portal(Hero·서비스 10종·관리 전후·현장 기록) · 고객 리포트 Before/After ·
+  현장관리/현장 Detail · Field Mobile 사진 등록 · Why AX Hero 및 Story
+- Dashboard·오늘의 AX·작업현황·Upsell·Evidence 등 운영 판단 화면은 데이터 UI를 유지
+
 ## Product Shell (v1.1)
 
 - **Theme 6종** — Settings → 화면에서 전환. `html[data-theme]` 토큰 교체 방식이라 본문·표 가독성은 고정

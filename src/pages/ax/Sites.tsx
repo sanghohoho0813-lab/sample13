@@ -3,6 +3,7 @@ import { MapPin, ArrowRight, AlertTriangle } from 'lucide-react'
 import { Card, PageHeader, Badge, DemoBadge, StatusPill } from '../../components/ui'
 import { useDemo } from '../../lib/data/store'
 import { CUSTOMERS, SITES, teamById } from '../../lib/demo/company'
+import { photoOf, altOf } from '../../lib/demo/photos'
 
 export default function Sites() {
   const { schedules } = useDemo()
@@ -16,7 +17,16 @@ export default function Sites() {
           const todayJobs = schedules.filter((s) => s.dayOffset === 0 && s.customerId === c.id)
           const risk = todayJobs.find((s) => s.risk)
           return (
-            <Card key={c.id} onClick={() => nav(`/sites/${c.id}`)} className="p-5">
+            <Card key={c.id} onClick={() => nav(`/sites/${c.id}`)} className="overflow-hidden">
+              <div className="aspect-[16/9] overflow-hidden bg-ivory">
+                <img
+                  src={photoOf(todayJobs[0]?.service ?? c.contract.serviceSummary)}
+                  alt={altOf(photoOf(todayJobs[0]?.service ?? c.contract.serviceSummary))}
+                  width={1448} height={1086} loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="p-5">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-[1.05rem] font-extrabold">{site?.name}</p>
@@ -39,6 +49,7 @@ export default function Sites() {
                   <span className="text-[0.8rem] text-ink-faint">오늘 예정 없음</span>
                 )}
                 {risk ? <AlertTriangle size={16} className="text-danger" /> : <ArrowRight size={15} className="text-primary" />}
+              </div>
               </div>
             </Card>
           )

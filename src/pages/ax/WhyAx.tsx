@@ -7,6 +7,7 @@ import {
 import { Card, PageHeader, Badge, Btn, DemoBadge } from '../../components/ui'
 import { COMPANY } from '../../lib/demo/company'
 import { cx } from '../../lib/utils'
+import { PHOTO, altOf } from '../../lib/demo/photos'
 
 // ─── Story building blocks ───────────────────────────────
 function Section({ no, title, children, tour }: { no: string; title: string; children: ReactNode; tour?: string }) {
@@ -76,8 +77,16 @@ export default function WhyAx() {
       />
 
       {/* HERO */}
-      <section data-tour="why-hero" className="mb-6 overflow-hidden rounded-3xl bg-shell px-6 py-10 text-white sm:px-10 sm:py-14">
-        <Badge tone="brand" className="bg-white/10 text-champagne">SERVICE INTELLIGENCE AX</Badge>
+      <section data-tour="why-hero" className="relative mb-6 overflow-hidden rounded-3xl bg-shell px-6 py-10 text-white sm:px-10 sm:py-14">
+        <img
+          src={PHOTO.axConnect}
+          alt={altOf(PHOTO.axConnect)}
+          width={1448} height={1086}
+          className="absolute inset-0 h-full w-full object-cover object-right"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-shell via-shell/94 to-shell/60" />
+        <div className="relative">
+        <Badge tone="brand" className="bg-shell/70 text-champagne ring-1 ring-champagne/30">SERVICE INTELLIGENCE AX</Badge>
         <h1 className="mt-4 text-[1.65rem] font-extrabold leading-tight sm:text-[2.3rem]">
           청소 서비스를 제공하는 회사에서,<br />
           <span className="text-champagne">고객의 공간 운영을 데이터로 관리하는 회사로.</span>
@@ -92,6 +101,7 @@ export default function WhyAx() {
           {['현장', '일정', '품질', '고객', '재계약', 'Growth'].map((k) => (
             <span key={k} className="rounded-lg bg-white/10 px-3 py-1.5 text-[0.8rem] font-bold text-champagne">{k}</span>
           ))}
+        </div>
         </div>
       </section>
 
@@ -246,6 +256,28 @@ export default function WhyAx() {
           </div>
         </Section>
 
+        <Section no="08-1" title="현장에서 기록이 만들어지는 순간">
+          <p>AX의 출발점은 시스템이 아니라 <b>현장에서 남는 한 줄의 기록</b>입니다.</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              { src: PHOTO.fieldMobile, t: '① 현장 등록', d: '담당자가 체크리스트·사진을 현장에서 바로 기록' },
+              { src: PHOTO.completionPhoto, t: '② 완료 증빙', d: '작업 후 사진이 곧 고객 리포트가 됨' },
+              { src: PHOTO.managerInspection, t: '③ 품질 점검', d: '관리자가 확인하고 기준을 맞춤' },
+            ].map((x) => (
+              <figure key={x.t} className="overflow-hidden rounded-xl border border-line">
+                <img src={x.src} alt={altOf(x.src)} width={1448} height={1086} loading="lazy" className="aspect-[4/3] w-full object-cover" />
+                <figcaption className="p-3">
+                  <p className="text-[0.85rem] font-extrabold text-primary">{x.t}</p>
+                  <p className="mt-0.5 text-[0.78rem] leading-snug text-ink-soft">{x.d}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          <p className="text-[0.88rem]">
+            이 세 장면이 데이터로 남기 때문에 <b>재계약·추가매출·수익성 판단</b>이 가능해집니다.
+          </p>
+        </Section>
+
         <Section no="09" title="재계약이 왜 중요한가요?">
           <p>
             정기관리 서비스업의 매출 기반은 신규 영업보다 <b>기존 계약의 유지</b>입니다.
@@ -266,6 +298,14 @@ export default function WhyAx() {
           <div className="flex flex-wrap gap-1.5">
             {['유리 집중청소', '바닥 집중관리', '소독 / 위생', '에어컨 세척', '입주·퇴거 특수청소', '대청소', '소모품 관리'].map((x) => (
               <Chip key={x} tone="success">{x}</Chip>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {([['발견된 상태', PHOTO.beforeGlass], ['집중관리 후', PHOTO.afterGlass]] as const).map(([tag, src]) => (
+              <figure key={tag} className="relative overflow-hidden rounded-xl border border-line">
+                <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="aspect-[4/3] w-full object-cover" />
+                <figcaption className="absolute left-2 top-2 rounded-md bg-ink/75 px-2 py-0.5 text-[0.66rem] font-extrabold text-white">{tag}</figcaption>
+              </figure>
             ))}
           </div>
           <CleanwayNote>

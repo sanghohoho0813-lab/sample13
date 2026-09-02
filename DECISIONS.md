@@ -21,3 +21,11 @@
 15. **Theme는 `html[data-theme]` 토큰 교체 방식** — Tailwind v4 `@theme` 토큰만 바꾸므로 컴포넌트 수정이 없다. Neutral·의미색은 Theme와 분리해 가독성을 고정한다.
 16. **`더보기`는 Bottom Sheet 추가 메뉴** — Menu Label과 Behavior 일치(Navigation Semantics). Hamburger(전체 Navigation)와 역할을 분리한다.
 17. **Demo Reset은 화면 설정(Theme/Font/Motion)을 보존** — 업무 Demo 상태만 원복한다.
+
+## 현장 사진 반영 (2026-09-02)
+
+18. **사진 원본을 재인코딩 없이 보존** — `public/photos/`에 1448×1086 PNG 원본 그대로 커밋한다. 화질 손실 없이 그대로 렌더하고, 대신 Hero를 제외한 전 이미지에 `loading="lazy"`와 `width/height`를 지정해 초기 로딩과 레이아웃 안정성을 확보한다.
+19. **사진은 매핑 Layer로 참조** — 컴포넌트에 경로를 흩뿌리지 않고 `src/lib/demo/photos.ts`의 `photoOf(service)` / `beforeAfterFor(note)`로 해석한다. 서비스가 늘어나도 매핑만 추가하면 된다.
+20. **Before/After는 작업 성격으로 자동 선택** — 특이사항 텍스트에 유리·공용공간 키워드가 있으면 유리 쌍, 아니면 바닥 쌍. 리포트마다 무관한 사진이 붙지 않게 한다.
+21. **운영 판단 화면에는 사진을 넣지 않는다** — Dashboard·오늘의 AX·작업현황·Upsell·Evidence는 데이터 밀도가 곧 신뢰도이므로 기존 데이터 UI를 유지하고, 사진은 고객 접점(Portal·리포트)과 현장/Story 화면에 집중한다.
+22. **사진 위 텍스트는 Deep Teal 그라디언트로 대비 확보** — 사진 톤을 어둡게 바꾸지 않고 브랜드 색 오버레이만 얹어 밝고 깨끗한 현장 리얼리즘을 유지한다.

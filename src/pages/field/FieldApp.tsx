@@ -9,6 +9,7 @@ import { useDemo } from '../../lib/data/store'
 import { customerById, teamMemberNames } from '../../lib/demo/company'
 import { CHECKLIST_TEMPLATE } from '../../lib/demo/operations'
 import { cx, nowClock, nowDateCompact } from '../../lib/utils'
+import { beforeAfterFor, altOf } from '../../lib/demo/photos'
 
 type Tab = 'today' | 'site' | 'alerts' | 'reports' | 'me'
 
@@ -39,6 +40,8 @@ export default function FieldApp() {
   const doneCount = Object.values(checklist).filter(Boolean).length
   const canComplete = !!ws?.checkinAt && doneCount === CHECKLIST_TEMPLATE.length && ws.beforePhoto && ws.afterPhoto
   const myReports = reports.filter((r) => r.team === 'Clean Team B')
+
+  const ba = beforeAfterFor(`${nextJob?.service ?? ''} ${ws?.note ?? ''}`)
 
   const aiNotes = nextJob?.customerId === 'C01'
     ? [
@@ -132,15 +135,26 @@ export default function FieldApp() {
                             <div className="grid grid-cols-2 gap-2.5">
                               {(['before', 'after'] as const).map((kind) => {
                                 const taken = kind === 'before' ? ws.beforePhoto : ws.afterPhoto
+                                const src = kind === 'before' ? ba.before : ba.after
+                                if (taken) {
+                                  return (
+                                    <figure key={kind} className="relative aspect-[4/3] overflow-hidden rounded-xl border border-primary">
+                                      <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
+                                      <figcaption className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-ink/75 px-2 py-0.5 text-[0.66rem] font-extrabold text-white">
+                                        <Camera size={11} /> {kind === 'before' ? 'Before' : 'After'}
+                                      </figcaption>
+                                    </figure>
+                                  )
+                                }
                                 return (
                                   <button key={kind} onClick={() => { setPhoto(nextJob.id, kind); toast(`${kind === 'before' ? 'Before' : 'After'} 사진을 등록했습니다. (DEMO)`) }}
                                     className={cx(
                                       'flex aspect-[4/3] flex-col items-center justify-center gap-1.5 rounded-xl border text-[0.82rem] font-bold',
-                                      taken ? 'border-primary bg-mint/60 text-primary' : 'border-dashed border-line bg-card text-ink-soft',
+                                      'border-dashed border-line bg-card text-ink-soft',
                                     )}>
-                                    {taken ? <Camera size={22} /> : <ImagePlus size={22} />}
+                                    <ImagePlus size={22} />
                                     {kind === 'before' ? 'Before Photo' : 'After Photo'}
-                                    <span className="text-[0.64rem] font-semibold text-ink-faint">{taken ? '등록됨 (DEMO)' : '탭하여 등록'}</span>
+                                    <span className="text-[0.64rem] font-semibold text-ink-faint">탭하여 등록</span>
                                   </button>
                                 )
                               })}

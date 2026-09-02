@@ -253,3 +253,42 @@ Hero → 01 서비스업 변화 → 02 AX 정의 → 03 현장서비스 필요�
 16 5개 성장경로 + Escape Path(Dashboard 복귀)
 
 일반론 뒤에 반드시 `CLEANWAY라면` 회사 맞춤 해석 블록을 배치(5개소).
+
+---
+
+# H. 현장 사진 배치 맵 (2026-09-02)
+
+원본 20장(1448×1086 PNG)을 재인코딩 없이 `public/photos/`에 보존하고, `src/lib/demo/photos.ts`에서
+서비스명·Before/After 매핑으로 참조한다. 모든 이미지에 한국어 `alt`와 `width/height`(CLS 방지),
+Hero 외 전부 `loading="lazy"`를 적용한다.
+
+| # | 파일 | 내용 | 배치 위치 |
+|---|---|---|---|
+| 01 | `01-hero-lobby-service.png` | 로비 전문 장비 바닥관리 | Customer Portal Landing **Hero 배경** |
+| 02 | `02-office-regular.png` | 사무실 정기청소 | 서비스 그리드 · 현장 카드/배너 |
+| 03 | `03-retail-regular.png` | 상가 정기관리 | 서비스 그리드 · 현장 카드/배너 |
+| 04 | `04-clinic-care.png` | 병·의원 청소관리 | 서비스 그리드 · 고객 Home 배너 · 현장 |
+| 05 | `05-academy-care.png` | 학원·교육시설 관리 | 서비스 그리드 · 현장 |
+| 06 | `06-common-area.png` | 건물 공용부 관리 | 서비스 그리드 · 현장 (기본값) |
+| 07 | `07-floor-wax.png` | 바닥 세척 / 왁스 | 서비스 그리드 · 현장 · Upsell 매핑 |
+| 08 | `08-glass-cleaning.png` | 유리창 집중청소 | 서비스 그리드 · 현장 · Upsell 매핑 |
+| 09 | `09-disinfection.png` | 소독 / 위생관리 | 서비스 그리드 · 현장 · Upsell 매핑 |
+| 10 | `10-aircon-cleaning.png` | 에어컨 세척 | 서비스 그리드 · Upsell 매핑 |
+| 11 | `11-move-in-out.png` | 입주·퇴거 특수청소 | 서비스 그리드 · Upsell 매핑 |
+| 12 | `12-before-floor.png` | Before ① 바닥 | Landing 관리 전·후 · 현장 Detail · Field · 고객 리포트 |
+| 13 | `13-after-floor.png` | After ① 바닥 | 〃 (12와 쌍) |
+| 14 | `14-before-glass.png` | Before ② 유리/공용 | 〃 + 고객 Home **AI 제안 근거 사진** · Why AX 10 |
+| 15 | `15-after-glass.png` | After ② 유리/공용 | 〃 (14와 쌍) |
+| 16 | `16-field-mobile-report.png` | 현장 모바일 작업등록 | Landing 현장 기록 · Why AX 08-1 ① |
+| 17 | `17-manager-inspection.png` | 관리자 품질점검 | Landing 현장 기록 · Why AX 08-1 ③ |
+| 18 | `18-equipment-supplies.png` | 장비·소모품 관리 | Landing 현장 기록 |
+| 19 | `19-completion-photo.png` | 작업 완료 증빙촬영 | Landing Portal 안내 · Why AX 08-1 ② |
+| 20 | `20-ax-connect.png` | AX 연결 대표 | **Why AX Hero 배경** |
+
+## 사진을 넣지 않는 화면 (데이터 UI 유지)
+AX Dashboard · 오늘의 AX · 일정/배정 · 작업현황 · 고객/계약 · 재계약 · Upsell Center ·
+수익성 · AI Operations Center · AX Evidence · 설정 — 운영 판단 화면은 데이터 밀도를 유지한다.
+
+## Before / After 선택 규칙
+`beforeAfterFor(note)` — 작업/특이사항 텍스트에 `유리·창·공용·로비`가 포함되면 유리 쌍(14/15),
+그 외에는 바닥 쌍(12/13)을 사용한다.

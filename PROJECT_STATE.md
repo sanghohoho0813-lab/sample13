@@ -37,11 +37,24 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - **Settings 재구성**: 화면 / 사용자·권한 / Demo / Data / AI / 연결 6그룹
 - **Surface Round-trip**: Desktop·Mobile 양방향 AX ↔ Customer ↔ Field
 
+## 완료 — 현장 사진 반영 (2026-09-02)
+- 실제 현장 사진 **20장 원본(1448×1086 PNG, 재인코딩 없음)** 을 `public/photos/`에 반영
+- `src/lib/demo/photos.ts` — 서비스명 → 사진, Before/After 쌍 선택, 한국어 alt 매핑 Layer
+- Customer Portal: Hero 배경 · 서비스 10종 그리드 · 관리 전·후 · 현장 기록 3장 · Portal 안내
+- 고객 리포트: Before/After 실사진 + "작업 전/후" 캡션 (유리/바닥 자동 선택)
+- 고객 Home: 다음 방문 배너 + **AI 제안 근거 사진**(반복 지적된 유리 오염)
+- Business AX: 현장관리 카드 썸네일 · 현장 Detail 배너 + Before/After 실사진
+- Field Mobile: 사진 등록 시 실제 Before/After 렌더
+- Why AX: Hero 배경(AX 연결) + Section 08-1 현장 기록 3단계 + Section 10 유리 전·후
+- 데이터 UI 화면(Dashboard·오늘의 AX·작업현황·Upsell·Evidence 등)에는 사진 미적용
+- 접근성/성능: 전 이미지 한국어 alt · width/height(CLS 방지) · Hero 외 lazy loading
+
 ## QA 결과 (Whole-App Acceptance Run)
 - 자동 검증 **51 PASS / 0 FAIL** (Playwright)
 - Gate A~N 전부 충족 · P0 Bug 0건
 - 360 / 390 / 430px 가로 스크롤 0 (More Sheet 포함)
 - Desktop·Mobile pageerror 0 · 빌드 Green
+- 사진 반영 후 재검증: 51 PASS / 0 FAIL · 이미지 404 0건 · 깨진 이미지 0건
 
 ## 미완료 (PLUS — 범위 외)
 - 고급 Map UX / Route Visualization
@@ -72,3 +85,4 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 ## 최근 주요 변경
 - 2026-08-28: PASS 1 설계 잠금 → PASS 2 CORE 구현 → 1차 MVP 완료
 - 2026-08-29: v1.1 Product Shell Upgrade (Tutorial·Preview·Theme·Navigation·Why AX·Parity) 완료
+- 2026-09-02: 실제 현장 사진 20장 반영 (Customer Portal·리포트·현장·Field·Why AX)
