@@ -75,7 +75,7 @@ export const ROADMAP: RoadmapItem[] = [
     key: 'quote',
     label: '견적 · 전자계약', icon: FileSignature, color: '#E0973F', stage: 'Preview',
     desc: '현장 조건(면적·주기·난이도)을 입력하면 견적이 산출되고 전자계약·자동청구까지 이어집니다.',
-    customerLabel: '온라인 견적 · 전자계약',
+    customerLabel: '견적 · 전자계약',
     customerDesc: '면적과 주기만 입력하면 견적이 바로 나오고, 방문 없이 전자계약으로 시작합니다.',
   },
   {
@@ -96,7 +96,7 @@ export const ROADMAP: RoadmapItem[] = [
     key: 'esg',
     label: 'ESG · 친환경', icon: Leaf, color: '#4FC3D9', stage: 'Long-term',
     desc: '친환경 자재·폐기물·에너지 사용량을 고객사 ESG 보고에 그대로 넣을 수 있게 제공합니다.',
-    customerLabel: 'ESG · 친환경 리포트',
+    customerLabel: 'ESG · 친환경',
     customerDesc: '친환경 자재 사용과 폐기물 배출량을 정리해, 귀사 ESG 보고에 그대로 넣을 수 있게 드립니다.',
   },
 ]

@@ -65,7 +65,10 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 단계 배지 NEXT · Preview · Long-term — Route 없이 인라인 설명만 펼침 (DEMO 정직성)
 - `src/lib/demo/roadmap.ts` 단일 원본 — Business AX(10개, 운영자 문구)와
   Customer Portal(9개, 고객 문구)이 같은 데이터를 읽음 (`채용·교육 관리`는 내부 전용으로 제외)
-- Customer Portal `/care`에 `앞으로 준비 중인 서비스` 카드 그리드 추가
+- Customer Portal `/care`에 `앞으로 준비 중인 서비스` 카드 그리드 추가 (랜딩 하단)
+- Customer Portal 헤더에 `전체 메뉴` Drawer 추가 — 서비스 이동 · 준비 중인 서비스 9종 ·
+  상담 CTA · DEMO/ADMIN 이동 · 제작사 크레딧 (하단 섹션은 그대로 유지, 진입점만 추가)
+- 고객 포털 헤더 아이콘 압축 — 360px에서 브랜드가 잘리던 문제 해결
 - AX 사이드바 로드맵 섹션 접기/펼치기 — 선택은 localStorage 유지 (데모 초기화 영향 없음)
 - 모바일 헤더에 `고객 화면 보기` 아이콘 버튼 노출 (기존에는 sm 미만에서 숨겨져 진입 경로 없음)
 - `PC 보기`도 모바일에서 아이콘만으로 압축 · 좌측 시계 그룹 클리핑으로 겹침 제거
@@ -112,3 +115,4 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 2026-09-02: 제작사 브랜드(미래AI랩) 로고 반영 — 사이드바·Portal·Field·Why AX·favicon
 - 2026-09-03: 향후 확장 로드맵 10항목 + 모바일 헤더 고객 화면 진입 버튼
 - 2026-09-03: 로드맵 고객 포털 확장 + AX 사이드바 접기/펼치기
+- 2026-09-03: 고객 포털 상단 전체 메뉴 Drawer
