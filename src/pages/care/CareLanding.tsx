@@ -5,6 +5,7 @@ import { Card, Btn, Badge } from '../../components/ui'
 import { SERVICE_TYPES } from '../../lib/demo/operations'
 import { PHOTO, altOf, photoOf } from '../../lib/demo/photos'
 import { MiraeCredit } from '../../components/brand/MiraeLogo'
+import { CUSTOMER_ROADMAP, STAGE_NOTE } from '../../lib/demo/roadmap'
 
 export default function CareLanding() {
   const nav = useNavigate()
@@ -157,6 +158,41 @@ export default function CareLanding() {
             </figcaption>
           </figure>
         </div>
+      </section>
+
+      {/* ── 앞으로 준비 중인 서비스 — Business AX 로드맵과 동일 원본, 고객 목소리로 ── */}
+      <section className="mt-10">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-[1.3rem] font-extrabold">앞으로 준비 중인 서비스</h2>
+          <Badge tone="info">NEXT</Badge>
+        </div>
+        <p className="mt-1 text-[0.88rem] text-ink-soft">
+          지금 제공되는 서비스는 아니며, 준비되는 대로 계약 고객께 먼저 안내드립니다.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {CUSTOMER_ROADMAP.map((r) => (
+            <Card key={r.key} className="flex flex-col gap-2 p-4">
+              <div className="flex items-start gap-2.5">
+                <span
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                  style={{ background: `${r.color}1F`, color: r.color }}
+                >
+                  <r.icon size={18} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[0.95rem] font-extrabold leading-tight">{r.customerLabel}</p>
+                  <p className="mt-0.5 text-[0.68rem] font-bold tracking-wide text-ink-faint">
+                    {r.stage} · {STAGE_NOTE[r.stage]}
+                  </p>
+                </div>
+              </div>
+              <p className="text-[0.84rem] leading-relaxed text-ink-soft">{r.customerDesc}</p>
+            </Card>
+          ))}
+        </div>
+        <p className="mt-3 text-[0.76rem] text-ink-faint">
+          필요한 서비스가 있으시면 요청 화면에서 알려주세요. 준비 순서를 정하는 데 반영합니다.
+        </p>
       </section>
 
       <footer className="mt-12 flex flex-col items-center gap-3 border-t border-line pt-6 text-center text-[0.74rem] leading-relaxed text-ink-faint">
