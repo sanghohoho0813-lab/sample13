@@ -137,13 +137,15 @@ export default function DevicePreview({ compact }: { compact?: boolean }) {
       <button
         onClick={() => setOpen(kind)}
         title={`${label} — 현재 화면을 ${isDesktop ? '모바일' : 'PC'} 크기로 미리보기`}
+        aria-label={label}
         className={cx(
           'flex items-center gap-1.5 rounded-xl border border-line bg-card font-bold text-ink-soft hover:border-primary hover:text-primary',
           compact ? 'px-2.5 py-1.5 text-[0.75rem]' : 'px-3 py-1.5 text-[0.8rem]',
         )}
       >
         <Icon size={15} />
-        {label}
+        {/* 모바일 헤더는 아이콘 액션으로 압축 — 라벨은 sm 이상에서 노출 (title/aria로 의미 보존) */}
+        <span className={cx(compact && 'hidden sm:inline')}>{label}</span>
       </button>
       {open && (
         <PreviewModal

@@ -58,6 +58,14 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 설정 Footer는 로고 중복을 피해 `POWERED BY 미래AI랩` 텍스트로 대체
 - favicon·apple-touch-icon을 M 심볼로 교체
 
+## 완료 — 향후 확장 로드맵 · 모바일 헤더 (2026-09-03)
+- 전체 메뉴(Desktop Sidebar · Mobile Drawer) 하단에 `향후 확장 · ROADMAP` 10항목 추가
+- 업 적합 항목만 선별: 다지점 통합관리 / 구독형 관리 / 협력사 네트워크 / 소모품·자재 /
+  위생·방역 증빙 / 채용·교육 관리 / 견적·전자계약 / 종합 시설관리 / IoT 스마트 현장 / ESG·친환경
+- 단계 배지 NEXT · Preview · Long-term — Route 없이 인라인 설명만 펼침 (DEMO 정직성)
+- 모바일 헤더에 `고객 화면 보기` 아이콘 버튼 노출 (기존에는 sm 미만에서 숨겨져 진입 경로 없음)
+- `PC 보기`도 모바일에서 아이콘만으로 압축 · 좌측 시계 그룹 클리핑으로 겹침 제거
+
 ## QA 결과 (Whole-App Acceptance Run)
 - 자동 검증 **51 PASS / 0 FAIL** (Playwright)
 - Gate A~N 전부 충족 · P0 Bug 0건
@@ -65,6 +73,7 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - Desktop·Mobile pageerror 0 · 빌드 Green
 - 사진 반영 후 재검증: 51 PASS / 0 FAIL · 이미지 404 0건 · 깨진 이미지 0건
 - 로고 반영 후 재검증: 51 PASS / 0 FAIL · tsc·build Green
+- 로드맵·헤더 반영 후 재검증: 57 PASS / 0 FAIL · 360/390px 가로 스크롤 0 · 라벨 잘림 0
 
 ## 미완료 (PLUS — 범위 외)
 - 고급 Map UX / Route Visualization
@@ -97,3 +106,4 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 2026-08-29: v1.1 Product Shell Upgrade (Tutorial·Preview·Theme·Navigation·Why AX·Parity) 완료
 - 2026-09-02: 실제 현장 사진 20장 반영 (Customer Portal·리포트·현장·Field·Why AX)
 - 2026-09-02: 제작사 브랜드(미래AI랩) 로고 반영 — 사이드바·Portal·Field·Why AX·favicon
+- 2026-09-03: 향후 확장 로드맵 10항목 + 모바일 헤더 고객 화면 진입 버튼

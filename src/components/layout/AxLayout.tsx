@@ -5,6 +5,7 @@ import {
   Inbox, ShieldCheck, RefreshCcw, TrendingUp, PieChart, Sparkles, ScrollText,
   BookOpen, Settings, Menu, X, Store, ChevronDown, Play,
   RotateCcw, BadgeCheck, Smartphone, MoreHorizontal, Palette,
+  Handshake, Package, GraduationCap, FileSignature, Wrench, Cpu, Leaf, FileCheck2,
 } from 'lucide-react'
 import { useDemo } from '../../lib/data/store'
 import { ROLE_LABEL, type Role } from '../../types'
@@ -77,6 +78,109 @@ const IconTile = ({ color, children, dark }: { color: string; children: ReactNod
     {children}
   </span>
 )
+
+// ─── 향후 확장 로드맵 ──────────────────────────────────────────────
+// 사업시설 유지관리·현장 서비스 업(業)에서 현재 Core(일정·현장·품질·계약·수익성) 위에
+// 실제로 얹을 수 있는 확장만 담는다. 지금 동작하지 않는 영역이므로 라우트를 만들지 않고,
+// 항목을 눌러 "무엇을·왜" 확장하는지만 펼쳐 보여준다. (DEMO 정직성 규칙)
+type NextStage = 'NEXT' | 'Preview' | 'Long-term'
+interface NextItem { label: string; icon: ReactNode; color: string; stage: NextStage; desc: string }
+
+const NEXT_ITEMS: NextItem[] = [
+  {
+    label: '다지점 통합관리', icon: <Building2 size={17} />, color: C.customer, stage: 'NEXT',
+    desc: '지점이 여러 곳인 고객사를 한 계약·한 리포트로 묶어 본사가 전 지점 품질을 한 번에 봅니다.',
+  },
+  {
+    label: '구독형 관리', icon: <RefreshCcw size={17} />, color: C.retention, stage: 'NEXT',
+    desc: '정기청소 + 주기별 특수관리(왁스·유리·소독)를 월 구독 상품으로 묶어 매출을 반복화합니다.',
+  },
+  {
+    label: '협력사 네트워크', icon: <Handshake size={17} />, color: C.schedule, stage: 'NEXT',
+    desc: '성수기·원거리 물량을 협력업체에 배정하고, 자사 현장과 동일한 품질 기준으로 검수합니다.',
+  },
+  {
+    label: '소모품 · 자재', icon: <Package size={17} />, color: C.upsell, stage: 'NEXT',
+    desc: '세제·소모품 재고와 현장별 사용량을 기록해 수익성 분석의 원가에 그대로 연결합니다.',
+  },
+  {
+    label: '위생 · 방역 증빙', icon: <FileCheck2 size={17} />, color: C.evidence, stage: 'NEXT',
+    desc: '병의원·식품시설 고객이 점검 때 바로 제출할 수 있도록 소독·위생 증빙을 자동 축적합니다.',
+  },
+  {
+    label: '채용 · 교육 관리', icon: <GraduationCap size={17} />, color: C.team, stage: 'NEXT',
+    desc: '현장 인력 채용 파이프라인과 교육·자격 이수를 관리해 배정 가능 인력을 정확히 셉니다.',
+  },
+  {
+    label: '견적 · 전자계약', icon: <FileSignature size={17} />, color: C.profit, stage: 'Preview',
+    desc: '현장 조건(면적·주기·난이도)을 입력하면 견적이 산출되고 전자계약·자동청구까지 이어집니다.',
+  },
+  {
+    label: '종합 시설관리', icon: <Wrench size={17} />, color: C.field, stage: 'Preview',
+    desc: '청소를 넘어 설비·경비·조경까지 한 건물에서 묶어 받는 종합 시설관리로 계약 단가를 올립니다.',
+  },
+  {
+    label: 'IoT 스마트 현장', icon: <Cpu size={17} />, color: C.ai, stage: 'Preview',
+    desc: '이용량 센서를 붙여 "정해진 주기"가 아니라 "필요한 시점"에 인력을 투입합니다.',
+  },
+  {
+    label: 'ESG · 친환경', icon: <Leaf size={17} />, color: C.today, stage: 'Long-term',
+    desc: '친환경 자재·폐기물·에너지 사용량을 고객사 ESG 보고에 그대로 넣을 수 있게 제공합니다.',
+  },
+]
+
+const STAGE_STYLE: Record<NextStage, string> = {
+  'NEXT': 'border-champagne/50 text-champagne',
+  'Preview': 'border-aqua/50 text-aqua',
+  'Long-term': 'border-white/25 text-[#8FB3B3]',
+}
+
+function NextRoadmap() {
+  const [open, setOpen] = useState<string | null>(null)
+  return (
+    <div className="pt-1">
+      <div className="flex items-center gap-2 px-2.5 pb-1.5">
+        <p className="text-[0.64rem] font-bold tracking-[0.16em] text-aqua">향후 확장</p>
+        <span className="rounded-md border border-champagne/50 px-1.5 py-[0.05rem] text-[0.56rem] font-bold tracking-[0.1em] text-champagne">
+          ROADMAP
+        </span>
+      </div>
+      <div className="space-y-0.5">
+        {NEXT_ITEMS.map((i) => {
+          const isOpen = open === i.label
+          return (
+            <div key={i.label}>
+              <button
+                onClick={() => setOpen(isOpen ? null : i.label)}
+                aria-expanded={isOpen}
+                className={cx(
+                  'flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[0.84rem] font-bold transition-colors',
+                  isOpen ? 'bg-white/8 text-white' : 'text-[#9FBDBD] hover:bg-white/6 hover:text-white',
+                )}
+              >
+                <IconTile color={i.color} dark>{i.icon}</IconTile>
+                {/* 라벨은 항상 한 줄 — 좁은 폭에서 3줄로 늘어나 행이 무너지지 않게 한다 */}
+                <span className="min-w-0 flex-1 truncate">{i.label}</span>
+                <span className={cx('shrink-0 rounded-md border px-1 py-[0.05rem] text-[0.55rem] font-bold tracking-wide', STAGE_STYLE[i.stage])}>
+                  {i.stage}
+                </span>
+              </button>
+              {isOpen && (
+                <p className="fade-up mx-2.5 mb-1 mt-0.5 rounded-lg bg-white/6 px-3 py-2 text-[0.74rem] leading-relaxed text-[#B9D2D2]">
+                  {i.desc}
+                </p>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <p className="px-2.5 pt-2 text-[0.66rem] leading-relaxed text-[#6E9595]">
+        확장 항목은 아직 구현되지 않은 로드맵입니다. 현재 Core 데이터(일정·현장·품질·계약·수익성)를
+        그대로 재사용하는 범위로만 정리했습니다.
+      </p>
+    </div>
+  )
+}
 
 // ─── 실시간 날짜 + 시각 (Desktop/Mobile 모두 날짜 표시 — Date/Time Parity) ──
 function LiveClock() {
@@ -189,6 +293,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         >
           <IconTile color="#D7BC86" dark><Play size={17} /></IconTile> 시연 모드
         </button>
+
+        <div className="mt-3 border-t border-shell-line pt-3"><NextRoadmap /></div>
       </nav>
       <div className="border-t border-shell-line px-5 py-4 space-y-2.5">
         <div className="flex items-center gap-2">
@@ -336,7 +442,7 @@ export default function AxLayout({ children }: { children: ReactNode }) {
       <div className="lg:pl-[280px]">
         <header className="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
           <div className="mx-auto flex max-w-[1720px] items-center justify-between gap-2 px-3 py-2.5 sm:px-4 lg:px-8">
-            <div className="flex min-w-0 items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2 overflow-hidden">
               <button onClick={() => setDrawer(true)} className="shrink-0 rounded-lg p-1.5 text-ink-soft hover:bg-[#EFF1F0] lg:hidden" aria-label="전체 메뉴">
                 <Menu size={22} />
               </button>
@@ -345,12 +451,16 @@ export default function AxLayout({ children }: { children: ReactNode }) {
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <div className="hidden xl:block"><Freshness /></div>
               <DevicePreview compact />
+              {/* 고객 화면 이동 — 모바일에서는 아이콘만, sm 이상에서는 라벨까지 (숨기지 않고 압축) */}
               {role !== 'customer' && (
                 <button
                   onClick={() => nav('/care')}
-                  className="hidden items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-[0.8rem] font-bold text-white hover:bg-primary-strong sm:flex"
+                  aria-label="고객 화면 보기"
+                  title="고객 화면 보기"
+                  className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-2.5 py-1.5 text-[0.8rem] font-bold text-white hover:bg-primary-strong sm:px-3"
                 >
-                  <Store size={15} /> 고객 화면 보기
+                  <Store size={15} />
+                  <span className="hidden sm:inline">고객 화면 보기</span>
                 </button>
               )}
               <RoleSwitcher compact />
