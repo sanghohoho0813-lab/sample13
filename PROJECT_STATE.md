@@ -73,6 +73,16 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 모바일 헤더에 `고객 화면 보기` 아이콘 버튼 노출 (기존에는 sm 미만에서 숨겨져 진입 경로 없음)
 - `PC 보기`도 모바일에서 아이콘만으로 압축 · 좌측 시계 그룹 클리핑으로 겹침 제거
 
+## 완료 — 미래AI랩 브릿지 CTA (2026-09-18)
+- `src/lib/mirae.ts` — 링크 3종(consult/samples/home) + CTA 문구 단일 수정 지점
+- `src/components/brand/SampleBridgeCTA.tsx` — `SampleBridgeCTA`(섹션) / `SampleBridgeMini`(축약형)
+- 배치: AX 전 화면 하단 · 고객 포털 전 화면 하단 · AX 사이드바 좌하단 ·
+  고객 포털 전체 메뉴 Drawer · Field Mobile 내 정보 (총 5곳)
+- 메인 CTA 문구 전 화면 통일 — `우리 회사도 만들어보기`
+- 외부 링크 전부 `target="_blank"` + `rel="noopener noreferrer"`
+- 아주 약한 light sweep(5.5s 중 64% 정지) + 배지 glow(7s) · motion-reduce에서 완전 차단
+- 로고는 CTA에 넣지 않음 (사이드바·푸터에 이미 상시 노출)
+
 ## QA 결과 (Whole-App Acceptance Run)
 - 자동 검증 **51 PASS / 0 FAIL** (Playwright)
 - Gate A~N 전부 충족 · P0 Bug 0건
@@ -116,3 +126,4 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 2026-09-03: 향후 확장 로드맵 10항목 + 모바일 헤더 고객 화면 진입 버튼
 - 2026-09-03: 로드맵 고객 포털 확장 + AX 사이드바 접기/펼치기
 - 2026-09-03: 고객 포털 상단 전체 메뉴 Drawer
+- 2026-09-18: 미래AI랩 브릿지 CTA 5곳 적용 (상담·다른 샘플·홈페이지)

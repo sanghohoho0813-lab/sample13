@@ -412,3 +412,42 @@ AX 화면 본문(Dashboard·오늘의 AX·일정·현장·고객·AI·Evidence)�
 
 360px에서 브랜드가 `CLEANWAY PA…`로 잘리던 문제는 액션을 아이콘으로 압축해 폭을 확보하고
 브랜드 크기를 낮춰 해결했다. 정보를 지우지 않고 압축한다는 규칙을 그대로 따른다.
+
+# M. 미래AI랩 브릿지 CTA (2026-09-18)
+
+샘플을 다 본 사람이 "우리 회사도 이렇게 가능하겠다"까지 가도록 잇는 구간.
+로고는 이미 사이드바·푸터에 상시 노출되므로 **여기서는 로고를 반복하지 않고**
+브랜드명과 짧은 소개만 둔다.
+
+## 수정 지점 (단 두 곳)
+| 무엇 | 파일 |
+|---|---|
+| 링크 3종 (consult / samples / home) | `src/lib/mirae.ts` → `MIRAE_LINKS` |
+| 문구 전체 (배지·헤드라인·본문·버튼) | `src/lib/mirae.ts` → `MIRAE_CTA_COPY` |
+| 화면별 예외 링크 | `SampleBridgeCTA` props — `consultHref` / `samplesHref` / `homeHref` |
+
+## 컴포넌트 — `src/components/brand/SampleBridgeCTA.tsx`
+- `SampleBridgeCTA` — 화면 하단 공통 섹션 (배지 → 헤드라인 → 설명 → 메인 CTA → 보조 링크)
+- `SampleBridgeMini` — 사이드바·모바일용 3버튼 축약형 (`tone: 'light' | 'dark'`)
+
+## 배치
+| 위치 | 형태 | 적용 범위 |
+|---|---|---|
+| `AxLayout` `<main>` 하단 | 섹션 | **모든 AX 화면** (대시보드·오늘의AX·현장·기획의도·설정 …) |
+| `CareShell` `<main>` 하단 | 섹션 | **모든 고객 포털 화면** (`/care`, `/care/home`, `/care/reports`, `/care/requests`) |
+| AX 사이드바 좌측 하단 | 축약형 (dark) | 전 AX 화면 상시 — 하단까지 내려가지 않아도 닿는다 |
+| 고객 포털 `전체 메뉴` Drawer | 축약형 (light) | 상단 메뉴에서도 바로 |
+| Field Mobile `내 정보` | 축약형 (light) | 좁은 화면이라 섹션 대신 축약형 |
+
+## 애니메이션 — 광고처럼 보이지 않는 선
+`.cta-sweep` : 5.5s 주기 중 **0~64% 구간은 정지**, 나머지에서 한 번만 스친다.
+`.cta-glow`  : 7s 주기의 아주 옅은 glow (배지 전용).
+`html[data-motion="reduce"]`와 `prefers-reduced-motion`에서는 `display:none` / `animation:none`으로 완전히 끈다.
+
+금지: 빠른 깜빡임 · 지속적 번쩍임 · 네온 · attention-seeking.
+
+## 접근성
+- 메인 CTA 최소 높이 `3.1rem`, 모바일 full-width — 터치 타깃 확보
+- 외부 링크는 전부 `target="_blank"` + `rel="noopener noreferrer"`
+- 섹션에 `aria-labelledby`로 제목 연결
+- 메인 CTA 문구는 전 화면 `우리 회사도 만들어보기`로 통일

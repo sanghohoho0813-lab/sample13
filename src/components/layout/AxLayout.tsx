@@ -13,6 +13,7 @@ import { cx, nowClock, nowDateLong, nowDateCompact } from '../../lib/utils'
 import DevicePreview from './DevicePreview'
 import { useTour, useAutoTutorial } from '../tour/TourProvider'
 import { MiraeCredit } from '../brand/MiraeLogo'
+import { SampleBridgeCTA, SampleBridgeMini } from '../brand/SampleBridgeCTA'
 import { ROADMAP, type RoadmapStage } from '../../lib/demo/roadmap'
 
 // ─── Nav model — Role 접근제어(RLS Preview) + Module Icon Color ──
@@ -295,6 +296,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           모든 데이터는 가상의 Sample Data입니다.
         </p>
         <MiraeCredit tone="dark" height={18} className="pt-0.5" />
+        {/* 하단까지 내려가지 않아도 상담·샘플·홈으로 갈 수 있게 (축약형 3버튼) */}
+        <SampleBridgeMini tone="dark" className="pt-1" />
       </div>
     </div>
   )
@@ -450,7 +453,11 @@ export default function AxLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="mx-auto max-w-[1720px] px-4 py-6 pb-24 lg:px-8 lg:pb-10">{children}</main>
+        <main className="mx-auto max-w-[1720px] px-4 py-6 pb-24 lg:px-8 lg:pb-10">
+          {children}
+          {/* 샘플을 다 본 뒤의 공통 브릿지 — 모든 AX 화면 하단에 동일하게 붙는다 */}
+          <SampleBridgeCTA className="mt-10" />
+        </main>
       </div>
 
       <AxBottomNav onMore={() => setMore(true)} />

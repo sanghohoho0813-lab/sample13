@@ -11,6 +11,7 @@ import { CHECKLIST_TEMPLATE } from '../../lib/demo/operations'
 import { cx, nowClock, nowDateCompact } from '../../lib/utils'
 import { beforeAfterFor, altOf } from '../../lib/demo/photos'
 import { MiraeCredit } from '../../components/brand/MiraeLogo'
+import { SampleBridgeMini } from '../../components/brand/SampleBridgeCTA'
 
 type Tab = 'today' | 'site' | 'alerts' | 'reports' | 'me'
 
@@ -293,6 +294,8 @@ export default function FieldApp() {
                 현장직원 화면에는 경영 지표·수익성·전체 고객 정보가 표시되지 않습니다.<br />(Role 기반 접근 제어 — RLS Preview)
               </p>
               <div className="flex justify-center pt-1"><MiraeCredit height={19} /></div>
+              {/* 좁은 모바일 화면이라 섹션형 대신 축약형 3버튼 */}
+              <SampleBridgeMini className="pt-1" />
             </div>
           )}
         </main>

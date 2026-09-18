@@ -9,6 +9,7 @@ import { cx, nowClock, nowDateCompact } from '../../lib/utils'
 import DevicePreview from '../../components/layout/DevicePreview'
 import { CUSTOMER_ROADMAP, STAGE_NOTE, type RoadmapStage } from '../../lib/demo/roadmap'
 import { MiraeCredit } from '../../components/brand/MiraeLogo'
+import { SampleBridgeCTA, SampleBridgeMini } from '../../components/brand/SampleBridgeCTA'
 
 // Customer Demo Persona: 라온메디컬센터 (C01) 김수연 실장
 export const CARE_CUSTOMER_ID = 'C01'
@@ -181,7 +182,8 @@ function CareMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             </div>
           )}
 
-          <div className="flex justify-center pb-2 pt-5">
+          <SampleBridgeMini className="mt-5" />
+          <div className="flex justify-center pb-2 pt-4">
             <MiraeCredit height={19} />
           </div>
         </div>
@@ -257,7 +259,11 @@ export default function CareShell({ children, wide }: { children: ReactNode; wid
         </div>
       </header>
 
-      <main className={cx('mx-auto px-4 py-6 pb-24 sm:pb-10', wide ? 'max-w-5xl' : 'max-w-3xl')}>{children}</main>
+      <main className={cx('mx-auto px-4 py-6 pb-24 sm:pb-10', wide ? 'max-w-5xl' : 'max-w-3xl')}>
+        {children}
+        {/* 고객 화면에서도 동일한 브릿지 — 링크·문구는 src/lib/mirae.ts 단일 원본 */}
+        <SampleBridgeCTA className="mt-10" />
+      </main>
 
       <CareMenu open={menu} onClose={() => setMenu(false)} />
 

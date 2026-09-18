@@ -72,3 +72,12 @@ npm run preview  # 빌드 결과 미리보기
 - `DECISIONS.md` — 주요 설계결정
 
 기준 규격: 미래AI랩 AX Design & Development System v6.0 + AX/Platform Unified System v1.1
+
+## 미래AI랩 브릿지 CTA
+
+- `src/lib/mirae.ts` — **링크와 문구의 단일 수정 지점** (`MIRAE_LINKS` / `MIRAE_CTA_COPY`)
+- `src/components/brand/SampleBridgeCTA.tsx` — `SampleBridgeCTA`(섹션) · `SampleBridgeMini`(축약형)
+- 노출 5곳: AX 전 화면 하단 · 고객 포털 전 화면 하단 · AX 사이드바 좌하단 ·
+  고객 포털 전체 메뉴 · Field Mobile 내 정보
+- 메인 CTA는 전 화면 `우리 회사도 만들어보기`로 통일, 외부 링크는 새 탭
+- 반짝임은 5.5s 주기 중 64%가 정지 구간인 light sweep 하나뿐이며 motion-reduce에서 꺼진다
