@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cx } from '../../lib/utils'
+import { HEALTH_STATUS_LABEL } from '../../types'
 
 // ─── Tone system (의미색 고정) ───────────────────────────
 export type Tone = 'success' | 'warning' | 'danger' | 'info' | 'ai' | 'neutral' | 'brand'
@@ -19,15 +20,15 @@ export const toneBg: Record<Tone, string> = {
 // ─── Badge ───────────────────────────────────────────────
 export function Badge({ tone = 'neutral', children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
   return (
-    <span className={cx('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[0.72rem] font-bold whitespace-nowrap', toneBg[tone], className)}>
+    <span className={cx('inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-[0.72rem] font-bold whitespace-nowrap', toneBg[tone], className)}>
       {children}
     </span>
   )
 }
 
-export function DemoBadge({ label = 'DEMO DATA' }: { label?: string }) {
+export function DemoBadge({ label = '데모 데이터' }: { label?: string }) {
   return (
-    <span className="inline-flex items-center rounded-md border border-dashed border-ink-faint/50 px-2 py-0.5 text-[0.68rem] font-bold tracking-wide text-ink-faint whitespace-nowrap">
+    <span className="inline-flex items-center rounded-md border border-dashed border-ink-faint/50 px-2 py-0.5 text-[0.72rem] font-bold tracking-wide text-ink-faint whitespace-nowrap">
       {label}
     </span>
   )
@@ -55,16 +56,17 @@ export function KpiCard({ icon, label, value, unit, sub, tone = 'brand', onClick
   icon: ReactNode; label: string; value: string | number; unit?: string; sub?: ReactNode; tone?: Tone; onClick?: () => void
 }) {
   return (
-    <Card onClick={onClick} className="p-5 flex flex-col gap-2 min-w-0">
-      <div className="flex items-center gap-2.5">
-        <span className={cx('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', toneBg[tone])}>{icon}</span>
-        <span className="text-[0.85rem] font-semibold text-ink-soft leading-tight">{label}</span>
+    <Card onClick={onClick} className="p-4 sm:p-5 flex flex-col gap-2 min-w-0">
+      {/* 400px 미만 2열 카드에서는 아이콘을 라벨 위로 — 라벨이 단어 중간에서 끊기지 않게 */}
+      <div className="flex items-center gap-2 max-[399px]:flex-col max-[399px]:items-start max-[399px]:gap-1.5">
+        <span className={cx('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10', toneBg[tone])}>{icon}</span>
+        <span className="min-w-0 text-[0.8rem] font-semibold text-ink-soft leading-snug break-keep sm:text-[0.85rem]">{label}</span>
       </div>
-      <div className="flex items-baseline gap-1.5">
-        <span className="tnum text-[1.9rem] font-extrabold leading-none tracking-tight">{value}</span>
-        {unit && <span className="text-[0.9rem] font-semibold text-ink-faint">{unit}</span>}
+      <div className="flex flex-wrap items-baseline gap-x-1.5">
+        <span className="tnum whitespace-nowrap text-[1.75rem] font-extrabold leading-none tracking-tight sm:text-[1.9rem]">{value}</span>
+        {unit && <span className="whitespace-nowrap text-[0.9rem] font-semibold text-ink-faint">{unit}</span>}
       </div>
-      {sub && <div className="text-[0.78rem] text-ink-faint leading-snug">{sub}</div>}
+      {sub && <div className="text-[0.78rem] text-ink-faint leading-snug break-keep">{sub}</div>}
     </Card>
   )
 }
@@ -72,9 +74,9 @@ export function KpiCard({ icon, label, value, unit, sub, tone = 'brand', onClick
 // ─── Section ─────────────────────────────────────────────
 export function SectionTitle({ children, right, className }: { children: ReactNode; right?: ReactNode; className?: string }) {
   return (
-    <div className={cx('flex items-center justify-between gap-3 mb-3', className)}>
-      <h2 className="text-[1.18rem] font-bold tracking-tight">{children}</h2>
-      {right}
+    <div className={cx('flex items-center justify-between gap-2 mb-3', className)}>
+      <h2 className="min-w-0 break-keep text-[1.18rem] font-bold leading-snug tracking-tight">{children}</h2>
+      {right && <div className="shrink-0">{right}</div>}
     </div>
   )
 }
@@ -165,7 +167,7 @@ export function SkeletonBlock({ className }: { className?: string }) {
 }
 
 // ─── Data Freshness ──────────────────────────────────────
-export function Freshness({ source = 'DEMO DATA' }: { source?: string }) {
+export function Freshness({ source = '데모 데이터' }: { source?: string }) {
   const [t, setT] = useState('')
   useEffect(() => {
     const fmt = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
@@ -213,8 +215,9 @@ export function StatusPill({ status }: { status: string }) {
     status === '완료' || status === '성사' || status === '해결' ? 'success'
     : status === '작업중' || status === '실행중' || status === '처리중' || status === '협의중' || status === '조치중' ? 'info'
     : status === '이동중' || status === '제안됨' || status === '확인' ? 'brand'
-    : status === '확인필요' || status === 'Risk' || status === '보류' ? 'danger'
-    : status === '추천됨' || status === '발견됨' || status === '접수' ? 'warning'
+    : status === '확인필요' || status === 'Risk' || status === '위험' || status === '보류' ? 'danger'
+    : status === '추천됨' || status === '발견됨' || status === '접수' || status === '재계약 주의' || status === 'Retention Watch' ? 'warning'
     : 'neutral'
-  return <Badge tone={tone}>{status}</Badge>
+  const label = (HEALTH_STATUS_LABEL as Record<string, string>)[status] ?? status
+  return <Badge tone={tone}>{label}</Badge>
 }

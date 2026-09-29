@@ -38,7 +38,7 @@ export default function CustomerDetail() {
           {/* Customer Health */}
           {h && (
             <Card tour="customer-health" className="p-5">
-              <SectionTitle right={<AIReadyBadge small />}>Customer Health</SectionTitle>
+              <SectionTitle right={<AIReadyBadge small />}>고객 건강도</SectionTitle>
               <div className="flex flex-wrap items-center gap-5">
                 <div className="relative flex h-28 w-28 items-center justify-center">
                   <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
@@ -74,7 +74,7 @@ export default function CustomerDetail() {
             <SectionTitle right={role !== 'ceo' ? <Badge tone="neutral"><Eye size={11} /> 대표 전용</Badge> : undefined}>실제 운영 수익성</SectionTitle>
             {role === 'ceo' && profit ? (
               <div className="space-y-3">
-                <div className="grid grid-cols-3 gap-2.5 text-center">
+                <div className="grid grid-cols-1 gap-2 text-center min-[420px]:grid-cols-3 min-[420px]:gap-2.5">
                   {[
                     ['월 계약금액', `${profit.contractAmt}만원`],
                     ['표면 마진', `${profit.surfaceMarginPct}%`],
@@ -82,18 +82,18 @@ export default function CustomerDetail() {
                   ].map(([l, v], i2) => (
                     <div key={l} className={cx('rounded-xl px-2 py-3', i2 === 2 ? (profit.contributionMarginPct < 20 ? 'bg-danger-soft' : 'bg-success-soft') : 'bg-ivory')}>
                       <p className="text-[0.7rem] font-bold text-ink-faint">{l}</p>
-                      <p className={cx('tnum mt-0.5 text-[1.15rem] font-extrabold', i2 === 2 && (profit.contributionMarginPct < 20 ? 'text-danger' : 'text-success'))}>{v}</p>
+                      <p className={cx('tnum mt-0.5 whitespace-nowrap text-[1rem] font-extrabold sm:text-[1.15rem]', i2 === 2 && (profit.contributionMarginPct < 20 ? 'text-danger' : 'text-success'))}>{v}</p>
                     </div>
                   ))}
                 </div>
-                <p className="rounded-xl bg-ai-soft p-3 text-[0.84rem] leading-relaxed text-ink"><b className="text-ai-strong">AI Insight</b> — {profit.aiNote}</p>
+                <p className="rounded-xl bg-ai-soft p-3 text-[0.84rem] leading-relaxed text-ink"><b className="text-ai-strong">AI 분석</b> — {profit.aiNote}</p>
                 <div className="flex items-center justify-between">
                   <StatusPill status={profit.grade} />
                   <Btn variant="ghost" size="sm" onClick={() => nav('/profitability')}>수익성 분석 전체 <ArrowRight size={13} className="inline" /></Btn>
                 </div>
               </div>
             ) : (
-              <p className="text-[0.85rem] text-ink-faint">수익성 데이터는 대표 권한에서만 표시됩니다. (RLS Preview)</p>
+              <p className="text-[0.85rem] text-ink-faint">수익성 데이터는 대표 권한에서만 표시됩니다. (RLS)</p>
             )}
           </Card>
         </div>
@@ -170,7 +170,7 @@ export default function CustomerDetail() {
           {/* 최근 리포트 */}
           {myReports.length > 0 && (
             <Card className="p-5">
-              <SectionTitle>최근 Service Report</SectionTitle>
+              <SectionTitle>최근 작업 리포트</SectionTitle>
               <div className="space-y-2">
                 {myReports.slice(0, 3).map((r) => (
                   <div key={r.id} className="rounded-lg bg-ivory px-3 py-2 text-[0.8rem]">

@@ -14,14 +14,14 @@ function WorkPhoto({ label, taken, src }: { label: string; taken: boolean; src: 
       <div className="flex aspect-[4/3] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-ivory">
         <ImageOff size={22} className="text-ink-faint" />
         <p className="text-[0.78rem] font-bold text-ink-soft">{label}</p>
-        <p className="text-[0.65rem] text-ink-faint">미등록</p>
+        <p className="text-[0.72rem] text-ink-faint">미등록</p>
       </div>
     )
   }
   return (
     <figure className="relative aspect-[4/3] overflow-hidden rounded-xl border border-line bg-ivory">
       <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
-      <figcaption className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-ink/75 px-2 py-0.5 text-[0.66rem] font-extrabold text-white">
+      <figcaption className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-ink/75 px-2 py-0.5 text-[0.72rem] font-extrabold text-white">
         <Camera size={11} /> {label}
       </figcaption>
     </figure>
@@ -96,7 +96,7 @@ export default function SiteDetail() {
                     ['체크아웃', ws?.checkoutAt ?? (mainJob.status === '완료' ? '완료' : '-')],
                   ].map(([l, v]) => (
                     <div key={l} className="rounded-xl bg-ivory px-2 py-2.5">
-                      <p className="text-[0.68rem] font-bold text-ink-faint">{l}</p>
+                      <p className="text-[0.72rem] font-bold text-ink-faint">{l}</p>
                       <p className="tnum mt-0.5 text-[0.88rem] font-extrabold">{v}</p>
                     </div>
                   ))}
@@ -124,9 +124,9 @@ export default function SiteDetail() {
             )}
           </Card>
 
-          {/* Service Report */}
+          {/* 작업 리포트 */}
           <Card className="p-5">
-            <SectionTitle right={<Btn variant="ghost" size="sm" onClick={() => nav('/work')}>작업현황 <ArrowRight size={13} className="inline" /></Btn>}>최근 Service Report</SectionTitle>
+            <SectionTitle right={<Btn variant="ghost" size="sm" onClick={() => nav('/work')}>작업현황 <ArrowRight size={13} className="inline" /></Btn>}>최근 작업 리포트</SectionTitle>
             {report ? (
               <div className="rounded-xl border border-line p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -138,7 +138,7 @@ export default function SiteDetail() {
                 {report.nextRecommend && <p className="mt-2 rounded-lg bg-mint px-3 py-1.5 text-[0.8rem] font-bold text-primary-strong">다음 관리 추천 · {report.nextRecommend}</p>}
               </div>
             ) : (
-              <EmptyState title="아직 생성된 리포트가 없습니다." desc="작업이 완료되면 Service Report가 자동 생성됩니다." />
+              <EmptyState title="아직 생성된 리포트가 없습니다." desc="작업이 완료되면 작업 리포트가 자동 생성됩니다." />
             )}
           </Card>
         </div>
@@ -186,7 +186,7 @@ export default function SiteDetail() {
             <div className="mt-3"><WhyAIButton dataViewed={['현장 특이사항', '품질문의 이력', '작업 사진 메모', '방문 기록']} /></div>
           </Card>
 
-          <p className="text-[0.72rem] leading-relaxed text-ink-faint flex items-center gap-1.5"><MapPin size={12} /> GPS 체크인·Geofence·QR 인증은 Integration Ready — 실서비스 연결 시 활성화됩니다.</p>
+          <p className="text-[0.72rem] leading-relaxed text-ink-faint flex items-center gap-1.5"><MapPin size={12} /> GPS 체크인·Geofence·QR 인증은 연동 준비 상태 — 실서비스 연결 시 활성화됩니다.</p>
         </div>
       </div>
     </div>

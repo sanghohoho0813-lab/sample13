@@ -13,7 +13,7 @@ import { MIRAE_LINKS, MIRAE_CTA_COPY } from '../../lib/mirae'
  *  - 'section' : 화면 하단 공통 섹션 (기본)
  *  - 'compact' : 사이드바·모바일 등 좁은 자리의 3버튼 축약형
  * tone
- *  - 'light' : 밝은 배경 위 (Customer Portal 본문 등)
+ *  - 'light' : 밝은 배경 위 (고객 플랫폼 본문 등)
  *  - 'dark'  : Deep Teal 면 위 (AX 사이드바 등)
  *
  * 링크·문구 수정은 src/lib/mirae.ts 에서 한다. props 로 화면별 덮어쓰기도 가능.
@@ -46,7 +46,7 @@ export function SampleBridgeCTA({
       {/* 브랜드 톤의 아주 옅은 강조 — 페이지 전체보다 튀지 않는 선까지만 */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-mint/70 via-card to-card" />
       <div className="relative px-6 py-8 sm:px-9 sm:py-10">
-        <span className="cta-glow inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-card px-3 py-1 text-[0.66rem] font-bold tracking-[0.16em] text-primary-strong">
+        <span className="cta-glow inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-card px-3 py-1 text-[0.72rem] font-bold tracking-[0.16em] text-primary-strong">
           <Sparkles size={12} /> {C.badge}
         </span>
 
@@ -104,17 +104,19 @@ export function SampleBridgeMini({
   samplesHref = MIRAE_LINKS.samples,
   homeHref = MIRAE_LINKS.home,
   tone = 'light',
+  compact,
   className,
-}: BridgeProps & { tone?: 'light' | 'dark' }) {
+}: BridgeProps & { tone?: 'light' | 'dark'; compact?: boolean }) {
   const C = MIRAE_CTA_COPY
   const dark = tone === 'dark'
   return (
-    <div className={cx('space-y-1.5', className)}>
+    <div className={cx(compact ? 'space-y-1' : 'space-y-1.5', className)}>
       <a
         href={consultHref}
         {...ext}
         className={cx(
-          'cta-sweep group relative flex items-center justify-center gap-1.5 overflow-hidden rounded-xl px-3 py-2 text-[0.78rem] font-extrabold transition-all duration-200 hover:-translate-y-px',
+          'cta-sweep group relative flex items-center justify-center gap-1.5 overflow-hidden rounded-xl px-3 font-extrabold transition-all duration-200 hover:-translate-y-px',
+          compact ? 'py-1.5 text-[0.76rem]' : 'py-2 text-[0.78rem]',
           dark
             ? 'bg-champagne text-shell shadow-[0_4px_12px_-4px_rgba(215,188,134,0.5)]'
             : 'bg-primary text-white shadow-[0_4px_12px_-4px_rgba(14,109,113,0.5)]',
@@ -130,7 +132,8 @@ export function SampleBridgeMini({
             href={href}
             {...ext}
             className={cx(
-              'flex flex-1 items-center justify-center gap-1 rounded-xl border px-2 py-1.5 text-[0.68rem] font-bold transition-colors',
+              'flex flex-1 items-center justify-center gap-1 rounded-xl border px-2 text-[0.72rem] font-bold transition-colors',
+              compact ? 'py-1' : 'py-1.5',
               dark
                 ? 'border-white/18 text-[#9FBDBD] hover:border-champagne/60 hover:text-champagne'
                 : 'border-line text-ink-faint hover:border-primary hover:text-primary',

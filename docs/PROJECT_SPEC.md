@@ -451,3 +451,52 @@ AX 화면 본문(Dashboard·오늘의 AX·일정·현장·고객·AI·Evidence)�
 - 외부 링크는 전부 `target="_blank"` + `rel="noopener noreferrer"`
 - 섹션에 `aria-labelledby`로 제목 연결
 - 메인 CTA 문구는 전 화면 `우리 회사도 만들어보기`로 통일
+
+# N. UI/UX 안정화 — 메뉴 정보구조 · 한글 UI · 반응형 (2026-09-30)
+
+기능·route·데이터·business logic은 하나도 삭제하지 않고 **노출 구조만** 정리했다.
+
+## AX 메뉴 정보구조 (1차 노출 15 → 7)
+| 1차 메뉴 | 2차 (기존 route 그대로) | 아이콘 계열 |
+|---|---|---|
+| 대시보드 | `/` | 운영 (aqua) |
+| 오늘의 AX | `/today` | 운영 |
+| 현장 운영 | 일정/배정 `/schedule` · 현장관리 `/sites` · 작업현황 `/work` · 직원/팀 `/team` | 운영 |
+| 고객 관리 | 고객/계약 `/customers` · 요청/문의 `/requests` · 품질/만족도 `/quality` · 재계약 관리 `/renewals` | 고객 (rose) |
+| 성장 · 분석 | 추가서비스 `/upsell` · 수익성 분석 `/profitability` · AX 실증 기록 `/evidence` | 성장 (amber) |
+| AI 센터 | `/ai` | AI (indigo) |
+| 소개 · 설정 | 기획의도 `/why-ax` · 설정 `/settings` | 시스템 (slate) |
+
+- 아이콘 색은 **카테고리당 1개, 전체 5계열** (`FAMILY` in `AxLayout.tsx`). 기존 13색 무지개 폐기.
+- 모바일 Drawer: 좌측, `86vw / max 370px`, 그룹은 접이식(현재 화면이 속한 그룹만 열림), 자체 스크롤, body scroll lock.
+- Desktop 사이드바: 그룹을 펼친 상태로 표시(폭이 있으므로), 그룹명은 한글.
+- `더보기` Bottom Sheet: 햄버거와 같은 그룹 구조 + 데모 도구 + 고객 플랫폼 보기.
+- 확장 기능(향후 로드맵 10종)은 핵심 메뉴와 같은 무게로 나열하지 않고 `확장 기능 보기` 한 줄로 접는다(기본 접힘).
+
+## 플랫폼 전환 명칭
+- AX → 고객: **고객 플랫폼 보기** (상단 툴바 + 햄버거 하단 full-width CTA + 더보기 하단)
+- 고객 → AX: **AX 운영화면 보기** (DEMO 툴바 + 고객 Drawer 하단, 고객 Role에는 미노출)
+- 현장직원 앱 → AX: **AX 운영화면**
+
+## 모바일 헤더 2층 구조
+- 1층 **데모 툴바**: (DEMO) · 역할 전환 · PC 보기 · 고객 플랫폼 보기/AX 운영화면 보기
+- 2층 **메인 헤더**: [햄버거 44px] 날짜·시각 / 고객 플랫폼은 [햄버거] 브랜드
+- 햄버거는 AX·고객 플랫폼 모두 **왼쪽**.
+
+## 한글 UI 원칙
+- 상태 표기 통일: `NEXT → 예정`, `Preview → 미리보기`, `Long-term → 장기` (`STAGE_NOTE`)
+- 영문 그룹명·탭·배지 제거 (OVERVIEW→개요 구조로, Today/Week/Team→오늘/이번 주/팀별, BEFORE/AFTER→작업 전/후 …)
+- AI 엔진명: 스마트 배정 · 서비스 위험 감지 · 재계약 관리 · 추가매출 발굴 · 서비스 수익성 · 경영 브리핑
+- 고객 건강도 상태는 **데이터 값은 유지**하고 화면 표기만 한글 (`HEALTH_STATUS_LABEL`)
+- 유지하는 영문: AI · AX · DEMO · RLS · API · CSV · GPS · 브랜드명(CLEANWAY) · 기술 스택명
+
+## 줄바꿈 · 넘침 규칙 (`src/index.css`)
+- `body { word-break: keep-all; overflow-wrap: anywhere; }` — 한글은 단어 단위, 띄어쓰기 없는 긴 회사명은 칸을 넘칠 때만 끊는다
+- `.tnum { overflow-wrap: normal; flex-shrink: 0; }` — 숫자·금액·날짜·시간은 끊기거나 눌리지 않는다
+- `Badge`는 `shrink-0` — 상태 배지는 절대 눌리지 않고 옆의 긴 이름이 줄바꿈된다
+- 12px 미만 글자 금지 — 최소 `0.72rem`(13.7px)
+- 표는 좁아지면 칸을 누르지 않고 가로 스크롤 (`min-w-[…]` + `overflow-x-auto`)
+
+## 검증 스크립트 (scratchpad, Playwright)
+- 뷰포트 360/390/412/430/1280/1440 × 22개 화면: 넘침 · 세로 깨짐 · 단어 중간 끊김 · 헤더 요소 겹침 · 12px 미만 · 가로 스크롤
+- 긴 데이터 stress: 26자 회사명 · 1,254,540만원 금액 주입 후 동일 검사

@@ -74,7 +74,7 @@ export default function CareHome() {
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-line bg-ai-soft px-5 py-3">
             <p className="flex items-center gap-1.5 text-[0.95rem] font-extrabold text-ai-strong"><Sparkles size={16} /> AI 시설관리 제안</p>
-            <Badge tone="ai">NEW</Badge>
+            <Badge tone="ai">신규</Badge>
           </div>
           <div className="grid gap-4 p-5 sm:grid-cols-[1fr_180px] sm:items-start">
             <div>
@@ -90,7 +90,7 @@ export default function CareHome() {
             {/* 판단 근거가 된 현장 사진 */}
             <figure className="order-first overflow-hidden rounded-xl border border-line sm:order-none">
               <img src={PHOTO.beforeGlass} alt={altOf(PHOTO.beforeGlass)} width={1448} height={1086} loading="lazy" className="aspect-[4/3] w-full object-cover" />
-              <figcaption className="bg-ivory px-2 py-1 text-center text-[0.66rem] font-bold text-ink-faint">최근 방문 기록 사진</figcaption>
+              <figcaption className="bg-ivory px-2 py-1 text-center text-[0.72rem] font-bold text-ink-faint">최근 방문 기록 사진</figcaption>
             </figure>
           </div>
         </Card>
@@ -162,7 +162,7 @@ export default function CareHome() {
 
       <Modal open={modal === '일정변경'} onClose={() => setModal(null)} title="방문 일정 변경 요청">
         <div className="space-y-3">
-          <p className="text-[0.85rem] text-ink-soft">희망 시간대를 선택하세요. AI Smart Dispatch가 재검토 후 담당자가 확정 안내드립니다.</p>
+          <p className="text-[0.85rem] text-ink-soft">희망 시간대를 선택하세요. AI 스마트 배정이 재검토 후 담당자가 확정 안내드립니다.</p>
           {['오전 (09:00~12:00)', '오후 (13:00~17:00)', '저녁 (17:00~20:00)'].map((s) => (
             <button key={s} onClick={() => setSelSlot(s)}
               className={`w-full rounded-xl border px-3 py-3 text-[0.9rem] font-bold ${selSlot === s ? 'border-primary bg-mint text-primary-strong' : 'border-line'}`}>{s}</button>

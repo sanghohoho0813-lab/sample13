@@ -83,6 +83,16 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 아주 약한 light sweep(5.5s 중 64% 정지) + 배지 glow(7s) · motion-reduce에서 완전 차단
 - 로고는 CTA에 넣지 않음 (사이드바·푸터에 이미 상시 노출)
 
+## 완료 — UI/UX 안정화 (2026-09-30)
+- AX 메뉴 1차 노출 15 → 7 (현장 운영 · 고객 관리 · 성장·분석 · AI 센터 · 소개·설정 …), 삭제 기능 0 · route 변경 0
+- 아이콘 색 13색 → 카테고리 5계열
+- 햄버거 왼쪽 통일(AX · 고객 플랫폼), 좌측 Drawer 86vw/max 370px, 그룹 접이식, 자체 스크롤
+- 모바일 헤더 2층(데모 툴바 + 메인 헤더)
+- 명칭 통일: 고객 플랫폼 보기 / AX 운영화면 보기 — 툴바 + Drawer 하단 full-width CTA
+- 영문 UI 한글화 + 상태 표기 통일(예정 / 미리보기 / 장기), AI 엔진명 한글화
+- 12px 미만 글자 0 · 넘침 0 · 세로깨짐 0 · 단어 중간 끊김 0 · 헤더 겹침 0 (360~1440px)
+- 긴 회사명/금액 stress test 통과
+
 ## QA 결과 (Whole-App Acceptance Run)
 - 자동 검증 **51 PASS / 0 FAIL** (Playwright)
 - Gate A~N 전부 충족 · P0 Bug 0건
@@ -127,3 +137,4 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 2026-09-03: 로드맵 고객 포털 확장 + AX 사이드바 접기/펼치기
 - 2026-09-03: 고객 포털 상단 전체 메뉴 Drawer
 - 2026-09-18: 미래AI랩 브릿지 CTA 5곳 적용 (상담·다른 샘플·홈페이지)
+- 2026-09-30: UI/UX 안정화 — 메뉴 IA 재분류 · 한글 UI · 햄버거 왼쪽 · 반응형 overflow 0

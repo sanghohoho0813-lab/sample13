@@ -10,7 +10,7 @@ export default function Quality() {
 
   return (
     <div className="fade-up">
-      <PageHeader title="품질 / 만족도" desc="현장 품질 이슈와 고객 만족도를 추적하여 재계약·Retention에 연결합니다." right={<DemoBadge />} />
+      <PageHeader title="품질 / 만족도" desc="현장 품질 이슈와 고객 만족도를 추적하여 재계약 관리에 연결합니다." right={<DemoBadge />} />
 
       <div className="mb-5 grid grid-cols-2 gap-3 sm:max-w-lg sm:grid-cols-3">
         <Card className="p-4 text-center">

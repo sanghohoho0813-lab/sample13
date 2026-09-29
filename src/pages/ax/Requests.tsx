@@ -13,11 +13,11 @@ export default function Requests() {
     <div className="fade-up">
       <PageHeader
         title="요청 / 문의"
-        desc="Customer Portal과 담당자를 통해 접수된 고객 요청을 처리합니다. Portal 요청은 내부 AX에 실시간으로 연결됩니다 (Closed Loop)."
+        desc="고객 플랫폼과 담당자를 통해 접수된 고객 요청을 처리합니다. 플랫폼 요청은 내부 AX에 실시간으로 연결됩니다 (Closed Loop)."
         right={<DemoBadge />}
       />
       {requests.length === 0 ? (
-        <EmptyState title="접수된 요청이 없습니다." desc="Customer Portal에서 요청이 들어오면 이곳에 표시됩니다." />
+        <EmptyState title="접수된 요청이 없습니다." desc="고객 플랫폼에서 요청이 들어오면 이곳에 표시됩니다." />
       ) : (
         <div data-tour="requests" className="grid gap-3.5 md:grid-cols-2">
           {requests.map((r) => {
@@ -27,7 +27,7 @@ export default function Requests() {
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Badge tone={r.type === '긴급방문' ? 'danger' : r.type === '추가서비스' ? 'success' : r.type === '일정변경' ? 'warning' : 'info'}>{r.type}</Badge>
-                    {r.fromPortal && <Badge tone="ai"><Store size={11} /> Customer Portal</Badge>}
+                    {r.fromPortal && <Badge tone="ai"><Store size={11} /> 고객 플랫폼</Badge>}
                   </div>
                   <StatusPill status={r.status} />
                 </div>
@@ -50,7 +50,7 @@ export default function Requests() {
           })}
         </div>
       )}
-      <p className="mt-5 flex items-center gap-1.5 text-[0.76rem] text-ink-faint"><Inbox size={13} /> 문자·카카오톡·이메일 채널 연동은 Integration Ready 상태입니다.</p>
+      <p className="mt-5 flex items-center gap-1.5 text-[0.76rem] text-ink-faint"><Inbox size={13} /> 문자·카카오톡·이메일 채널 연동은 연동 준비 상태입니다.</p>
     </div>
   )
 }

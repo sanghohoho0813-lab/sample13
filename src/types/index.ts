@@ -117,12 +117,12 @@ export type AIEngine =
   | 'briefing'
 
 export const ENGINE_LABEL: Record<AIEngine, string> = {
-  dispatch: 'AI Smart Dispatch',
-  risk: 'AI Service Risk Radar',
-  retention: 'AI Customer Retention',
-  upsell: 'AI Upsell Finder',
-  profit: 'AI Service Profitability',
-  briefing: 'AI Executive Briefing',
+  dispatch: 'AI 스마트 배정',
+  risk: 'AI 서비스 위험 감지',
+  retention: 'AI 재계약 관리',
+  upsell: 'AI 추가매출 발굴',
+  profit: 'AI 서비스 수익성',
+  briefing: 'AI 경영 브리핑',
 }
 
 export interface ActionItem {
@@ -170,6 +170,14 @@ export interface CustomerHealth {
   watch: string[]
   aiStatus: '안정' | 'Retention Watch' | 'Risk'
 }
+
+/** 고객 건강도 상태의 화면 표기 — 데이터 값은 유지하고 표기만 한글로 통일한다 */
+export const HEALTH_STATUS_LABEL: Record<CustomerHealth['aiStatus'], string> = {
+  '안정': '안정',
+  'Retention Watch': '재계약 주의',
+  'Risk': '위험',
+}
+
 
 export interface ProfitabilityRow {
   customerId: string

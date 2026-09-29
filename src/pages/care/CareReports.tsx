@@ -37,11 +37,11 @@ export default function CareReports() {
 
                   {/* Before / After — 실제 현장 사진 */}
                   <div className="grid grid-cols-2">
-                    {([['BEFORE', ba.before], ['AFTER', ba.after]] as const).map(([tag, src]) => (
+                    {([['작업 전', ba.before], ['작업 후', ba.after]] as const).map(([tag, src]) => (
                       <figure key={tag} className="relative aspect-[4/3] overflow-hidden bg-ivory">
                         <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
-                        <figcaption className={`absolute left-2.5 top-2.5 rounded-md px-2 py-0.5 text-[0.68rem] font-extrabold tracking-wide ${
-                          tag === 'BEFORE' ? 'bg-ink/75 text-white' : 'bg-primary text-white'
+                        <figcaption className={`absolute left-2.5 top-2.5 rounded-md px-2 py-0.5 text-[0.72rem] font-extrabold tracking-wide ${
+                          tag === '작업 전' ? 'bg-ink/75 text-white' : 'bg-primary text-white'
                         }`}>{tag}</figcaption>
                       </figure>
                     ))}
@@ -63,7 +63,7 @@ export default function CareReports() {
             })}
           </div>
         )}
-        <p className="mt-5 text-center text-[0.7rem] text-ink-faint">본 화면에는 라온메디컬센터 리포트만 표시됩니다 (본인 데이터만 접근 — RLS Preview).</p>
+        <p className="mt-5 text-center text-[0.7rem] text-ink-faint">본 화면에는 라온메디컬센터 리포트만 표시됩니다 (본인 데이터만 접근 — RLS).</p>
       </div>
     </CareShell>
   )

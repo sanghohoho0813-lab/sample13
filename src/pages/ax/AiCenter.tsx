@@ -9,12 +9,12 @@ import type { AIEngine } from '../../types'
 type Tab = 'today' | AIEngine
 
 const TABS: Array<{ id: Tab; label: string }> = [
-  { id: 'today', label: 'Today' },
-  { id: 'dispatch', label: 'Dispatch' },
-  { id: 'risk', label: 'Risk' },
-  { id: 'retention', label: 'Retention' },
-  { id: 'upsell', label: 'Growth' },
-  { id: 'profit', label: 'Profit' },
+  { id: 'today', label: '오늘' },
+  { id: 'dispatch', label: '배정' },
+  { id: 'risk', label: '위험' },
+  { id: 'retention', label: '재계약' },
+  { id: 'upsell', label: '추가매출' },
+  { id: 'profit', label: '수익성' },
 ]
 
 export default function AiCenter() {
@@ -24,8 +24,8 @@ export default function AiCenter() {
   return (
     <div className="fade-up">
       <PageHeader
-        title="AI Operations Center"
-        desc="6개 AI Engine의 발견·판단·추천을 한곳에서 봅니다. 챗봇이 아니라 업무 Flow에 연결된 AI입니다."
+        title="AI 센터"
+        desc="6개 AI 엔진의 발견·판단·추천을 한곳에서 봅니다. 챗봇이 아니라 업무 흐름에 연결된 AI입니다."
         right={<><AIReadyBadge /><DemoBadge /></>}
       />
 
@@ -52,7 +52,7 @@ export default function AiCenter() {
       </div>
 
       {list.length === 0 ? (
-        <EmptyState title="이 영역의 AI Insight가 없습니다." desc="AI Engine이 새 발견을 하면 이곳에 표시됩니다." />
+        <EmptyState title="이 영역의 AI 발견이 없습니다." desc="AI 엔진이 새 발견을 하면 이곳에 표시됩니다." />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {list.map((i) => <InsightCard key={i.id} insight={i} />)}

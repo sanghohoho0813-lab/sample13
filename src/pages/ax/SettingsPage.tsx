@@ -17,7 +17,7 @@ const MATRIX: Array<{ item: string; ceo: 0 | 1 | 2; manager: 0 | 1 | 2; field: 0
   { item: 'AI 전략 (Retention·Profit)', ceo: 2, manager: 1, field: 0, customer: 0 },
   { item: '본인 일정 / 현장 업무', ceo: 2, manager: 2, field: 2, customer: 0 },
   { item: '체크인 / 체크리스트 / 사진', ceo: 1, manager: 2, field: 2, customer: 0 },
-  { item: '본인 계약 / Service Report', ceo: 2, manager: 2, field: 0, customer: 2 },
+  { item: '본인 계약 / 작업 리포트', ceo: 2, manager: 2, field: 0, customer: 2 },
   { item: '본인 요청 / 일정변경', ceo: 2, manager: 2, field: 0, customer: 2 },
   { item: 'AX Evidence / 설정', ceo: 2, manager: 0, field: 0, customer: 0 },
 ]
@@ -62,7 +62,7 @@ export default function SettingsPage() {
       <div className="grid gap-5 xl:grid-cols-2">
         {/* ── 화면 ── */}
         <Group icon={<Palette size={19} />} title="화면" desc="테마 · 글자 크기 · 모션 — PC와 모바일에 동일하게 적용됩니다.">
-          <p className="mb-2 text-[0.82rem] font-bold text-ink-soft">Theme <span className="font-semibold text-ink-faint">6종</span></p>
+          <p className="mb-2 text-[0.82rem] font-bold text-ink-soft">테마 <span className="font-semibold text-ink-faint">6종</span></p>
           <div className="grid gap-2 sm:grid-cols-2">
             {THEMES.map((t) => (
               <button
@@ -111,8 +111,8 @@ export default function SettingsPage() {
         </Group>
 
         {/* ── 사용자 / 권한 ── */}
-        <Group icon={<ShieldCheck size={19} />} title="사용자 / 권한" desc="Role Preview · Permission Matrix (RLS Preview)">
-          <p className="mb-2 text-[0.82rem] font-bold text-ink-soft">Role Preview — 전환 시 메뉴·KPI·데이터가 실제로 달라집니다.</p>
+        <Group icon={<ShieldCheck size={19} />} title="사용자 / 권한" desc="역할 미리보기 · 권한표 (RLS)">
+          <p className="mb-2 text-[0.82rem] font-bold text-ink-soft">역할 미리보기 — 전환 시 메뉴·KPI·데이터가 실제로 달라집니다.</p>
           <div className="mb-4 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
             {(Object.keys(ROLE_LABEL) as Role[]).map((r) => (
               <button
@@ -132,7 +132,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-[0.82rem]">
+            <table className="w-full min-w-[500px] text-[0.82rem]">
               <thead>
                 <tr className="border-b border-line bg-ivory text-[0.72rem] text-ink-faint">
                   <th className="px-3 py-2.5 text-left font-bold">항목</th>
@@ -142,7 +142,7 @@ export default function SettingsPage() {
               <tbody>
                 {MATRIX.map((row) => (
                   <tr key={row.item} className="border-b border-line/60">
-                    <td className="px-3 py-2.5 font-bold">{row.item}</td>
+                    <td className="px-3 py-2.5 font-bold whitespace-nowrap">{row.item}</td>
                     <td className="px-2 py-2.5"><Mark v={row.ceo} /></td>
                     <td className="px-2 py-2.5"><Mark v={row.manager} /></td>
                     <td className="px-2 py-2.5"><Mark v={row.field} /></td>
@@ -161,9 +161,9 @@ export default function SettingsPage() {
         </Group>
 
         {/* ── Demo ── */}
-        <Group icon={<Play size={19} />} title="Demo" desc="Demo / Live 구분 · 초기화 · 튜토리얼 · 시연 모드">
+        <Group icon={<Play size={19} />} title="데모" desc="데모 / 실서비스 구분 · 초기화 · 튜토리얼 · 시연 모드">
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <Badge tone="warning">DEMO MODE</Badge>
+            <Badge tone="warning">데모 모드</Badge>
             <span className="text-[0.8rem] text-ink-soft">모든 데이터는 가상의 Sample Data입니다. 실제 운영처럼 위장하지 않습니다.</span>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -184,10 +184,10 @@ export default function SettingsPage() {
         </Group>
 
         {/* ── Data ── */}
-        <Group icon={<Database size={19} />} title="Data" desc="Demo Repository · 마지막 갱신 · 실데이터 연결 준비">
+        <Group icon={<Database size={19} />} title="데이터" desc="데모 저장소 · 마지막 갱신 · 실데이터 연결 준비">
           <div className="mb-3"><Freshness /></div>
           <div className="grid gap-2 sm:grid-cols-2">
-            <Btn variant="outline" size="sm" className="justify-center" onClick={() => toast('CSV 가져오기는 실서비스 전환 시 활성화됩니다. (Integration Ready)', 'info')}>
+            <Btn variant="outline" size="sm" className="justify-center" onClick={() => toast('CSV 가져오기는 실서비스 전환 시 활성화됩니다. (연동 준비 상태)', 'info')}>
               <Upload size={14} className="mr-1 inline" /> CSV 가져오기
             </Btn>
             <Btn variant="outline" size="sm" className="justify-center" onClick={() => toast('고객·일정·직원·계약 필드 구조는 docs/PROJECT_SPEC.md에 정의되어 있습니다.', 'info')}>
@@ -195,7 +195,7 @@ export default function SettingsPage() {
             </Btn>
           </div>
           <div className="mt-3.5 space-y-1.5 border-t border-line pt-3 text-[0.8rem]">
-            {[['Demo Repository (localStorage)', 'ACTIVE', 'success'], ['Supabase (Auth·DB·RLS)', 'READY', 'neutral'], ['지도 / GPS / Geofence', 'READY', 'neutral']].map(([l, s, t]) => (
+            {[['데모 저장소 (localStorage)', '연결됨', 'success'], ['실데이터 저장소 · Supabase', '준비됨', 'neutral'], ['지도 / GPS / Geofence', '준비됨', 'neutral']].map(([l, s, t]) => (
               <div key={l} className="flex items-center justify-between gap-2">
                 <span className="font-semibold text-ink-soft">{l}</span>
                 <Badge tone={t as 'success'}>{s}</Badge>
@@ -207,13 +207,13 @@ export default function SettingsPage() {
         {/* ── AI ── */}
         <Group icon={<Zap size={19} />} title="AI" desc="현재 AI 동작 방식과 향후 연결 지점">
           <div className="space-y-2 text-[0.84rem]">
-            <div className="flex items-center justify-between gap-2 rounded-xl bg-ai-soft px-3.5 py-2.5">
-              <span className="font-bold text-ai-strong">6 AI Engine 동작 방식</span>
-              <Badge tone="ai">규칙 기반 Demo Logic</Badge>
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ai-soft px-3.5 py-2.5">
+              <span className="font-bold text-ai-strong">AI 엔진 6종 동작 방식</span>
+              <Badge tone="ai">규칙 기반 데모 로직</Badge>
             </div>
             <p className="text-ink-soft">AI가 보는 데이터 — 일정 · 현장 위치 · 직원 상황 · 작업시간 · 고객/계약 · 품질 기록 · 수익성</p>
-            <div className="flex items-center justify-between gap-2 rounded-xl border border-line px-3.5 py-2.5">
-              <span className="font-bold">LLM API (GPT / Claude)</span>
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line px-3.5 py-2.5">
+              <span className="font-bold">생성형 AI 연결 (GPT / Claude)</span>
               <Badge tone="ai">AI READY</Badge>
             </div>
             <p className="text-[0.78rem] text-ink-faint">실제 API Key가 없어도 완료 조건이 아닙니다. 연결 시 동일한 service interface로 교체됩니다.</p>
@@ -221,17 +221,17 @@ export default function SettingsPage() {
         </Group>
 
         {/* ── 연결 ── */}
-        <Group icon={<Store size={19} />} title="연결" desc="Customer Portal · Field Mobile · 알림">
+        <Group icon={<Store size={19} />} title="연결" desc="고객 플랫폼 · 현장직원 앱 · 알림">
           <div className="grid gap-2 sm:grid-cols-2">
             <Btn variant="outline" size="sm" className="justify-center" onClick={() => nav('/care')}>
-              <Store size={14} className="mr-1 inline" /> Customer Portal 열기
+              <Store size={14} className="mr-1 inline" /> 고객 플랫폼 보기
             </Btn>
             <Btn variant="outline" size="sm" className="justify-center" onClick={() => nav('/field')}>
-              <Smartphone size={14} className="mr-1 inline" /> Field Mobile 열기
+              <Smartphone size={14} className="mr-1 inline" /> 현장직원 앱 보기
             </Btn>
           </div>
           <div className="mt-3.5 space-y-1.5 border-t border-line pt-3 text-[0.8rem]">
-            {[['Customer → AX Closed Loop', 'ACTIVE', 'success'], ['문자 / 알림 Push', 'READY', 'neutral'], ['전자계약 / 결제', 'READY', 'neutral']].map(([l, s, t]) => (
+            {[['고객 요청 → AX 연결', '연결됨', 'success'], ['문자 / 앱 알림', '준비됨', 'neutral'], ['전자계약 / 결제', '준비됨', 'neutral']].map(([l, s, t]) => (
               <div key={l} className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-1.5 font-semibold text-ink-soft"><Bell size={12} /> {l}</span>
                 <Badge tone={t as 'success'}>{s}</Badge>

@@ -54,13 +54,13 @@ export default function Schedule() {
     <div className="fade-up">
       <PageHeader
         title="일정 / 배정"
-        desc="시간·고객·현장·팀 상태를 한 화면에서 보고, AI Smart Dispatch가 배정을 추천합니다."
+        desc="시간·고객·현장·팀 상태를 한 화면에서 보고, AI 스마트 배정이 팀을 추천합니다."
         right={<><AIReadyBadge /><DemoBadge /></>}
       />
 
       {/* View switcher */}
       <div className="mb-4 flex gap-1.5 rounded-xl border border-line bg-card p-1 w-fit">
-        {([['today', 'Today'], ['week', 'Week'], ['team', 'Team']] as [View, string][]).map(([v, label]) => (
+        {([['today', '오늘'], ['week', '이번 주'], ['team', '팀별']] as [View, string][]).map(([v, label]) => (
           <button
             key={v}
             onClick={() => setView(v)}
@@ -97,7 +97,7 @@ export default function Schedule() {
           })}
         </div>
       ) : (
-        <div className="grid gap-5 xl:grid-cols-[340px_1fr_360px]">
+        <div className="grid gap-5 xl:grid-cols-[320px_1fr] 2xl:grid-cols-[340px_1fr_360px]">
           {/* Left: 일정 리스트 */}
           <div className="space-y-2 xl:max-h-[72vh] xl:overflow-y-auto xl:pr-1">
             <p className="flex items-center gap-1.5 text-[0.8rem] font-bold text-ink-soft"><CalendarDays size={14} /> {view === 'today' ? `오늘 일정 ${today.length}건` : `이번 주 예정 ${week.length}건`}</p>
@@ -115,16 +115,16 @@ export default function Schedule() {
                   </div>
                   <StatusPill status={selected.teamId ? selected.status : '확인필요'} />
                 </div>
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2.5 2xl:grid-cols-4">
                   {[
                     { l: '방문시간', v: `${selected.dayOffset > 0 ? dateWithOffset(selected.dayOffset) + ' ' : ''}${selected.time}` },
                     { l: '서비스', v: selected.service },
                     { l: '예상 작업', v: `${selected.durationMin}분` },
                     { l: '이동시간', v: selected.teamId ? `${selected.travelMin}분` : '배정 후 산출' },
                   ].map((x) => (
-                    <div key={x.l} className="rounded-xl bg-ivory px-3 py-2.5">
-                      <p className="text-[0.68rem] font-bold text-ink-faint">{x.l}</p>
-                      <p className="mt-0.5 text-[0.88rem] font-extrabold leading-tight">{x.v}</p>
+                    <div key={x.l} className="min-w-0 rounded-xl bg-ivory px-2.5 py-2.5">
+                      <p className="text-[0.72rem] font-bold text-ink-faint">{x.l}</p>
+                      <p className="mt-0.5 break-keep text-[0.88rem] font-extrabold leading-tight">{x.v}</p>
                     </div>
                   ))}
                 </div>
@@ -133,7 +133,7 @@ export default function Schedule() {
                   {selected.teamId ? (
                     <p className="mt-0.5 text-[0.95rem] font-extrabold">{teamById(selected.teamId)?.name} <span className="font-semibold text-ink-soft text-[0.82rem]">— {teamMemberNames(selected.teamId)}</span></p>
                   ) : (
-                    <p className="mt-0.5 flex items-center gap-1.5 text-[0.95rem] font-extrabold text-warning"><Sparkles size={15} /> 미배정 — 우측 AI 추천을 확인하세요</p>
+                    <p className="mt-0.5 flex items-center gap-1.5 text-[0.95rem] font-extrabold text-warning"><Sparkles size={15} /> 미배정 — AI 추천 확인</p>
                   )}
                 </div>
                 {selected.risk && (
@@ -158,11 +158,11 @@ export default function Schedule() {
             )}
           </div>
 
-          {/* Right: AI Smart Dispatch / Risk */}
-          <div className="space-y-4">
+          {/* Right: AI 스마트 배정 / 위험 */}
+          <div className="space-y-4 xl:col-span-2 2xl:col-span-1">
             <Card tour="dispatch" className="overflow-hidden">
               <div className="flex items-center justify-between gap-2 border-b border-line bg-ai-soft px-4 py-3">
-                <p className="flex items-center gap-1.5 text-[0.92rem] font-extrabold text-ai-strong"><Sparkles size={16} /> AI Smart Dispatch</p>
+                <p className="flex items-center gap-1.5 text-[0.92rem] font-extrabold text-ai-strong"><Sparkles size={16} /> AI 스마트 배정</p>
                 <AIReadyBadge small />
               </div>
               <div className="p-4 space-y-3">
@@ -182,7 +182,7 @@ export default function Schedule() {
                             {[[`${cand.travelMin}분`, '이동'], [`${cand.fitPct}%`, '적합도'], [`${cand.slackMin}분`, '이후 여유']].map(([v, l]) => (
                               <div key={l} className="rounded-lg bg-card px-1 py-1.5 border border-line">
                                 <p className="tnum text-[0.88rem] font-extrabold text-primary">{v}</p>
-                                <p className="text-[0.64rem] font-bold text-ink-faint">{l}</p>
+                                <p className="text-[0.72rem] font-bold text-ink-faint">{l}</p>
                               </div>
                             ))}
                           </div>
@@ -234,7 +234,7 @@ export default function Schedule() {
           </div>
         </div>
       )}
-      <p className="mt-5 text-[0.74rem] text-ink-faint">지도·실제 이동시간 API는 Integration Ready — 현재 값은 규칙 기반 DEMO 추정치입니다.</p>
+      <p className="mt-5 text-[0.74rem] text-ink-faint">지도·실제 이동시간 API는 연동 준비 상태 — 현재 값은 규칙 기반 DEMO 추정치입니다.</p>
     </div>
   )
 }

@@ -15,7 +15,7 @@ export default function Profitability() {
     return (
       <EmptyState
         title="수익성 분석은 대표 권한 전용입니다."
-        desc="RLS Preview — 역할별 데이터 접근 제어를 체감할 수 있는 화면입니다. 우측 상단에서 역할을 '대표'로 전환해보세요."
+        desc="역할별 데이터 접근 제어(RLS)를 체감할 수 있는 화면입니다. 우측 상단에서 역할을 '대표'로 전환해보세요."
         action={<Btn onClick={() => nav('/')}>대시보드로</Btn>}
       />
     )
@@ -40,7 +40,7 @@ export default function Profitability() {
         ].map(([l, v], i) => (
           <Card key={l} className="p-4 text-center">
             <p className="text-[0.72rem] font-bold text-ink-faint">{l}</p>
-            <p className={cx('tnum mt-0.5 text-[1.2rem] font-extrabold', i === 3 ? 'text-danger' : 'text-primary')}>{v}</p>
+            <p className={cx('tnum mt-0.5 text-[clamp(0.9rem,4.2vw,1.2rem)] font-extrabold', i === 3 ? 'text-danger' : 'text-primary')}>{v}</p>
           </Card>
         ))}
       </div>
@@ -94,7 +94,7 @@ export default function Profitability() {
           </Card>
         ))}
       </div>
-      <p className="mt-5 flex items-center gap-1.5 text-[0.74rem] text-ink-faint"><Lock size={12} /> 이 화면은 대표 권한 전용 — 관리자/직원/고객 역할에서는 접근이 차단됩니다 (RLS Preview).</p>
+      <p className="mt-5 flex items-center gap-1.5 text-[0.74rem] text-ink-faint"><Lock size={12} /> 이 화면은 대표 권한 전용 — 관리자/직원/고객 역할에서는 접근이 차단됩니다 (RLS).</p>
     </div>
   )
 }

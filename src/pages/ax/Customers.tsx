@@ -19,7 +19,7 @@ export default function Customers() {
 
   return (
     <div className="fade-up">
-      <PageHeader title="고객 / 계약" desc="정기관리 고객사 76곳 중 대표 12곳 표시 (DEMO). Customer Health로 상태를 관리합니다." right={<DemoBadge />} />
+      <PageHeader title="고객 / 계약" desc="정기관리 고객사 76곳 중 대표 12곳 표시 (DEMO). 고객 건강도로 상태를 관리합니다." right={<DemoBadge />} />
 
       <div className="mb-4 flex flex-wrap items-center gap-2.5">
         <div className="relative">
@@ -65,7 +65,7 @@ export default function Customers() {
                 {h && (
                   <div className="mt-3 border-t border-line pt-2.5">
                     <div className="flex items-center justify-between text-[0.76rem] font-bold">
-                      <span className="text-ink-faint">Customer Health</span>
+                      <span className="text-ink-faint">고객 건강도</span>
                       <span className={cx('tnum', h.score >= 80 ? 'text-success' : h.score >= 65 ? 'text-warning' : 'text-danger')}>{h.score} / 100</span>
                     </div>
                     <div className="mt-1 h-1.5 rounded-full bg-ivory">

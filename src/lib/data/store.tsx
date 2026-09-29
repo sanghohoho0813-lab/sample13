@@ -22,12 +22,12 @@ export type ThemeId = 'signature' | 'navy' | 'tealchampagne' | 'graphite' | 'ind
 export type FontScale = 'sm' | 'md' | 'lg'
 
 export const THEMES: Array<{ id: ThemeId; name: string; desc: string; dots: string[] }> = [
-  { id: 'signature', name: 'CLEANWAY SIGNATURE', desc: 'Deep Teal · Champagne', dots: ['#08343A', '#0E6D71', '#D7BC86', '#52A7A3', '#DDEDEA', '#F7F5F0'] },
-  { id: 'navy', name: 'EXECUTIVE NAVY', desc: 'Deep Navy · Muted Gold', dots: ['#0D1B33', '#23479B', '#C9A961', '#5B7BA8', '#DFE7F3', '#F7F8FA'] },
-  { id: 'tealchampagne', name: 'TEAL CHAMPAGNE', desc: 'Dark Teal · Champagne Gold', dots: ['#103C3A', '#12756E', '#DCC182', '#7FA38C', '#DCEDE6', '#F8F6EF'] },
-  { id: 'graphite', name: 'GRAPHITE COPPER', desc: 'Graphite · Copper', dots: ['#23262B', '#454B54', '#B4703F', '#7C8794', '#E8E6E2', '#F7F4EF'] },
-  { id: 'indigo', name: 'INDIGO LAVENDER', desc: 'Midnight Indigo · Lavender', dots: ['#1E1B39', '#4A3E9E', '#B7A3DC', '#6C77B5', '#E8E5F5', '#F7F6FB'] },
-  { id: 'forest', name: 'FOREST SAND', desc: 'Deep Forest · Sand Gold', dots: ['#14322A', '#2C6B4F', '#CBA968', '#7C9C82', '#DFEDE0', '#F8F6EE'] },
+  { id: 'signature', name: '클린웨이 시그니처', desc: '딥 틸 · 샴페인', dots: ['#08343A', '#0E6D71', '#D7BC86', '#52A7A3', '#DDEDEA', '#F7F5F0'] },
+  { id: 'navy', name: '이그제큐티브 네이비', desc: '딥 네이비 · 골드', dots: ['#0D1B33', '#23479B', '#C9A961', '#5B7BA8', '#DFE7F3', '#F7F8FA'] },
+  { id: 'tealchampagne', name: '틸 샴페인', desc: '다크 틸 · 샴페인 골드', dots: ['#103C3A', '#12756E', '#DCC182', '#7FA38C', '#DCEDE6', '#F8F6EF'] },
+  { id: 'graphite', name: '그라파이트 코퍼', desc: '그라파이트 · 코퍼', dots: ['#23262B', '#454B54', '#B4703F', '#7C8794', '#E8E6E2', '#F7F4EF'] },
+  { id: 'indigo', name: '인디고 라벤더', desc: '미드나잇 인디고 · 라벤더', dots: ['#1E1B39', '#4A3E9E', '#B7A3DC', '#6C77B5', '#E8E5F5', '#F7F6FB'] },
+  { id: 'forest', name: '포레스트 샌드', desc: '딥 포레스트 · 샌드 골드', dots: ['#14322A', '#2C6B4F', '#CBA968', '#7C9C82', '#DFEDE0', '#F8F6EE'] },
 ]
 
 interface DemoState {
@@ -91,7 +91,7 @@ interface DemoStore extends DemoState {
   completeWork: (scheduleId: string) => void
   // Action Lifecycle
   setActionStatus: (actionId: string, status: ActionStatus, result?: string) => void
-  // Customer Portal → AX Closed Loop
+  // 고객 플랫폼 → AX Closed Loop
   addRequest: (customerId: string, type: RequestType, detail: string) => void
   setRequestStatus: (requestId: string, status: CustomerRequest['status']) => void
   setUpsellStatus: (id: string, status: UpsellOpportunity['status']) => void
@@ -209,7 +209,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         })
         const sc = state.schedules.find((x) => x.id === id)
         const c = sc ? customerById(sc.customerId) : undefined
-        pushEvidence('risk', `현장 작업 완료 — ${c?.name ?? id} · Service Report 자동 생성`)
+        pushEvidence('risk', `현장 작업 완료 — ${c?.name ?? id} · 작업 리포트 자동 생성`)
       },
       setActionStatus: (actionId, status, result) => {
         setState((s) => ({
@@ -235,10 +235,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
                 {
                   id: `U-${Date.now()}`, customerId,
                   currentService: c?.contract.serviceSummary ?? '-',
-                  signal: 'Customer Portal 고객 요청',
+                  signal: '고객 플랫폼 고객 요청',
                   recommendedService: detail,
                   expectedRevenue: 85,
-                  reason: '고객이 Portal에서 직접 요청한 신규 Service Opportunity',
+                  reason: '고객이 플랫폼에서 직접 요청한 신규 서비스 기회',
                   status: '발견됨',
                 },
                 ...s.upsell,
@@ -247,7 +247,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         }))
         pushEvidence(
           type === '추가서비스' ? 'upsell' : 'risk',
-          `Customer Portal 요청 접수 — ${c?.name ?? customerId} · ${type}${type === '추가서비스' ? ' → 신규 Service Opportunity 생성' : type === '일정변경' ? ' → AI Smart Dispatch 재검토 대기' : ''}`,
+          `고객 플랫폼 요청 접수 — ${c?.name ?? customerId} · ${type}${type === '추가서비스' ? ' → 신규 서비스 Opportunity 생성' : type === '일정변경' ? ' → AI Smart Dispatch 재검토 대기' : ''}`,
         )
       },
       setRequestStatus: (requestId, status) =>

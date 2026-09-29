@@ -165,7 +165,7 @@ export default function WhyAx() {
           </CleanwayNote>
         </Section>
 
-        <Section no="04" title="CLEANWAY에는 이미 어떤 Data가 있나요?">
+        <Section no="04" title="CLEANWAY에는 이미 어떤 데이터가 있나요?">
           <p>새로 만들 데이터가 아니라, <b>이미 매일 발생하고 있지만 흩어져 있는 데이터</b>입니다.</p>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             {[
@@ -214,10 +214,10 @@ export default function WhyAx() {
         </Section>
 
         <Section no="07" title="업무가 어떻게 달라지나요?">
-          <Flow tone="success" items={['Customer Portal', '일정', 'AI Dispatch', 'Field Mobile', '작업', 'Service Report', 'Customer Data', 'Retention / Upsell', 'Action', 'Evidence']} />
+          <Flow tone="success" items={['고객 플랫폼', '일정', 'AI 배정', '현장직원 앱', '작업', '작업 리포트', '고객 데이터', '재계약 / 추가매출', '실행', '실증 기록']} />
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl bg-danger-soft/50 p-4">
-              <Badge tone="danger">BEFORE</Badge>
+              <Badge tone="danger">도입 전</Badge>
               <ul className="mt-2 space-y-1.5 text-[0.85rem]">
                 {['사람의 기억 + Excel + 단톡방', '대표가 전화로 현장 확인', '완료 보고는 사진 메시지', '재계약은 갱신일이 닥쳐서', '수익성은 감으로 판단'].map((x) => (
                   <li key={x} className="flex gap-1.5"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-danger" />{x}</li>
@@ -225,7 +225,7 @@ export default function WhyAx() {
               </ul>
             </div>
             <div className="rounded-xl bg-success-soft/50 p-4">
-              <Badge tone="success">AFTER</Badge>
+              <Badge tone="success">도입 후</Badge>
               <ul className="mt-2 space-y-1.5 text-[0.85rem]">
                 {['한 번 입력 → 자동 연결', 'Dashboard + AI Briefing으로 시작', '체크인·사진·리포트 자동 축적', 'D-60부터 AI가 사전관리 제안', '현장별 기여마진이 숫자로 보임'].map((x) => (
                   <li key={x} className="flex gap-1.5"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-success" />{x}</li>
@@ -284,7 +284,7 @@ export default function WhyAx() {
             정기관리 서비스업의 매출 기반은 신규 영업보다 <b>기존 계약의 유지</b>입니다.
             계약 하나가 이탈하면 그만큼을 신규로 채우는 데 훨씬 더 큰 비용이 듭니다.
           </p>
-          <Flow items={['계약 종료 D-60 / D-30', '품질 · 상담 · 민원 확인', 'Customer Health', 'AI Retention 제안', '담당자 사전관리', '재계약']} />
+          <Flow items={['계약 종료 D-60 / D-30', '품질 · 상담 · 민원 확인', '고객 건강도', 'AI 재계약 제안', '담당자 사전관리', '재계약']} />
           <CleanwayNote>
             <p>
               라온메디컬센터는 계약 종료 D-32이면서 최근 60일간 일정변경 3회, 품질문의 2회가 있었습니다.
@@ -295,7 +295,7 @@ export default function WhyAx() {
 
         <Section no="10" title="추가서비스는 어떻게 매출이 되나요?">
           <p>추가매출은 새 고객을 찾는 것이 아니라, <b>이미 관리 중인 현장에서 발견</b>됩니다.</p>
-          <Flow items={['작업기록 · 현장 특이사항', 'AI Upsell Finder', '담당자 제안', '협의', '성사']} />
+          <Flow items={['작업기록 · 현장 특이사항', 'AI 추가매출 발굴', '담당자 제안', '협의', '성사']} />
           <div className="flex flex-wrap gap-1.5">
             {['유리 집중청소', '바닥 집중관리', '소독 / 위생', '에어컨 세척', '입주·퇴거 특수청소', '대청소', '소모품 관리'].map((x) => (
               <Chip key={x} tone="success">{x}</Chip>
@@ -305,7 +305,7 @@ export default function WhyAx() {
             {([['발견된 상태', PHOTO.beforeGlass], ['집중관리 후', PHOTO.afterGlass]] as const).map(([tag, src]) => (
               <figure key={tag} className="relative overflow-hidden rounded-xl border border-line">
                 <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="aspect-[4/3] w-full object-cover" />
-                <figcaption className="absolute left-2 top-2 rounded-md bg-ink/75 px-2 py-0.5 text-[0.66rem] font-extrabold text-white">{tag}</figcaption>
+                <figcaption className="absolute left-2 top-2 rounded-md bg-ink/75 px-2 py-0.5 text-[0.72rem] font-extrabold text-white">{tag}</figcaption>
               </figure>
             ))}
           </div>
@@ -342,7 +342,7 @@ export default function WhyAx() {
           </Accordion>
         </Section>
 
-        <Section no="12" title="추천은 실제 Action으로 이어집니다">
+        <Section no="12" title="추천은 실제 실행으로 이어집니다">
           <p>AI가 추천만 하고 끝나면 데이터가 남지 않습니다. 그래서 모든 추천에 <b>상태</b>를 둡니다.</p>
           <Flow items={['추천됨', '확인', '실행중', '완료']} />
           <p className="text-[0.88rem] text-ink-soft">필요 시 <b>보류 / 무시</b>도 기록됩니다 — 무시한 이유 역시 회사의 판단 데이터입니다.</p>
@@ -357,7 +357,7 @@ export default function WhyAx() {
 
         <Section no="13" title="고객 플랫폼과 왜 연결해야 하나요?">
           <p>
-            Customer Portal이 필요한 이유는 <b>예쁜 고객 페이지가 필요해서가 아닙니다.</b>
+            고객 플랫폼이 필요한 이유는 <b>예쁜 고객 페이지가 필요해서가 아닙니다.</b>
             고객의 일정변경·추가서비스 요청·긴급요청·리포트 확인이 그대로 <b>Business AX의 데이터</b>가 되기 때문입니다.
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -377,8 +377,8 @@ export default function WhyAx() {
           <p className="text-center text-[0.86rem] font-extrabold text-primary">Customer ↔ Business AX = 하나의 Data Loop</p>
         </Section>
 
-        <Section no="14" title="서비스 Data가 왜 자산이 되나요?">
-          <Flow items={['업무 발생', '기록', '축적', '비교', 'Pattern', 'AI', '더 나은 판단']} />
+        <Section no="14" title="서비스 데이터가 왜 자산이 되나요?">
+          <Flow items={['업무 발생', '기록', '축적', '비교', '패턴', 'AI', '더 나은 판단']} />
           <p>
             현장·고객·품질·수익성 데이터는 시간이 갈수록 쌓입니다. 이 데이터는
             <b> 담당 직원이 바뀌어도 회사에 남는 기술·데이터 자산</b>이며, 신규 직원의 학습 시간을 줄이고

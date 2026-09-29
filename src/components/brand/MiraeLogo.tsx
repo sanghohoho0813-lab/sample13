@@ -60,7 +60,7 @@ export function MiraeCredit({
   const dark = tone === 'dark'
   return (
     <div className={cx('flex items-center gap-2', className)}>
-      <span className={cx('text-[0.64rem] font-bold tracking-[0.14em] whitespace-nowrap', dark ? 'text-white/45' : 'text-ink-faint')}>
+      <span className={cx('text-[0.72rem] font-bold tracking-[0.14em] whitespace-nowrap', dark ? 'text-white/45' : 'text-ink-faint')}>
         {label}
       </span>
       <span

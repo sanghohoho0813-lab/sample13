@@ -57,7 +57,7 @@ export default function CareLanding() {
           </Card>
         ))}
       </section>
-      <p className="mt-2 text-center text-[0.68rem] text-ink-faint">위 수치는 가상의 DEMO DATA입니다.</p>
+      <p className="mt-2 text-center text-[0.72rem] text-ink-faint">위 수치는 가상의 DEMO DATA입니다.</p>
 
       {/* ── 서비스 10종 — 실제 작업 장면 ── */}
       <section className="mt-10">
@@ -100,11 +100,11 @@ export default function CareLanding() {
           ].map((p) => (
             <Card key={p.label} className="overflow-hidden">
               <div className="grid grid-cols-2">
-                {([['BEFORE', p.before], ['AFTER', p.after]] as const).map(([tag, src]) => (
+                {([['작업 전', p.before], ['작업 후', p.after]] as const).map(([tag, src]) => (
                   <figure key={tag} className="relative aspect-[4/3] overflow-hidden bg-ivory">
                     <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
-                    <figcaption className={`absolute left-2 top-2 rounded-md px-2 py-0.5 text-[0.66rem] font-extrabold tracking-wide ${
-                      tag === 'BEFORE' ? 'bg-ink/75 text-white' : 'bg-primary text-white'
+                    <figcaption className={`absolute left-2 top-2 rounded-md px-2 py-0.5 text-[0.72rem] font-extrabold tracking-wide ${
+                      tag === '작업 전' ? 'bg-ink/75 text-white' : 'bg-primary text-white'
                     }`}>{tag}</figcaption>
                   </figure>
                 ))}
@@ -142,7 +142,7 @@ export default function CareLanding() {
       <section className="mt-10 overflow-hidden rounded-3xl bg-mint/60">
         <div className="grid items-center gap-6 p-6 sm:p-8 lg:grid-cols-[1.1fr_1fr]">
           <div>
-            <p className="flex items-center gap-1.5 text-[0.8rem] font-extrabold text-primary"><Sparkles size={14} /> CUSTOMER CARE PORTAL</p>
+            <p className="flex items-center gap-1.5 text-[0.8rem] font-extrabold text-primary"><Sparkles size={14} /> 고객 플랫폼</p>
             <h2 className="mt-1.5 text-[1.35rem] font-extrabold leading-snug">전화하지 않아도, 관리 상태가 보입니다.</h2>
             <ul className="mt-3 space-y-1.5 text-[0.9rem] text-ink-soft">
               {['다음 방문 일정과 담당팀 확인', '작업 리포트 · Before/After 사진', '일정 변경 · 추가서비스 · 긴급 방문 요청', 'AI가 우리 시설에 필요한 관리를 먼저 제안'].map((x) => (
@@ -164,7 +164,7 @@ export default function CareLanding() {
       <section className="mt-10">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-[1.3rem] font-extrabold">앞으로 준비 중인 서비스</h2>
-          <Badge tone="info">NEXT</Badge>
+          <Badge tone="info">예정</Badge>
         </div>
         <p className="mt-1 text-[0.88rem] text-ink-soft">
           지금 제공되는 서비스는 아니며, 준비되는 대로 계약 고객께 먼저 안내드립니다.
@@ -181,8 +181,8 @@ export default function CareLanding() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[0.95rem] font-extrabold leading-tight">{r.customerLabel}</p>
-                  <p className="mt-0.5 text-[0.68rem] font-bold tracking-wide text-ink-faint">
-                    {r.stage} · {STAGE_NOTE[r.stage]}
+                  <p className="mt-0.5 text-[0.72rem] font-bold tracking-wide text-ink-faint">
+                    {STAGE_NOTE[r.stage]}
                   </p>
                 </div>
               </div>

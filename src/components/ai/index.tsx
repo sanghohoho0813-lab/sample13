@@ -9,7 +9,7 @@ import { cx } from '../../lib/utils'
 // ─── AI READY 표시 ───────────────────────────────────────
 export function AIReadyBadge({ small }: { small?: boolean }) {
   return (
-    <Badge tone="ai" className={small ? 'text-[0.62rem] px-2' : ''}>
+    <Badge tone="ai" className={small ? 'text-[0.72rem] px-2' : ''}>
       <Sparkles size={small ? 10 : 12} /> AI READY
     </Badge>
   )
@@ -49,7 +49,7 @@ export function WhyAIButton({ dataViewed, aiDoes, className }: {
             </ul>
           </div>
           <div className="rounded-xl border border-line bg-ivory p-3.5 text-[0.82rem]">
-            <p><b>현재 MVP</b> — 규칙 기반 Demo Logic (실제 AI 미연결 · <b>AI READY</b>)</p>
+            <p><b>현재 MVP</b> — 규칙 기반 데모 로직 (실제 AI 미연결 · <b>AI READY</b>)</p>
             <p className="mt-1 text-ink-soft"><b>향후</b> — GPT / Claude 등 LLM API · Optimization API 연결 가능 (service interface 준비됨)</p>
           </div>
         </div>
@@ -72,7 +72,7 @@ export function ActionLifecycle({ actionId, status, compact }: { actionId: strin
         <div className="flex items-center gap-1">
           {FLOW.map((f, i) => (
             <span key={f} className={cx(
-              'rounded-full px-2 py-0.5 text-[0.66rem] font-bold',
+              'rounded-full px-2 py-0.5 text-[0.72rem] font-bold',
               i <= idx ? 'bg-primary text-white' : 'bg-[#EFF1F0] text-ink-faint',
             )}>{f}</span>
           ))}
@@ -80,15 +80,15 @@ export function ActionLifecycle({ actionId, status, compact }: { actionId: strin
       )}
       {compact && <StatusPill status={status} />}
       {next && (
-        <Btn size="sm" variant="outline" onClick={() => { setActionStatus(actionId, next); toast(`Action 상태 변경: ${next}`, 'info') }}>
+        <Btn size="sm" variant="outline" onClick={() => { setActionStatus(actionId, next); toast(`실행 상태 변경: ${next}`, 'info') }}>
           {next === '완료' ? '완료 처리' : `${next}으로`}
         </Btn>
       )}
       {status !== '보류' && status !== '무시' && status !== '완료' && (
-        <Btn size="sm" variant="ghost" onClick={() => { setActionStatus(actionId, '보류'); toast('Action을 보류했습니다.', 'warning') }}>보류</Btn>
+        <Btn size="sm" variant="ghost" onClick={() => { setActionStatus(actionId, '보류'); toast('실행을 보류했습니다.', 'warning') }}>보류</Btn>
       )}
       {status === '보류' && (
-        <Btn size="sm" variant="outline" onClick={() => { setActionStatus(actionId, '확인'); toast('Action을 다시 진행합니다.', 'info') }}>다시 진행</Btn>
+        <Btn size="sm" variant="outline" onClick={() => { setActionStatus(actionId, '확인'); toast('실행을 다시 진행합니다.', 'info') }}>다시 진행</Btn>
       )}
     </div>
   )

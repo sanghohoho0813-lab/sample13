@@ -20,7 +20,7 @@ export default function Work() {
 
   return (
     <div className="fade-up">
-      <PageHeader title="작업현황" desc="오늘 전 현장의 작업 진행상태와 Service Report를 확인합니다." right={<DemoBadge />} />
+      <PageHeader title="작업현황" desc="오늘 전 현장의 작업 진행상태와 작업 리포트를 확인합니다." right={<DemoBadge />} />
 
       <div className="mb-4 flex flex-wrap gap-1.5">
         {FILTERS.map((f) => (
@@ -36,7 +36,7 @@ export default function Work() {
       <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-[0.85rem]">
+            <table className="w-full min-w-[560px] text-left text-[0.85rem]">
               <thead>
                 <tr className="border-b border-line bg-ivory text-[0.74rem] text-ink-faint">
                   {['시간', '고객 / 현장', '서비스', '담당팀', '상태'].map((h) => <th key={h} className="px-4 py-2.5 font-bold whitespace-nowrap">{h}</th>)}
@@ -49,7 +49,7 @@ export default function Work() {
                 {today.map((s) => (
                   <tr key={s.id} onClick={() => nav(`/sites/${s.customerId}`)} className="cursor-pointer border-b border-line/60 hover:bg-mint/30">
                     <td className="tnum px-4 py-3 font-extrabold text-primary whitespace-nowrap">{s.time}</td>
-                    <td className="px-4 py-3 font-bold">{customerById(s.customerId)?.name}</td>
+                    <td className="px-4 py-3 font-bold whitespace-nowrap">{customerById(s.customerId)?.name}</td>
                     <td className="px-4 py-3 text-ink-soft whitespace-nowrap">{s.service}</td>
                     <td className="px-4 py-3 text-ink-soft whitespace-nowrap">{teamById(s.teamId)?.name ?? <Badge tone="warning">미배정</Badge>}</td>
                     <td className="px-4 py-3"><StatusPill status={s.status} /></td>
@@ -61,7 +61,7 @@ export default function Work() {
         </Card>
 
         <div>
-          <h2 className="mb-3 text-[1.05rem] font-bold">최근 Service Report</h2>
+          <h2 className="mb-3 text-[1.05rem] font-bold">최근 작업 리포트</h2>
           {reports.length === 0 ? (
             <EmptyState title="생성된 리포트가 없습니다." />
           ) : (

@@ -38,11 +38,11 @@ export const SEED_INSIGHTS: AIInsight[] = [
     actionId: 'A-02',
   },
   {
-    id: 'I-03', engine: 'upsell', severity: 'opportunity', title: 'Growth Opportunity', target: '에이원교육센터', customerId: 'C03',
+    id: 'I-03', engine: 'upsell', severity: 'opportunity', title: '추가매출 기회', target: '에이원교육센터', customerId: 'C03',
     found: '현재 주 3회 정기청소 계약. 최근 작업기록에서 유리 오염 관련 특이사항 4회 반복.',
     dataViewed: ['현재 계약 서비스', '현장 특이사항 기록', '작업 사진 메모', '고객 요청 이력'],
     why: '정기청소 범위 밖 오염이 반복되면 고객 불만이 누적되고, 선제 제안 시 추가 매출과 만족도를 동시에 얻을 수 있습니다.',
-    recommendation: '외부 유리 집중관리 제안 (예상 Opportunity: DEMO 85만원)',
+    recommendation: '외부 유리 집중관리 제안 (예상 매출: DEMO 85만원)',
     impact: '추가 매출 85만원/회 + 특이사항 재발 방지',
     actionId: 'A-03',
   },
@@ -147,7 +147,7 @@ export const SEED_REQUESTS: CustomerRequest[] = [
 export const SEED_EVIDENCE: EvidenceLog[] = [
   { id: 'EV-01', date: 'TODAY', time: '08:40', engine: 'risk', text: 'AI 방문지연 가능성 감지 — 성수 B오피스 15:30 일정', result: undefined },
   { id: 'EV-02', date: 'TODAY', time: '08:41', engine: 'retention', text: 'AI 계약갱신 Risk 감지 — 라온메디컬센터 D-32' },
-  { id: 'EV-03', date: 'TODAY', time: '08:42', engine: 'upsell', text: 'AI Growth Opportunity 발견 — 에이원교육센터 유리 집중관리' },
+  { id: 'EV-03', date: 'TODAY', time: '08:42', engine: 'upsell', text: 'AI 추가매출 기회 발견 — 에이원교육센터 유리 집중관리' },
   { id: 'EV-04', date: 'D-1', time: '16:05', engine: 'retention', text: '서초 E의원 재계약 협의 착수 — 담당자 Action 실행중' },
   { id: 'EV-05', date: 'D-5', time: '10:30', engine: 'upsell', text: '그랜드타워 에어컨 세척 시즌 제안 → 담당자 제안 완료', result: '9월 정기작업 패키지 계약 추가 (DEMO)' },
   { id: 'EV-06', date: 'D-7', time: '09:12', engine: 'dispatch', text: 'AI 재배정 추천 적용 — 원효빌딩 방문지연 예방', result: '방문지연 방지 · 당일 완료율 100% 유지' },
@@ -170,10 +170,10 @@ export const DAILY_BRIEFING = {
     '추가매출 관점에서는 에이원교육센터의 유리 집중관리 제안 가능성이 높습니다.',
   ],
   counters: [
-    { label: '오늘의 Risk', value: 3, tone: 'danger' as const },
-    { label: 'Revenue Opportunity', value: 5, tone: 'success' as const },
-    { label: 'Retention Action', value: 2, tone: 'warning' as const },
-    { label: 'Dispatch 추천', value: 4, tone: 'info' as const },
+    { label: '오늘의 위험', value: 3, tone: 'danger' as const },
+    { label: '매출 기회', value: 5, tone: 'success' as const },
+    { label: '재계약 조치', value: 2, tone: 'warning' as const },
+    { label: '배정 추천', value: 4, tone: 'info' as const },
   ],
 }
 

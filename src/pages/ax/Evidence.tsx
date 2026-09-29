@@ -10,12 +10,12 @@ export default function Evidence() {
   return (
     <div className="fade-up">
       <PageHeader
-        title="AX Evidence Log"
+        title="AX 실증 기록"
         desc="AI 추천 → 사람의 결정 → 실행 → 결과가 시간순으로 기록됩니다. AX 도입 실증·정부지원 결과보고·경영기록의 근거가 되는 데이터입니다."
         right={<DemoBadge />}
       />
       {evidence.length === 0 ? (
-        <EmptyState title="기록된 Evidence가 없습니다." />
+        <EmptyState title="기록된 실증 기록이 없습니다." />
       ) : (
         <Card tour="evidence" className="p-5">
           <ol className="relative space-y-5 border-l-2 border-line pl-6 ml-2">
@@ -29,7 +29,7 @@ export default function Evidence() {
                 <p className="mt-1 text-[0.92rem] font-semibold leading-relaxed">{e.text}</p>
                 {e.result && (
                   <p className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-success-soft px-3 py-1.5 text-[0.82rem] font-bold text-success w-fit">
-                    <CheckCircle2 size={14} /> Result — {e.result}
+                    <CheckCircle2 size={14} /> 결과 — {e.result}
                   </p>
                 )}
               </li>
@@ -38,7 +38,7 @@ export default function Evidence() {
         </Card>
       )}
       <p className="mt-5 flex items-center gap-1.5 text-[0.76rem] text-ink-faint">
-        <ScrollText size={13} /> Evidence는 AI 추천 성과 측정과 향후 모델 고도화의 학습 데이터가 됩니다. (현재 DEMO 기록)
+        <ScrollText size={13} /> 실증 기록은 AI 추천 성과 측정과 향후 모델 고도화의 학습 데이터가 됩니다. (현재 DEMO 기록)
       </p>
     </div>
   )

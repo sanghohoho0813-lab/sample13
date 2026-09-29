@@ -4,7 +4,7 @@ import {
 } from 'lucide-react'
 
 /**
- * 향후 확장 로드맵 — Business AX와 Customer Portal이 함께 쓰는 단일 원본.
+ * 향후 확장 로드맵 — Business AX와 고객 플랫폼이 함께 쓰는 단일 원본.
  *
  * 사업시설 유지관리·현장 서비스 업에서 현재 Core(일정·현장·품질·계약·수익성) 위에
  * 실제로 얹을 수 있는 확장만 담는다. 아직 구현되지 않은 영역이므로 Route를 만들지 않는다.
@@ -107,8 +107,9 @@ export const CUSTOMER_ROADMAP = ROADMAP.filter(
     Boolean(r.customerLabel && r.customerDesc),
 )
 
+/** 화면 표기 — 프로젝트 전체에서 이 한글 상태명만 쓴다 (NEXT/Preview 영문 노출 금지) */
 export const STAGE_NOTE: Record<RoadmapStage, string> = {
-  'NEXT': '다음 단계',
-  'Preview': '개념 검증',
-  'Long-term': '장기 과제',
+  'NEXT': '예정',
+  'Preview': '미리보기',
+  'Long-term': '장기',
 }

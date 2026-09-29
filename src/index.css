@@ -124,14 +124,17 @@ body {
   font-family: var(--font-sans);
   color: var(--color-ink);
   background: var(--color-ivory);
+  /* 한글은 단어 단위로 줄바꿈하되, 띄어쓰기 없는 긴 회사명·현장명이 칸을 넘칠 때만 단어 안에서 끊는다 */
   word-break: keep-all;
+  overflow-wrap: anywhere;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
 * { min-width: 0; }
 
-.tnum { font-variant-numeric: tabular-nums; }
+/* 숫자·금액·날짜·시간 — 중간에서 끊기거나 flex 안에서 눌리지 않는다 */
+.tnum { font-variant-numeric: tabular-nums; overflow-wrap: normal; flex-shrink: 0; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: #C6CDD2; border-radius: 8px; }
@@ -160,6 +163,12 @@ body {
   to { transform: translateX(0); }
 }
 .slide-left { animation: slideLeft 0.24s cubic-bezier(0.32, 0.72, 0, 1) both; }
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.slide-in-left { animation: slideInLeft 0.24s cubic-bezier(0.32, 0.72, 0, 1) both; }
 
 @keyframes shimmer {
   0% { background-position: -400px 0; }

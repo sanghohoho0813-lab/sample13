@@ -61,16 +61,16 @@ export default function FieldApp() {
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[0.92rem] font-extrabold tracking-wide">CLEANWAY <span className="text-champagne">FIELD</span></p>
-              <p className="tnum text-[0.68rem] text-white/75">{nowDateCompact()} · {clock} · {MY_NAME}</p>
+              <p className="tnum text-[0.72rem] text-white/75">{nowDateCompact()} · {clock} · {MY_NAME}</p>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               <DemoBadge label="DEMO" />
               <button
                 onClick={() => { setRole('manager'); nav('/') }}
                 className="flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1.5 text-[0.72rem] font-bold hover:bg-white/20"
-                title="Business AX 보기 (Demo)"
+                title="AX 운영화면 보기 (데모)"
               >
-                <ArrowLeft size={14} /> AX
+                <ArrowLeft size={14} /> AX 운영화면
               </button>
             </div>
           </div>
@@ -95,10 +95,10 @@ export default function FieldApp() {
 
                     {!ws?.checkinAt ? (
                       <div className="grid grid-cols-2 gap-2.5">
-                        <Btn variant="outline" size="lg" onClick={() => toast('길찾기는 지도 API 연결 시 활성화됩니다. (Integration Ready)', 'info')}>
+                        <Btn variant="outline" className="py-3" onClick={() => toast('길찾기는 지도 API 연결 시 활성화됩니다. (연동 준비 상태)', 'info')}>
                           <Navigation size={17} className="mr-1 inline" /> 길찾기
                         </Btn>
-                        <Btn size="lg" onClick={() => { checkin(nextJob.id); toast('체크인 완료 — 도착시간이 기록되었습니다.') }}>
+                        <Btn className="py-3" onClick={() => { checkin(nextJob.id); toast('체크인 완료 — 도착시간이 기록되었습니다.') }}>
                           <MapPin size={17} className="mr-1 inline" /> 도착 체크인
                         </Btn>
                       </div>
@@ -142,7 +142,7 @@ export default function FieldApp() {
                                   return (
                                     <figure key={kind} className="relative aspect-[4/3] overflow-hidden rounded-xl border border-primary">
                                       <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
-                                      <figcaption className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-ink/75 px-2 py-0.5 text-[0.66rem] font-extrabold text-white">
+                                      <figcaption className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-ink/75 px-2 py-0.5 text-[0.72rem] font-extrabold text-white">
                                         <Camera size={11} /> {kind === 'before' ? 'Before' : 'After'}
                                       </figcaption>
                                     </figure>
@@ -156,7 +156,7 @@ export default function FieldApp() {
                                     )}>
                                     <ImagePlus size={22} />
                                     {kind === 'before' ? 'Before Photo' : 'After Photo'}
-                                    <span className="text-[0.64rem] font-semibold text-ink-faint">탭하여 등록</span>
+                                    <span className="text-[0.72rem] font-semibold text-ink-faint">탭하여 등록</span>
                                   </button>
                                 )
                               })}
@@ -174,7 +174,7 @@ export default function FieldApp() {
                             </div>
 
                             <Btn size="lg" variant={canComplete ? 'success' : 'primary'} disabled={!canComplete} className="w-full"
-                              onClick={() => { completeWork(nextJob.id); toast('작업 완료 — Service Report가 생성되었습니다.'); setNoteDraft('') }}>
+                              onClick={() => { completeWork(nextJob.id); toast('작업 완료 — 작업 리포트가 생성되었습니다.'); setNoteDraft('') }}>
                               <CheckCircle2 size={18} className="mr-1 inline" /> 작업 완료
                             </Btn>
                             {!canComplete && <p className="text-center text-[0.72rem] text-ink-faint">체크리스트 전체 완료 + Before/After 사진 등록 후 완료할 수 있습니다.</p>}
@@ -188,7 +188,7 @@ export default function FieldApp() {
                 <Card className="p-6 text-center">
                   <CheckCircle2 size={30} className="mx-auto text-success" />
                   <p className="mt-2 text-[1.05rem] font-extrabold">오늘 배정된 작업을 모두 완료했습니다!</p>
-                  <p className="mt-1 text-[0.82rem] text-ink-soft">Service Report는 리포트 탭에서 확인할 수 있습니다.</p>
+                  <p className="mt-1 text-[0.82rem] text-ink-soft">작업 리포트는 리포트 탭에서 확인할 수 있습니다.</p>
                 </Card>
               )}
 
@@ -255,13 +255,13 @@ export default function FieldApp() {
                   <p className="mt-0.5 text-[0.88rem] font-semibold leading-snug">{a.m}</p>
                 </Card>
               ))}
-              <p className="text-center text-[0.72rem] text-ink-faint">Push 알림은 실서비스 연결 시 활성화됩니다. (Integration Ready)</p>
+              <p className="text-center text-[0.72rem] text-ink-faint">앱 알림은 실서비스 연결 시 활성화됩니다. (연동 준비 상태)</p>
             </div>
           )}
 
           {tab === 'reports' && (
             <div className="space-y-3">
-              <p className="text-[1.05rem] font-extrabold">내 Service Report</p>
+              <p className="text-[1.05rem] font-extrabold">내 작업 리포트</p>
               {myReports.length === 0 && <Card className="p-5 text-center text-[0.85rem] text-ink-faint">작업 완료 시 리포트가 생성됩니다.</Card>}
               {myReports.map((r) => (
                 <Card key={r.id} className="p-4">
@@ -291,7 +291,7 @@ export default function FieldApp() {
                 </div>
               </Card>
               <p className="text-center text-[0.72rem] leading-relaxed text-ink-faint">
-                현장직원 화면에는 경영 지표·수익성·전체 고객 정보가 표시되지 않습니다.<br />(Role 기반 접근 제어 — RLS Preview)
+                현장직원 화면에는 경영 지표·수익성·전체 고객 정보가 표시되지 않습니다.<br />(역할 기반 접근 제어 — RLS)
               </p>
               <div className="flex justify-center pt-1"><MiraeCredit height={19} /></div>
               {/* 좁은 모바일 화면이라 섹션형 대신 축약형 3버튼 */}
@@ -310,7 +310,7 @@ export default function FieldApp() {
             ['me', '내 정보', <User key="i" size={21} />],
           ] as Array<[Tab, string, React.ReactNode]>).map(([id, label, icon]) => (
             <button key={id} onClick={() => setTab(id)}
-              className={cx('flex flex-1 flex-col items-center gap-0.5 py-2 text-[0.66rem] font-bold', tab === id ? 'text-primary' : 'text-ink-faint')}>
+              className={cx('flex flex-1 flex-col items-center gap-0.5 py-2 text-[0.72rem] font-bold', tab === id ? 'text-primary' : 'text-ink-faint')}>
               {icon}{label}
             </button>
           ))}

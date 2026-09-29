@@ -39,7 +39,7 @@ export default function Team() {
               <div className="mt-3 space-y-1.5">
                 {members.map((m) => (
                   <div key={m.id} className="flex items-center justify-between rounded-lg bg-ivory px-2.5 py-1.5 text-[0.82rem]">
-                    <span className="font-bold">{m.name} <span className="text-[0.68rem] font-semibold text-ink-faint">{m.position}</span></span>
+                    <span className="font-bold">{m.name} <span className="text-[0.72rem] font-semibold text-ink-faint">{m.position}</span></span>
                     <Badge tone={m.status === '근무' ? 'success' : m.status === '휴무' ? 'neutral' : 'danger'}>{m.status}</Badge>
                   </div>
                 ))}

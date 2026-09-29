@@ -16,14 +16,14 @@ export default function Upsell() {
   return (
     <div className="fade-up">
       <PageHeader
-        title="추가서비스 (Upsell Center)"
-        desc="AI Upsell Finder가 계약·현장 기록에서 발견한 추가 매출 기회를 관리합니다."
+        title="추가서비스"
+        desc="AI 추가매출 발굴이 계약·현장 기록에서 찾아낸 추가 매출 기회를 관리합니다."
         right={<><AIReadyBadge /><DemoBadge /></>}
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 sm:max-w-md">
         <Card className="p-4 text-center">
-          <p className="text-[0.75rem] font-bold text-ink-faint">진행중 Opportunity</p>
+          <p className="text-[0.75rem] font-bold text-ink-faint">진행 중인 기회</p>
           <p className="tnum text-[1.4rem] font-extrabold text-primary">{fmtManwon(totalExpected)}</p>
         </Card>
         <Card className="p-4 text-center">
@@ -38,7 +38,7 @@ export default function Upsell() {
           return (
             <Card key={u.id} className="p-5 flex flex-col">
               <div className="flex items-center justify-between gap-2">
-                <Badge tone="success"><TrendingUp size={11} /> Growth Opportunity</Badge>
+                <Badge tone="success"><TrendingUp size={11} /> 매출 기회</Badge>
                 <StatusPill status={u.status} />
               </div>
               <p className="mt-2.5 text-[1.05rem] font-extrabold">{c?.name}</p>
@@ -62,7 +62,7 @@ export default function Upsell() {
                   <Btn size="sm" variant="success" onClick={() => {
                     setUpsellStatus(u.id, '성사')
                     addEvidence('upsell', `${c?.name} — ${u.recommendedService} 계약 성사`, `추가매출 ${u.expectedRevenue}만원 (DEMO)`)
-                    toast('Opportunity 성사! Evidence에 기록되었습니다.')
+                    toast('추가서비스 성사! 실증 기록에 남겼습니다.')
                   }}>성사 처리</Btn>
                 )}
                 <Btn size="sm" variant="ghost" onClick={() => nav(`/customers/${u.customerId}`)}>고객 <ArrowRight size={12} className="inline" /></Btn>
