@@ -15,11 +15,6 @@ export function isInPreview(): boolean {
   return p === 'mobile' || p === 'pc'
 }
 
-export function previewKind(): PreviewKind | null {
-  if (typeof window === 'undefined') return null
-  const p = new URLSearchParams(window.location.search).get(PREVIEW_PARAM)
-  return p === 'mobile' || p === 'pc' ? p : null
-}
 
 /** 현재 Route(+query) 에 preview 파라미터를 붙인 URL */
 export function previewUrl(pathname: string, search: string, kind: PreviewKind): string {

@@ -1,6 +1,6 @@
 import { ScrollText, CheckCircle2 } from 'lucide-react'
 import { Card, PageHeader, Badge, DemoBadge, EmptyState } from '../../components/ui'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { ENGINE_LABEL } from '../../types'
 import { nowDateShort } from '../../lib/utils'
 

@@ -5,6 +5,7 @@ import { Card, PageHeader, Badge, DemoBadge, StatusPill, EmptyState } from '../.
 import { CUSTOMERS } from '../../lib/demo/company'
 import { SEED_HEALTH } from '../../lib/demo/intelligence'
 import { cx } from '../../lib/utils'
+import { matchesQuery } from '../../lib/search'
 
 const TYPES = ['전체', '병의원', '사무실', '학원', '상가', '빌딩', '프랜차이즈']
 
@@ -12,12 +13,8 @@ export default function Customers() {
   const nav = useNavigate()
   const [q, setQ] = useState('')
   const [type, setType] = useState('전체')
-  // 검색은 공백·대소문자 무시 — "강남c" 로 쳐도 "강남 C클리닉"을 찾는다
-  const norm = (v: string) => v.replace(/\s+/g, '').toLowerCase()
-  const nq = norm(q)
   const list = CUSTOMERS.filter((c) =>
-    (type === '전체' || c.type === type) &&
-    (nq === '' || [c.name, c.district, c.contract.serviceSummary].some((f) => norm(f).includes(nq))),
+    (type === '전체' || c.type === type) && matchesQuery([c.name, c.district, c.contract.serviceSummary], q),
   )
   const reset = () => { setQ(''); setType('전체') }
 

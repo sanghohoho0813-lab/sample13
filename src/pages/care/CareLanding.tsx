@@ -6,6 +6,7 @@ import { SERVICE_TYPES } from '../../lib/demo/operations'
 import { PHOTO, altOf, photoOf } from '../../lib/demo/photos'
 import { MiraeCredit } from '../../components/brand/MiraeLogo'
 import { CUSTOMER_ROADMAP, STAGE_NOTE } from '../../lib/demo/roadmap'
+import { Photo } from '../../components/ui/Photo'
 
 export default function CareLanding() {
   const nav = useNavigate()
@@ -13,7 +14,8 @@ export default function CareLanding() {
     <CareShell wide>
       {/* ── Hero — 실제 현장 사진 위에 브랜드 메시지 ── */}
       <section className="fade-up relative overflow-hidden rounded-3xl bg-shell">
-        <img
+        <Photo
+          sizes="100vw"
           src={PHOTO.hero}
           alt={altOf(PHOTO.hero)}
           width={1448}
@@ -74,7 +76,8 @@ export default function CareLanding() {
                 className="group overflow-hidden rounded-2xl border border-line bg-card text-left transition-all hover:border-primary hover:shadow-card-hover"
               >
                 <div className="aspect-[4/3] overflow-hidden bg-ivory">
-                  <img
+                  <Photo
+                    sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
                     src={src}
                     alt={altOf(src)}
                     width={1448}
@@ -103,7 +106,7 @@ export default function CareLanding() {
               <div className="grid grid-cols-2">
                 {([['작업 전', p.before], ['작업 후', p.after]] as const).map(([tag, src]) => (
                   <figure key={tag} className="relative aspect-[4/3] overflow-hidden bg-ivory">
-                    <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
+                    <Photo src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
                     <figcaption className={`absolute left-2 top-2 rounded-md px-2 py-0.5 text-[0.72rem] font-extrabold tracking-wide ${
                       tag === '작업 전' ? 'bg-ink/75 text-white' : 'bg-primary text-white'
                     }`}>{tag}</figcaption>
@@ -128,7 +131,7 @@ export default function CareLanding() {
           ].map((c) => (
             <Card key={c.t} className="overflow-hidden">
               <div className="aspect-[16/10] overflow-hidden bg-ivory">
-                <img src={c.src} alt={altOf(c.src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
+                <Photo src={c.src} alt={altOf(c.src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
               </div>
               <div className="p-4">
                 <p className="text-[0.95rem] font-extrabold">{c.t}</p>
@@ -153,7 +156,7 @@ export default function CareLanding() {
             <Btn size="lg" className="mt-5" onClick={() => nav('/care/home')}>포털 들어가기 <ArrowRight size={16} className="inline" /></Btn>
           </div>
           <figure className="overflow-hidden rounded-2xl">
-            <img src={PHOTO.completionPhoto} alt={altOf(PHOTO.completionPhoto)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
+            <Photo src={PHOTO.completionPhoto} alt={altOf(PHOTO.completionPhoto)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
             <figcaption className="mt-2 flex items-center gap-1.5 text-[0.74rem] text-ink-faint">
               <Camera size={12} /> 작업 완료 사진은 그대로 고객 리포트가 됩니다.
             </figcaption>

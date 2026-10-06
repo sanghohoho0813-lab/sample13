@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Users, AlertTriangle } from 'lucide-react'
 import { Card, PageHeader, Badge, DemoBadge, SectionTitle, StatTile, type Tone } from '../../components/ui'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { TEAMS, EMPLOYEES, customerById } from '../../lib/demo/company'
 
 export default function Team() {

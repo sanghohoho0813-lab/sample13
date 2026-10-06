@@ -135,7 +135,7 @@ export function SampleBridgeMini({
               'flex flex-1 items-center justify-center gap-1 rounded-xl border px-2 text-[0.72rem] font-bold transition-colors',
               compact ? 'py-1' : 'py-1.5',
               dark
-                ? 'border-white/18 text-[#9FBDBD] hover:border-champagne/60 hover:text-champagne'
+                ? 'border-white/18 text-white/65 hover:border-champagne/60 hover:text-champagne'
                 : 'border-line text-ink-faint hover:border-primary hover:text-primary',
             )}
           >

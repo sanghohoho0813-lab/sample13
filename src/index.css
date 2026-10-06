@@ -19,6 +19,8 @@
   --color-ink-faint: #6B7684;
   --color-line: #E4E4DC;
   --color-card: #FFFFFF;
+  --color-neutral-soft: #EFF1F0; /* 중립 배지 · 버튼 hover */
+  --color-neutral-mid: #B8C2CC;  /* 예정 · 대기 같은 중립 상태 막대 */
 
   /* ── 의미색 고정 ── */
   --color-success: #1E8A5E;
@@ -253,3 +255,25 @@ html[data-motion="reduce"] *::after {
   transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 71;
 }
+
+/* ═══════════ 키보드 포커스 — 마우스 클릭에는 보이지 않고, Tab 이동에는 항상 보인다 ═══════════ */
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 0.6rem;
+}
+/* 어두운 사이드바 · 드로어 위에서는 밝은 링 */
+:where(aside, .bg-shell) :where(a, button):focus-visible { outline-color: var(--color-champagne); }
+input:focus-visible, textarea:focus-visible { outline-offset: 0; }
+
+/* 본문 바로가기 — 평소엔 숨어 있다가 Tab 첫 이동에 나타난다 */
+.skip-link {
+  position: fixed; left: 1rem; top: -4rem; z-index: 100;
+  padding: 0.6rem 1rem; border-radius: 0.75rem;
+  background: var(--color-shell); color: #fff; font-weight: 800; font-size: 0.88rem;
+  transition: top 0.15s ease;
+}
+.skip-link:focus { top: 0.75rem; }
+
+/* 본문 바로가기로 포커스가 옮겨진 본문 영역 자체에는 링을 그리지 않는다 */
+main:focus-visible { outline: none; }

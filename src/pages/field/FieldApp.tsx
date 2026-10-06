@@ -4,14 +4,16 @@ import {
   Navigation, MapPin, CheckCircle2, Camera, Sparkles, Bell, FileText, User,
   CalendarDays, ClipboardCheck, ArrowLeft, Play, Check, ImagePlus,
 } from 'lucide-react'
-import { Badge, Btn, Card, DemoBadge, StatusPill, TextArea, useToast } from '../../components/ui'
-import { useDemo } from '../../lib/data/store'
+import { Badge, Btn, Card, DemoBadge, StatusPill, TextArea } from '../../components/ui'
+import { useToast } from '../../components/ui/toast-context'
+import { useDemo } from '../../lib/data/context'
 import { customerById, teamMemberNames } from '../../lib/demo/company'
 import { CHECKLIST_TEMPLATE } from '../../lib/demo/operations'
 import { cx, nowClock, nowDateCompact } from '../../lib/utils'
 import { beforeAfterFor, altOf } from '../../lib/demo/photos'
 import { MiraeCredit } from '../../components/brand/MiraeLogo'
 import { SampleBridgeMini } from '../../components/brand/SampleBridgeCTA'
+import { Photo } from '../../components/ui/Photo'
 
 type Tab = 'today' | 'site' | 'alerts' | 'reports' | 'me'
 
@@ -84,7 +86,7 @@ export default function FieldApp() {
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-4 pb-24 space-y-4">
+        <main id="main" tabIndex={-1} className="flex-1 px-4 py-4 pb-24 space-y-4">
           {tab === 'today' && (
             <>
               {/* 다음 현장 */}
@@ -157,7 +159,7 @@ export default function FieldApp() {
                                 if (taken) {
                                   return (
                                     <figure key={kind} className="relative aspect-[4/3] overflow-hidden rounded-xl border border-primary">
-                                      <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
+                                      <Photo sizes="240px" src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
                                       <figcaption className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-ink/75 px-2 py-0.5 text-[0.72rem] font-extrabold text-white">
                                         <Camera size={11} /> {kind === 'before' ? '작업 전' : '작업 후'}
                                       </figcaption>

@@ -8,8 +8,6 @@ import { cx } from '../../lib/utils'
  */
 
 export const MIRAE_LOGO = '/brand/mirae-ai-lab-logo.png'
-export const MIRAE_MARK = '/brand/mirae-mark.png'
-export const MIRAE_SITE = 'https://miraeailab.com'
 
 /** 로고 이미지 단독 (밝은 배경 전용) */
 export function MiraeLogo({ className, height = 22 }: { className?: string; height?: number }) {
@@ -26,20 +24,6 @@ export function MiraeLogo({ className, height = 22 }: { className?: string; heig
   )
 }
 
-/** M 심볼만 (작은 자리·아바타형) */
-export function MiraeMark({ size = 20, className }: { size?: number; className?: string }) {
-  return (
-    <img
-      src={MIRAE_MARK}
-      alt="미래AI랩"
-      width={256}
-      height={256}
-      loading="lazy"
-      className={cx('shrink-0', className)}
-      style={{ width: size, height: size }}
-    />
-  )
-}
 
 /**
  * 제작사 크레딧 — "Powered by 미래AI랩"

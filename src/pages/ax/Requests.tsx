@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Inbox, ArrowRight, Store } from 'lucide-react'
-import { Card, PageHeader, Badge, Btn, DemoBadge, StatusPill, EmptyState, useToast } from '../../components/ui'
-import { useDemo } from '../../lib/data/store'
+import { Card, PageHeader, Badge, Btn, DemoBadge, StatusPill, EmptyState } from '../../components/ui'
+import { useToast } from '../../components/ui/toast-context'
+import { useDemo } from '../../lib/data/context'
 import { customerById } from '../../lib/demo/company'
 import { cx } from '../../lib/utils'
 import type { CustomerRequest } from '../../types'
@@ -37,7 +38,7 @@ export default function Requests() {
       />
 
       <div className="-mx-4 mb-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <div role="tablist" className="flex w-max gap-1 rounded-xl border border-line bg-card p-1">
+        <div role="tablist" aria-label="요청 상태" className="flex w-max gap-1 rounded-xl border border-line bg-card p-1">
           {(['처리 필요', '처리중', '완료', '전체'] as Filter[]).map((f) => (
             <button key={f} role="tab" aria-selected={filter === f} onClick={() => setFilter(f)} className={cx(
               'flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-1.5 text-[0.88rem] font-bold',

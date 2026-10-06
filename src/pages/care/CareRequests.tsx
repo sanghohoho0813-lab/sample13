@@ -4,7 +4,7 @@ import { PlusCircle, RefreshCcw, Siren, MessageCircle } from 'lucide-react'
 import CareShell, { CARE_CUSTOMER_ID } from './CareShell'
 import RequestSheet, { type RequestPreset } from './RequestSheet'
 import { Card, Badge, EmptyState } from '../../components/ui'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { cx } from '../../lib/utils'
 import type { RequestType } from '../../types'
 
@@ -55,7 +55,7 @@ export default function CareRequests() {
           ))}
         </div>
 
-        <div role="tablist" className="flex w-fit gap-1 rounded-xl border border-line bg-card p-1">
+        <div role="tablist" aria-label="요청 상태" className="flex w-fit gap-1 rounded-xl border border-line bg-card p-1">
           {(['진행', '완료'] as const).map((f) => (
             <button key={f} role="tab" aria-selected={filter === f} onClick={() => setFilter(f)} className={cx(
               'flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-[0.88rem] font-bold',

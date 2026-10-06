@@ -589,3 +589,31 @@ AX 화면 본문(Dashboard·오늘의 AX·일정·현장·고객·AI·Evidence)�
 - `flows2.mjs` 36항목(딥링크 · 진행률 · 목록형 표 · 상담 바로가기 · 키보드 · 레이아웃 유지 · 태블릿 헤더 768/1024/1280) + 기존 flows 38 · qa 37 · regress 26.
 - `audit.mjs` 뷰포트에 **768 · 1024** 추가(총 8종), `midword.mjs`도 768 · 1024 추가.
 
+# Q. 3차 고도화 — 개발 품질 · 성능 · 접근성 (2026-10-07)
+
+화면 기능은 그대로 두고, 개발자가 저장소와 네트워크 탭을 열었을 때 드러나는 부분을 정리했다.
+
+## 성능
+- **현장 사진**: 원본 PNG(평균 1.9MB, 총 37.4MB)는 보존하고 `scripts/optimize-photos.mjs`(sharp)로 WebP 480·960·1448px 생성 → `public/photos/opt/`. `<Photo>` 가 `<picture>` + `srcset` + `sizes` 로 화면 폭에 맞는 파일을 고르고, WebP 미지원 시 PNG 로 대체.
+- **코드 분할**: 모든 화면을 `lazyPage()` 로 분할, 첫 화면을 그린 뒤 `requestIdleCallback` 으로 나머지 화면을 순서대로 미리 받음. 라이브러리는 `react` · `charts` · `icons` 청크로 분리(배포가 바뀌어도 캐시 재사용).
+- **차트**: recharts 는 `WeeklyTrendChart` 안에만 두고 대시보드에서 `lazy` — 본문(KPI · 브리핑)이 먼저 그려진다.
+- **글꼴**: Pretendard 를 npm 패키지로 자체 호스팅(동적 서브셋 92조각, `font-display: swap`).
+
+## 구조
+- **데이터 계층**: `state.ts`(모양 · 초기값 · `parseStoredState` 검증/버전) → `reducer.ts`(순수 변경 규칙) → `context.ts`(`useDemo`) → `store.tsx`(Provider). 시각 · ID 는 `meta` 주입.
+  - 같은 실행 단계로 두 번 바꾸거나 이미 완료된 작업을 다시 완료해도 기록 · 리포트가 중복되지 않는다.
+  - 저장 데이터가 손상 · 미래 버전이면 업무 데이터만 초기화, 사용자 설정(테마 · 글자 · 모션 · 튜토리얼 완료)은 유지.
+  - 데모 초기화는 튜토리얼 완료 여부를 유지(초기화 후 튜토리얼이 다시 뜨지 않게).
+- **오류 경계**: AX 본문 · 독립 화면을 각각 `ErrorBoundary` 로 감싸 화면 하나의 오류가 앱 전체 흰 화면이 되지 않게. 다른 화면으로 이동하면 자동 해제.
+- **폼 · 검색 규칙 분리**: `pages/care/requestForm.ts`(검증 · 요약 문장), `lib/search.ts`, `lib/status.ts`, `lib/tone.ts` — 화면 코드에서 빼 단위 테스트.
+- **토큰**: 하드코딩 색 제거 — `neutral-soft` · `neutral-mid` 토큰 추가, 사이드바 글자색은 테마와 무관한 흰색 투명도, 차트 · 진행 막대 · 건강도 링은 CSS 변수(테마 6종을 따라 바뀜).
+
+## 접근성
+- 오버레이 배경은 클릭 핸들러 div 대신 `<Backdrop>`(실제 버튼, Tab 순서 제외) — ESC · 닫기 버튼과 함께.
+- `Modal`: 열릴 때 포커스 이동, Tab 순환 제한, 닫히면 연 버튼으로 복귀. 하단 알림은 `role="status" aria-live="polite"`.
+- 본문 바로가기 링크, `:focus-visible` 포커스 링(어두운 배경에서는 샴페인색), 탭 목록 `aria-label`, 차트 `role="img"` 요약.
+- 화면별 `document.title`, `theme-color` · Open Graph 메타.
+
+## 품질 게이트 (CI)
+`typecheck`(앱 + 테스트 코드, 미사용 금지) → `lint`(ESLint 9 · jsx-a11y, 경고 0) → `test`(Vitest 35) → `build` → `e2e`(Playwright 26, PC · 모바일). `npm audit` 취약점 0 — react-router v7 로 올림.
+

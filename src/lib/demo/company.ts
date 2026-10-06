@@ -127,7 +127,6 @@ export const SITES: Site[] = CUSTOMERS.map((c, i) => ({
 
 export const customerById = (id: string) => CUSTOMERS.find((c) => c.id === id)
 export const teamById = (id: string | null) => (id ? TEAMS.find((t) => t.id === id) : undefined)
-export const employeeById = (id: string) => EMPLOYEES.find((e) => e.id === id)
 export const teamMembers = (teamId: string) =>
   EMPLOYEES.filter((e) => e.teamId === teamId)
 export const teamMemberNames = (teamId: string | null) =>

@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Star, ArrowRight, TrendingUp, ShieldCheck, Eye } from 'lucide-react'
 import { Card, PageHeader, Badge, Btn, DemoBadge, SectionTitle, StatusPill, EmptyState } from '../../components/ui'
 import { AIReadyBadge, InsightCard, WhyAIButton } from '../../components/ai'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { customerById } from '../../lib/demo/company'
 import { SEED_HEALTH, SEED_INSIGHTS, SEED_PROFITABILITY, SEED_QUALITY } from '../../lib/demo/intelligence'
 import { cx } from '../../lib/utils'
@@ -42,9 +42,9 @@ export default function CustomerDetail() {
               <div className="flex flex-wrap items-center gap-5">
                 <div className="relative flex h-28 w-28 items-center justify-center">
                   <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="#EDEDE6" strokeWidth="10" />
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="var(--color-line)" strokeWidth="10" />
                     <circle cx="50" cy="50" r="42" fill="none"
-                      stroke={h.score >= 80 ? '#1E8A5E' : h.score >= 65 ? '#B97E14' : '#C24A3F'}
+                      stroke={h.score >= 80 ? 'var(--color-success)' : h.score >= 65 ? 'var(--color-warning)' : 'var(--color-danger)'}
                       strokeWidth="10" strokeLinecap="round"
                       strokeDasharray={`${(h.score / 100) * 264} 264`} />
                   </svg>

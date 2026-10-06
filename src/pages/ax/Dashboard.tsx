@@ -1,26 +1,28 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   CalendarCheck, Loader2, CheckCircle2, AlertTriangle, RefreshCcw, TrendingUp,
   Sparkles, ArrowRight, Users, Wallet, Lock, ChevronRight,
 } from 'lucide-react'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { Card, KpiCard, SectionTitle, Btn, StatusPill, StatusText, Freshness, SkeletonBlock, DemoBadge, type Tone, toneBg } from '../../components/ui'
+import { Card, KpiCard, SectionTitle, Btn, StatusPill, StatusText, Freshness, SkeletonBlock, DemoBadge, type Tone } from '../../components/ui'
+import { toneBg } from '../../lib/tone'
 import { AIReadyBadge, WhyAIButton } from '../../components/ai'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { customerById, teamById, TEAMS, EMPLOYEES } from '../../lib/demo/company'
-import { DAILY_BRIEFING, WEEKLY_TREND, MONTH_REVENUE, SEED_INSIGHTS } from '../../lib/demo/intelligence'
-import { fmtManwon, cx } from '../../lib/utils'
+import { DAILY_BRIEFING, MONTH_REVENUE, SEED_INSIGHTS } from '../../lib/demo/intelligence'
+
+// 차트 라이브러리는 무거워 본문을 먼저 그리고 뒤이어 받는다
+const WeeklyTrendChart = lazy(() => import('../../components/charts/WeeklyTrendChart'))
+import { fmtManwon, fmtWon, cx } from '../../lib/utils'
 
 // 오늘 진행 상황 막대 — 상태별 색 (StatusPill 의미색과 동일 계열)
 const STATUS_ORDER: Array<{ key: string; label: string; color: string }> = [
-  { key: '완료', label: '완료', color: '#1E8A5E' },
-  { key: '진행', label: '진행중', color: '#2563AE' },
-  { key: '예정', label: '예정', color: '#B8C2CC' },
-  { key: '확인필요', label: '확인필요', color: '#C24A3F' },
+  { key: '완료', label: '완료', color: 'var(--color-success)' },
+  { key: '진행', label: '진행중', color: 'var(--color-info)' },
+  { key: '예정', label: '예정', color: 'var(--color-neutral-mid)' },
+  { key: '확인필요', label: '확인필요', color: 'var(--color-danger)' },
 ]
 
-// AI 브리핑 → AI 센터 해당 탭으로 바로 이동
 // 브리핑 칩 — 숫자는 AI 센터 해당 탭의 건수와 같은 원본에서 센다 (누른 뒤 숫자가 달라 보이지 않게)
 const BRIEF_CHIPS: Array<{ tab: 'risk' | 'upsell' | 'retention' | 'dispatch'; label: string; tone: Tone }> = [
   { tab: 'risk', label: '위험', tone: 'danger' },
@@ -222,17 +224,7 @@ export default function Dashboard() {
         <Card className="p-5">
           <SectionTitle right={<DemoBadge label="데모" />}>주간 작업 추이</SectionTitle>
           <div className="h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={WEEKLY_TREND} margin={{ top: 8, right: 12, left: -14, bottom: 0 }}>
-                <XAxis dataKey="day" tick={{ fontSize: 13, fontWeight: 700, fill: '#6B7684' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: '#6B7684' }} axisLine={false} tickLine={false} />
-                <Tooltip />
-                <Legend iconType="circle" iconSize={9} formatter={(v) => <span className="text-[0.8rem] font-semibold text-ink-soft">{v}</span>} />
-                <Line type="monotone" dataKey="예정" stroke="#52A7A3" strokeWidth={2.5} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="완료" stroke="#0E6D71" strokeWidth={2.5} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="지연" stroke="#C24A3F" strokeWidth={2} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
+            <Suspense fallback={<div className="skeleton h-full w-full" />}><WeeklyTrendChart /></Suspense>
           </div>
         </Card>
 
@@ -244,7 +236,7 @@ export default function Dashboard() {
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-info-soft text-info"><Wallet size={21} /></span>
                 <div>
                   <p className="text-[0.78rem] font-bold text-ink-faint">이번 달 누적 매출 (데모)</p>
-                  <p className="tnum text-[1.5rem] font-extrabold leading-tight">{(MONTH_REVENUE.total * 10000).toLocaleString('ko-KR')}원</p>
+                  <p className="tnum text-[clamp(1.2rem,5.4vw,1.5rem)] font-extrabold leading-tight">{fmtWon(MONTH_REVENUE.total)}</p>
                 </div>
               </div>
               <div>

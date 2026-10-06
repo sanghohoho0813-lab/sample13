@@ -1,9 +1,10 @@
 import { Sparkles, CheckCircle2 } from 'lucide-react'
 import CareShell, { CARE_CUSTOMER_ID } from './CareShell'
 import { Card, Badge, EmptyState } from '../../components/ui'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { SEED_REPORTS } from '../../lib/demo/intelligence'
 import { beforeAfterFor, altOf } from '../../lib/demo/photos'
+import { Photo } from '../../components/ui/Photo'
 
 export default function CareReports() {
   const { reports } = useDemo()
@@ -39,7 +40,7 @@ export default function CareReports() {
                   <div className="grid grid-cols-2">
                     {([['작업 전', ba.before], ['작업 후', ba.after]] as const).map(([tag, src]) => (
                       <figure key={tag} className="relative aspect-[4/3] overflow-hidden bg-ivory">
-                        <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
+                        <Photo src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
                         <figcaption className={`absolute left-2.5 top-2.5 rounded-md px-2 py-0.5 text-[0.72rem] font-extrabold tracking-wide ${
                           tag === '작업 전' ? 'bg-ink/75 text-white' : 'bg-primary text-white'
                         }`}>{tag}</figcaption>

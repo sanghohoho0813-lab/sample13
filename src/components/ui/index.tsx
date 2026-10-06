@@ -1,22 +1,13 @@
-import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
+import { X, CheckCircle2, AlertTriangle, Info } from 'lucide-react'
 import { cx } from '../../lib/utils'
-import { HEALTH_STATUS_LABEL } from '../../types'
 import { useHideHistoryNav } from '../../lib/historyNav'
+import { toneBg, toneText, type Tone } from '../../lib/tone'
+import { statusLabel, statusTone } from '../../lib/status'
+import { ToastContext } from './toast-context'
 
-// ─── Tone system (의미색 고정) ───────────────────────────
-export type Tone = 'success' | 'warning' | 'danger' | 'info' | 'ai' | 'neutral' | 'brand'
-
-export const toneBg: Record<Tone, string> = {
-  success: 'bg-success-soft text-success',
-  warning: 'bg-warning-soft text-warning',
-  danger: 'bg-danger-soft text-danger',
-  info: 'bg-info-soft text-info',
-  ai: 'bg-ai-soft text-ai-strong',
-  neutral: 'bg-[#EFF1F0] text-ink-soft',
-  brand: 'bg-mint text-primary-strong',
-}
+export type { Tone }
 
 // ─── Badge ───────────────────────────────────────────────
 export function Badge({ tone = 'neutral', children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
@@ -61,17 +52,13 @@ export function Card({ children, className, onClick, hover, tour }: { children: 
 }
 
 // ─── Stat Tile — 화면 상단 요약 숫자 (팀·품질·추가서비스·수익성 공통) ───────
-const toneValue: Record<Tone, string> = {
-  success: 'text-success', warning: 'text-warning', danger: 'text-danger', info: 'text-info',
-  ai: 'text-ai-strong', neutral: 'text-ink-soft', brand: 'text-primary',
-}
 export function StatTile({ label, value, tone = 'brand', icon, className }: {
   label: string; value: ReactNode; tone?: Tone; icon?: ReactNode; className?: string
 }) {
   return (
     <Card className={cx('px-4 py-3.5', className)}>
       <p className="text-[0.8rem] font-bold text-ink-faint">{label}</p>
-      <p className={cx('mt-0.5 flex flex-wrap items-center gap-1 text-[clamp(1.15rem,5vw,1.45rem)] font-extrabold leading-tight tabular-nums [overflow-wrap:anywhere]', toneValue[tone])}>{icon}<span className="min-w-0">{value}</span></p>
+      <p className={cx('mt-0.5 flex flex-wrap items-center gap-1 text-[clamp(1.15rem,5vw,1.45rem)] font-extrabold leading-tight tabular-nums [overflow-wrap:anywhere]', toneText[tone])}>{icon}<span className="min-w-0">{value}</span></p>
     </Card>
   )
 }
@@ -126,7 +113,7 @@ export function Btn({ children, onClick, variant = 'primary', size = 'md', class
   const v = {
     primary: 'bg-primary text-white hover:bg-primary-strong',
     outline: 'border border-line bg-card text-ink hover:border-primary hover:text-primary',
-    ghost: 'text-ink-soft hover:bg-[#EFF1F0]',
+    ghost: 'text-ink-soft hover:bg-neutral-soft',
     ai: 'bg-ai text-white hover:bg-ai-strong',
     danger: 'bg-danger text-white hover:opacity-90',
     success: 'bg-success text-white hover:opacity-90',
@@ -147,6 +134,14 @@ export function Btn({ children, onClick, variant = 'primary', size = 'md', class
   )
 }
 
+/**
+ * 오버레이 배경 — 누르면 닫힌다. 클릭 핸들러를 붙인 div 대신 실제 버튼을 쓰고,
+ * 키보드 사용자는 ESC · 닫기 버튼으로 닫으므로 Tab 순서에서는 뺀다(tabIndex -1).
+ */
+export function Backdrop({ onClick, label = '닫기', className }: { onClick: () => void; label?: string; className?: string }) {
+  return <button type="button" tabIndex={-1} aria-label={label} onClick={onClick} className={cx('absolute inset-0 cursor-default', className)} />
+}
+
 // ─── Modal ───────────────────────────────────────────────
 export function Modal({ open, onClose, title, children, wide }: {
   open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; wide?: boolean
@@ -161,19 +156,22 @@ export function Modal({ open, onClose, title, children, wide }: {
     boxRef.current?.focus({ preventScroll: true })
     return () => { if (prev && document.contains(prev)) prev.focus({ preventScroll: true }) }
   }, [open])
-  // Tab 이 대화상자 밖으로 빠져나가지 않게
-  const trap = (e: React.KeyboardEvent) => {
-    if (e.key !== 'Tab' || !boxRef.current) return
-    const f = [...boxRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')]
-    if (!f.length) return
-    const first = f[0], last = f[f.length - 1]
-    if (e.shiftKey && (document.activeElement === first || document.activeElement === boxRef.current)) { e.preventDefault(); last.focus() }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
-  }
-  // ESC 닫기 + 배경 스크롤 잠금 (닫힐 때 반드시 원복)
+  // ESC 닫기 · Tab 이 대화상자 밖으로 빠져나가지 않게 · 배경 스크롤 잠금 (닫힐 때 반드시 원복)
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const trapTab = (e: KeyboardEvent) => {
+      const box = boxRef.current
+      if (!box) return
+      const f = [...box.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')]
+      if (!f.length) return
+      const first = f[0], last = f[f.length - 1]
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === box)) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+      else if (e.key === 'Tab') trapTab(e)
+    }
     window.addEventListener('keydown', onKey)
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -182,23 +180,22 @@ export function Modal({ open, onClose, title, children, wide }: {
   if (!open) return null
   // 조상 요소의 backdrop-filter/transform이 fixed의 containing block이 되는 것을 방지
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-shell/50 backdrop-blur-sm p-0 sm:p-6" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
+      <Backdrop onClick={onClose} className="bg-shell/50 backdrop-blur-sm" />
       <div
         ref={boxRef}
         tabIndex={-1}
-        onKeyDown={trap}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        onClick={(e) => e.stopPropagation()}
         className={cx(
-          'pop-in w-full bg-card outline-none sm:rounded-2xl rounded-t-2xl shadow-pop max-h-[88vh] overflow-y-auto overscroll-contain',
+          'pop-in relative w-full bg-card outline-none sm:rounded-2xl rounded-t-2xl shadow-pop max-h-[88vh] overflow-y-auto overscroll-contain',
           wide ? 'sm:max-w-2xl' : 'sm:max-w-lg',
         )}
       >
         <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-card px-5 py-4">
           <h3 id={titleId} className="text-[1.08rem] font-bold">{title}</h3>
-          <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-faint hover:bg-[#EFF1F0]" aria-label="닫기">
+          <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-faint hover:bg-neutral-soft" aria-label="닫기">
             <X size={20} />
           </button>
         </div>
@@ -259,52 +256,44 @@ export function Freshness({ source = '데모 데이터' }: { source?: string }) 
 }
 
 // ─── Toast ───────────────────────────────────────────────
-const ToastCtx = createContext<(msg: string, tone?: Tone) => void>(() => {})
-export const useToast = () => useContext(ToastCtx)
+const TOAST_ICON: Partial<Record<Tone, ReactNode>> = {
+  success: <CheckCircle2 size={17} />,
+  warning: <AlertTriangle size={17} />,
+  danger: <AlertTriangle size={17} />,
+  info: <Info size={17} />,
+}
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Array<{ id: number; msg: string; tone: Tone }>>([])
-  const push = (msg: string, tone: Tone = 'success') => {
+  // 참조가 바뀌지 않아야 useToast() 를 쓰는 화면이 불필요하게 다시 그려지지 않는다
+  const push = useCallback((msg: string, tone: Tone = 'success') => {
     const id = Date.now() + Math.random()
-    setToasts((t) => [...t, { id, msg, tone }])
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2800)
-  }
+    // 같은 문구를 연달아 누르면 쌓지 않고 하나만 — 최대 3개
+    setToasts((t) => [...t.filter((x) => x.msg !== msg), { id, msg, tone }].slice(-3))
+    window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2800)
+  }, [])
   return (
-    <ToastCtx.Provider value={push}>
+    <ToastContext.Provider value={push}>
       {children}
-      <div className="fixed bottom-20 lg:bottom-6 left-1/2 z-[60] -translate-x-1/2 flex flex-col gap-2 items-center px-4 w-full max-w-md pointer-events-none">
+      {/* 스크린리더가 알림 내용을 읽도록 live region 으로 둔다 */}
+      <div role="status" aria-live="polite" className="pointer-events-none fixed bottom-20 left-1/2 z-[60] flex w-full max-w-md -translate-x-1/2 flex-col items-center gap-2 px-4 lg:bottom-6">
         {toasts.map((t) => (
-          <div key={t.id} className={cx('pop-in rounded-xl px-4 py-2.5 text-[0.85rem] font-bold shadow-pop', toneBg[t.tone], 'bg-card border border-line')}>
+          <div key={t.id} className="pop-in flex items-center gap-2 rounded-xl border border-line bg-card px-4 py-2.5 text-[0.86rem] font-bold text-ink shadow-pop">
+            <span className={cx('shrink-0', toneText[t.tone])}>{TOAST_ICON[t.tone] ?? <Info size={17} />}</span>
             {t.msg}
           </div>
         ))}
       </div>
-    </ToastCtx.Provider>
+    </ToastContext.Provider>
   )
 }
 
 // ─── Status pill for schedules / actions ─────────────────
-export function statusTone(status: string): Tone {
-  return status === '완료' || status === '성사' || status === '해결' ? 'success'
-    : status === '작업중' || status === '실행중' || status === '처리중' || status === '협의중' || status === '조치중' ? 'info'
-    : status === '이동중' || status === '제안됨' || status === '확인' ? 'brand'
-    : status === '확인필요' || status === 'Risk' || status === '위험' || status === '보류' ? 'danger'
-    : status === '추천됨' || status === '발견됨' || status === '접수' || status === '재계약 주의' || status === 'Retention Watch' ? 'warning'
-    : 'neutral'
-}
-// 데이터 값은 그대로 두고 화면 표기만 자연스럽게 (실행 단계 '확인' → '검토 중')
-const DISPLAY_LABEL: Record<string, string> = { ...HEALTH_STATUS_LABEL, 확인: '검토 중', 실행중: '실행 중' }
-const statusLabel = (status: string) => DISPLAY_LABEL[status] ?? status
-
 export function StatusPill({ status }: { status: string }) {
   return <Badge tone={statusTone(status)}>{statusLabel(status)}</Badge>
 }
 
 /** 좁은 목록 행에서 Pill 대신 보조줄 앞에 붙이는 상태 텍스트 — 이름 칸을 넓혀 단어가 중간에 끊기지 않게 한다 */
-const toneText: Record<Tone, string> = {
-  success: 'text-success', warning: 'text-warning', danger: 'text-danger', info: 'text-info',
-  ai: 'text-ai-strong', neutral: 'text-ink-soft', brand: 'text-primary-strong',
-}
 export function StatusText({ status, className }: { status: string; className?: string }) {
   return <span className={cx('font-bold', toneText[statusTone(status)], className)}>{statusLabel(status)} · </span>
 }

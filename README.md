@@ -9,10 +9,58 @@
 
 ```bash
 npm install
-npm run dev      # 개발 서버
-npm run build    # 타입체크 + 프로덕션 빌드
-npm run preview  # 빌드 결과 미리보기
+npm run dev        # 개발 서버
+npm run build      # 타입체크 + 프로덕션 빌드
+npm run preview    # 빌드 결과 미리보기
 ```
+
+## 개발자 가이드
+
+### 품질 게이트 — CI(`.github/workflows/ci.yml`)가 매 push마다 같은 순서로 돌린다
+
+| 명령 | 내용 |
+|---|---|
+| `npm run typecheck` | `strict` + 미사용 변수·인자 금지, 앱 코드와 테스트·설정 코드(`tsconfig.node.json`) 모두 |
+| `npm run lint` | ESLint 9 — TypeScript · React Hooks · Fast Refresh · **jsx-a11y**(접근성) 규칙, 경고 0 |
+| `npm test` | Vitest 단위 테스트 — 상태 변경 규칙 · 저장 데이터 복원 · 폼 검증 · 검색 · 오류 경계 |
+| `npm run build` | 화면 단위 코드 분할 빌드 (번들 경고 0) |
+| `npm run e2e` | Playwright — 실제 빌드를 띄워 PC(1440)·모바일(390) 두 환경에서 사용자 흐름 · 360/768/1024px 넘침 검사 · 콘솔 오류 0 |
+
+로컬에 Playwright 브라우저 대신 다른 Chromium 을 쓰려면 `PW_CHROMIUM=/path/to/chrome npm run e2e`.
+
+### 폴더 구조
+
+```
+src/
+  App.tsx                 라우트 — AX 화면은 레이아웃 route 하나를 공유, 화면마다 lazy 로딩
+  pages/ax · care · field 화면 (AX 운영 · 고객 플랫폼 · 현장직원 앱)
+  components/
+    ui/                   Card · Modal · Field · StatTile · Photo … 공통 부품
+    system/               ErrorBoundary · PageFallback
+    layout/ tour/ ai/ charts/ brand/
+  lib/
+    data/                 state.ts(모양·저장 검증) · reducer.ts(변경 규칙) · context.ts(useDemo) · store.tsx(Provider)
+    demo/                 가상 시드 데이터
+    tone.ts status.ts search.ts photoSrcSet.ts routeTitles.ts lazyPage.ts
+e2e/                      Playwright 시나리오
+scripts/optimize-photos.mjs  현장 사진 WebP 파생본 생성 (npm run photos)
+```
+
+### 데이터 계층
+
+화면은 `useDemo()` 하나로 상태와 동작을 받는다. 상태 변경은 전부 `lib/data/reducer.ts` 의 **순수 함수**에서 일어나고,
+시각·ID 같은 바깥 값은 `meta` 로 주입해 테스트에서 고정한다. 저장된 데이터는 `parseStoredState` 가 검증하며
+(버전 · 배열 모양 · 허용값), 손상되었으면 업무 데이터만 초기화하고 테마 · 글자 크기 같은 사용자 설정은 지킨다.
+실서비스 전환 시 `store.tsx` 의 dispatch 자리를 API 호출로 바꾸면 화면 코드는 그대로다.
+
+### 성능
+
+| 항목 | 이전 | 현재 |
+|---|---|---|
+| 현장 사진 20장 | PNG 37.4MB | WebP 1.8MB (1448px) + 480/960px 반응형 — 원본 PNG 는 저장소에 보존 |
+| 고객 서비스 소개 화면 이미지 전송량 (모바일) | 약 40MB | 535KB |
+| 첫 화면 JS (gzip) | 241KB 단일 번들 | 약 95KB — 화면별 분할, 차트(108KB)는 대시보드 본문 뒤에 로딩 |
+| 글꼴 | Pretendard 미로딩(시스템 글꼴로 대체) | Pretendard 자체 호스팅 · 쓰인 글자 조각만 로딩 · `font-display: swap` |
 
 ## 주요 화면
 
@@ -99,4 +147,12 @@ npm run preview  # 빌드 결과 미리보기
 - 표 화면은 좁을 때 목록형, 탭 6개 화면은 모바일 3×2, 고객 헤더 태블릿 대응
 - 공통 부품 `StatTile`, 카드 키보드 접근, Modal 포커스 관리, 404 안내
 - 상세: `docs/PROJECT_SPEC.md` P절 · `DECISIONS.md` 63~73
+
+## 3차 고도화 (2026-10-07) — 개발 품질
+
+- 이미지 95% 경량화(WebP + srcset), 화면 단위 코드 분할, 차트 지연 로딩, Pretendard 자체 호스팅
+- 상태 계층을 순수 reducer + 저장 형식 검증으로 재구성, 단위 테스트 35 · E2E 26 · CI
+- ESLint(jsx-a11y 포함) 경고 0, 미사용 코드 금지, 의존성 취약점 0 (react-router v7)
+- 오류 경계 · 화면별 탭 제목 · 본문 바로가기 · 키보드 포커스 링 · 대화상자 포커스 관리 · 테마를 따르는 차트 색
+- 상세: `docs/PROJECT_SPEC.md` Q절 · `DECISIONS.md` 74~85
 

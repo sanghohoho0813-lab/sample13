@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle2, Siren, Clock } from 'lucide-react'
 import { Modal, Btn, Field, TextArea, ChoiceGroup } from '../../components/ui'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { UPSELL_SERVICES } from '../../lib/demo/operations'
 import { dateWithOffset } from '../../lib/utils'
 import type { RequestType } from '../../types'
 import { CARE_CUSTOMER_ID } from './CareShell'
+import { TOPIC, composeRequestDetail, hasErrors, validateRequest, type RequestFields, type Topic } from './requestForm'
 
 /**
  * 고객 요청 시트 — 추가서비스 · 일정 변경 · 긴급 방문 · 담당자 문의를 한 흐름으로.
@@ -37,7 +38,6 @@ const URGENT = [
   { value: '행사 전후 정리', label: '행사 전후 정리', desc: '갑작스런 일정·방문객 대응' },
   { value: '위생·소독', label: '위생 · 소독', desc: '감염 의심, 위생 점검 대응' },
 ] as const
-const TOPIC = ['일정', '작업 품질', '계약 · 결제', '기타'] as const
 
 // 다음 방문 이후 영업일 4일을 희망 날짜 후보로 (주말 제외)
 const dateChoices = () => {
@@ -51,7 +51,7 @@ const dateChoices = () => {
   return out
 }
 
-export interface RequestPreset { service?: string; topic?: (typeof TOPIC)[number]; memo?: string }
+export interface RequestPreset { service?: string; topic?: Topic; memo?: string }
 
 export default function RequestSheet({ type, onClose, preset }: { type: RequestType | null; onClose: () => void; preset?: RequestPreset }) {
   const { addRequest } = useDemo()
@@ -75,21 +75,10 @@ export default function RequestSheet({ type, onClose, preset }: { type: RequestT
 
   if (!type) return null
 
-  const memoText = memo.trim()
-  // 유형별 필수 항목 — 빠진 것만 메시지로
-  const errors: Record<string, string | null> = {
-    service: type === '추가서비스' && !service ? '필요한 서비스를 선택해 주세요.' : null,
-    when: type === '추가서비스' && !when ? '희망 시기를 선택해 주세요.' : null,
-    date: type === '일정변경' && !date ? '희망 날짜를 선택해 주세요.' : null,
-    slot: type === '일정변경' && !slot ? '희망 시간대를 선택해 주세요.' : null,
-    urgent: type === '긴급방문' && !urgent ? '상황 유형을 선택해 주세요.' : null,
-    topic: type === '문의' && !topic ? '문의 유형을 선택해 주세요.' : null,
-    memo: (type === '긴급방문' || type === '문의') && memoText.length < 5
-      ? (memoText.length === 0 ? '내용을 입력해 주세요.' : '조금만 더 자세히 적어 주세요. (5자 이상)')
-      : null,
-  }
-  const invalid = Object.values(errors).some(Boolean)
-  const show = (k: string) => (tried ? errors[k] : null)
+  const fields: RequestFields = { service, when, date, slot, urgent, topic, memo }
+  const errors = validateRequest(type, fields)
+  const invalid = hasErrors(errors)
+  const show = (k: keyof RequestFields) => (tried ? errors[k] : null)
 
   const submit = () => {
     setTried(true)
@@ -98,13 +87,7 @@ export default function RequestSheet({ type, onClose, preset }: { type: RequestT
       window.setTimeout(() => document.querySelector('[role="dialog"] [role="alert"], .pop-in [role="alert"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 30)
       return
     }
-    const detail =
-      type === '추가서비스' ? `${service} · ${when}` :
-      type === '일정변경' ? `다음 방문 → ${date} ${slot} 희망` :
-      type === '긴급방문' ? `[${urgent}] ${memoText}` :
-      `[${topic}] ${memoText}`
-    const extra = memoText && (type === '추가서비스' || type === '일정변경') ? ` — ${memoText}` : ''
-    setDoneId(addRequest(CARE_CUSTOMER_ID, type, detail + extra))
+    setDoneId(addRequest(CARE_CUSTOMER_ID, type, composeRequestDetail(type, fields)))
   }
 
   return (

@@ -113,6 +113,14 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 공통: StatTile, 카드 키보드 접근, Modal 포커스 관리, AX 레이아웃 route 공유
 - 검증 뷰포트에 태블릿 768·1024 추가
 
+## 완료 — 3차 고도화 · 개발 품질 (2026-10-07)
+- 사진 WebP 파생본 + 반응형 srcset (37.4MB → 1.8MB, 원본 보존), 화면 단위 코드 분할 · 유휴 시간 미리 받기, 차트 지연 로딩, Pretendard 자체 호스팅
+- 데이터 계층 재구성: 순수 reducer · 저장 형식 검증/버전 · 중복 동작 방지
+- 오류 경계 · 화면별 탭 제목 · 404 · 메타 태그
+- ESLint 9(jsx-a11y) 경고 0, 미사용 코드 금지, 하드코딩 색 토큰화(테마별 사이드바 · 차트 색 정상화)
+- 단위 테스트 35 (Vitest) · E2E 26 (Playwright, 저장소 내) · GitHub Actions CI · `npm audit` 0 (react-router v7)
+- 접근성: Backdrop 버튼, Modal 포커스 관리, 본문 바로가기, focus-visible 링, aria-live 알림
+
 ## QA 결과 (Whole-App Acceptance Run)
 - 자동 검증 **51 PASS / 0 FAIL** (Playwright)
 - Gate A~N 전부 충족 · P0 Bug 0건
@@ -123,6 +131,7 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 로드맵·헤더 반영 후 재검증: 57 PASS / 0 FAIL · 360/390px 가로 스크롤 0 · 라벨 잘림 0
 - 고도화 후 재검증(2026-10-06): flows 38 · qa 37 · regress 26 PASS / 0 FAIL · 360~1440px 넘침·겹침·12px 미만·단어 중간 끊김 0 · 콘솔 오류 0 · tsc·build Green
 - 2차 고도화 후 재검증(2026-10-07): flows 38 · flows2 36 · qa 37 · regress 26 PASS / 0 FAIL · 360/390/412/430/768/1024/1280/1440 넘침·겹침·12px 미만·단어 중간 끊김 0 · stress 0 · 콘솔 오류 0
+- 3차 고도화 후(2026-10-07): 저장소 내 단위 35 · E2E 26 PASS, typecheck · lint(경고 0) · build(경고 0) · audit 0, 기존 검증 스크립트 137항목 · 8개 폭 레이아웃 감사 0
 
 ## 미완료 (PLUS — 범위 외)
 - 고급 Map UX / Route Visualization
@@ -134,7 +143,7 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 데이터 = src/lib/demo Seed + localStorage (Demo Reset 가능)
 
 ## 알려진 문제
-- 번들 단일 chunk ~830KB (Reference 데모 용도로 허용, 필요 시 code-splitting)
+- (해결) 단일 번들 830KB → 화면 단위 분할 (2026-10-07)
 
 ## 다음 우선작업 (실서비스 전환 시)
 1. Supabase Auth/RLS + Data Adapter 교체
@@ -162,3 +171,4 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 2026-09-30: UI/UX 안정화 — 메뉴 IA 재분류 · 한글 UI · 햄버거 왼쪽 · 반응형 overflow 0
 - 2026-10-06: 한 단계 고도화 — 화면 우선순위 재배치 · 요청 폼 검증 · 모바일 상세 시트 · 요청함 상태 탭 · E2E 플로우 검증
 - 2026-10-07: 2차 고도화 — 동선 단축(딥링크) · 숫자 일관성 · 목록형 표 · 태블릿 헤더 · 상태/빈 화면 · 접근성
+- 2026-10-07: 3차 고도화 — 성능(이미지 · 번들 · 글꼴) · 데이터 계층 · 테스트/CI · 린트 · 접근성 · 보안 업데이트

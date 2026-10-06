@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useTour } from '../../components/tour/TourProvider'
+import { useTour } from '../../components/tour/context'
 
 /**
  * /presentation 은 별도 슬라이드 화면이 아니라

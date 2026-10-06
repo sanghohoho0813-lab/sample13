@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom'
 import { MapPin, ArrowRight, AlertTriangle } from 'lucide-react'
 import { Card, PageHeader, Badge, DemoBadge, StatusPill } from '../../components/ui'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { CUSTOMERS, SITES, teamById } from '../../lib/demo/company'
 import { photoForSite, altOf } from '../../lib/demo/photos'
+import { Photo } from '../../components/ui/Photo'
 
 export default function Sites() {
   const { schedules } = useDemo()
@@ -22,7 +23,8 @@ export default function Sites() {
             <Card key={c.id} onClick={() => nav(`/sites/${c.id}`)} className="p-5">
               {/* 현장 식별: 소형 썸네일 + 이름/주소 — 데이터가 카드 상단을 차지한다 */}
               <div className="flex items-start gap-3">
-                <img
+                <Photo
+                  sizes="80px"
                   src={thumb}
                   alt={altOf(thumb)}
                   width={1448}

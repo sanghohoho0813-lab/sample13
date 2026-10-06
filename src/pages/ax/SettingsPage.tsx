@@ -4,9 +4,11 @@ import {
   Check, Minus, X, RotateCcw, Upload, FileSpreadsheet, Database, HelpCircle,
   Palette, Type, Sparkles, Play, Users, Store, Smartphone, Bell, Zap, ShieldCheck,
 } from 'lucide-react'
-import { Card, PageHeader, Badge, Btn, DemoBadge, useToast, Freshness, ConfirmDialog } from '../../components/ui'
-import { useDemo, THEMES, type FontScale } from '../../lib/data/store'
-import { useTour } from '../../components/tour/TourProvider'
+import { Card, PageHeader, Badge, Btn, DemoBadge, Freshness, ConfirmDialog } from '../../components/ui'
+import { useToast } from '../../components/ui/toast-context'
+import { useDemo } from '../../lib/data/context'
+import { THEMES, type FontScale } from '../../lib/data/state'
+import { useTour } from '../../components/tour/context'
 import { ROLE_LABEL, type Role } from '../../types'
 import { cx } from '../../lib/utils'
 

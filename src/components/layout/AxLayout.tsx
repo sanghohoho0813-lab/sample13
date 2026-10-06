@@ -6,12 +6,13 @@ import {
   BookOpen, Settings, Menu, X, Store, ChevronDown, Play,
   RotateCcw, Smartphone, MoreHorizontal, ArrowRight, Compass, Handshake, LineChart,
 } from 'lucide-react'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { ROLE_LABEL, type Role } from '../../types'
-import { Badge, ConfirmDialog, useToast } from '../ui'
+import { Badge, Backdrop, ConfirmDialog } from '../ui'
+import { useToast } from '../ui/toast-context'
 import { cx, nowClock, nowDateLong, nowDateCompact } from '../../lib/utils'
 import DevicePreview from './DevicePreview'
-import { useTour, useAutoTutorial } from '../tour/TourProvider'
+import { useTour, useAutoTutorial } from '../tour/context'
 import { MiraeCredit } from '../brand/MiraeLogo'
 import { SampleBridgeCTA, SampleBridgeMini } from '../brand/SampleBridgeCTA'
 import { ROADMAP, STAGE_NOTE, type RoadmapStage } from '../../lib/demo/roadmap'
@@ -25,7 +26,7 @@ import { useHideHistoryNav } from '../../lib/historyNav'
    ═══════════════════════════════════════════════════════════════════ */
 
 // Icon Color Family — 카테고리마다 하나. 색만 봐도 어느 영역인지 느껴지게 한다.
-export const FAMILY = {
+const FAMILY = {
   ops: '#52A7A3',      // 운영 (개요 · 현장 운영)
   customer: '#C58AA8', // 고객
   growth: '#DFAE5E',   // 성장 · 분석
@@ -49,7 +50,7 @@ interface NavEntry {
 
 const ALL: Role[] = ['ceo', 'manager']
 
-export const NAV: NavEntry[] = [
+const NAV: NavEntry[] = [
   { key: 'dashboard', label: '대시보드', icon: <LayoutDashboard size={18} />, family: 'ops', to: '/', roles: ALL },
   { key: 'today', label: '오늘의 AX', icon: <Zap size={18} />, family: 'ops', to: '/today', roles: ALL },
   {
@@ -127,7 +128,7 @@ const IconTile = ({ color, children, dark, size = 8 }: { color: string; children
 const STAGE_STYLE: Record<RoadmapStage, string> = {
   'NEXT': 'border-champagne/50 text-champagne',
   'Preview': 'border-aqua/50 text-aqua',
-  'Long-term': 'border-white/25 text-[#8FB3B3]',
+  'Long-term': 'border-white/25 text-white/60',
 }
 const ROADMAP_OPEN_KEY = 'cleanway.roadmapOpen'
 const readRoadmapOpen = () => {
@@ -151,13 +152,13 @@ function NextRoadmap({ dense }: { dense?: boolean }) {
         onClick={toggle}
         aria-expanded={expanded}
         className={cx(
-          'flex w-full items-center gap-2.5 rounded-lg px-2.5 text-left font-bold text-[#9FBDBD] hover:bg-white/6 hover:text-white',
+          'flex w-full items-center gap-2.5 rounded-lg px-2.5 text-left font-bold text-white/65 hover:bg-white/6 hover:text-white',
           dense ? 'py-1 text-[0.86rem]' : 'py-2 text-[0.9rem]',
         )}
       >
         <IconTile color={FAMILY.system} dark size={dense ? 6 : 8}><Handshake size={dense ? 15 : 18} /></IconTile>
         <span className="min-w-0 flex-1 truncate">확장 기능 보기</span>
-        <span className="rounded-md border border-white/20 px-1.5 py-[0.05rem] text-[0.7rem] font-bold text-[#8FB3B3]">{ROADMAP.length}</span>
+        <span className="rounded-md border border-white/20 px-1.5 py-[0.05rem] text-[0.7rem] font-bold text-white/60">{ROADMAP.length}</span>
         <ChevronDown size={15} className={cx('shrink-0 text-white/40 transition-transform', expanded && 'rotate-180')} />
       </button>
 
@@ -172,7 +173,7 @@ function NextRoadmap({ dense }: { dense?: boolean }) {
                   aria-expanded={isOpen}
                   className={cx(
                     'flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[0.84rem] font-semibold transition-colors',
-                    isOpen ? 'bg-white/8 text-white' : 'text-[#9FBDBD] hover:bg-white/6 hover:text-white',
+                    isOpen ? 'bg-white/8 text-white' : 'text-white/65 hover:bg-white/6 hover:text-white',
                   )}
                 >
                   <i.icon size={15} className="shrink-0 opacity-80" />
@@ -182,12 +183,12 @@ function NextRoadmap({ dense }: { dense?: boolean }) {
                   </span>
                 </button>
                 {isOpen && (
-                  <p className="fade-up mx-2 mb-1 mt-0.5 rounded-lg bg-white/6 px-3 py-2 text-[0.78rem] leading-relaxed text-[#B9D2D2]">{i.desc}</p>
+                  <p className="fade-up mx-2 mb-1 mt-0.5 rounded-lg bg-white/6 px-3 py-2 text-[0.78rem] leading-relaxed text-white/75">{i.desc}</p>
                 )}
               </div>
             )
           })}
-          <p className="px-2 pt-1.5 text-[0.72rem] leading-relaxed text-[#6E9595]">
+          <p className="px-2 pt-1.5 text-[0.72rem] leading-relaxed text-white/45">
             아직 구현되지 않은 로드맵입니다. 현재 데이터를 그대로 재사용하는 범위로만 정리했습니다.
           </p>
         </div>
@@ -240,7 +241,7 @@ function RoleSwitcher({ compact }: { compact?: boolean }) {
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-30"><Backdrop onClick={() => setOpen(false)} label="역할 선택 닫기" /></div>
           <div className="pop-in absolute right-0 z-40 mt-2 w-52 rounded-xl border border-line bg-card p-1.5 shadow-pop">
             <p className="px-2.5 pt-1 pb-1.5 text-[0.72rem] font-bold text-ink-faint">데모 역할 전환 · 권한 체감</p>
             {(Object.keys(ROLE_LABEL) as Role[]).map((r) => (
@@ -317,7 +318,7 @@ function SidebarContent({ onNavigate, collapsible }: { onNavigate?: () => void; 
   const linkCls = (isActive: boolean, sub?: boolean) => cx(
     'flex items-center gap-2.5 rounded-lg px-2.5 text-left font-bold transition-colors',
     dense ? 'py-1 text-[0.88rem]' : sub ? 'py-1.5 text-[0.88rem]' : 'py-2 text-[0.92rem]',
-    isActive ? 'bg-white/12 text-white' : 'text-[#B9D2D2] hover:bg-white/8 hover:text-white',
+    isActive ? 'bg-white/12 text-white' : 'text-white/75 hover:bg-white/8 hover:text-white',
   )
   const iconSize = dense ? 15 : 18
 
@@ -391,7 +392,7 @@ function SidebarContent({ onNavigate, collapsible }: { onNavigate?: () => void; 
             <button onClick={() => start('presentation')} className="flex items-center justify-center gap-1.5 rounded-lg border border-champagne/40 py-1.5 text-[0.8rem] font-bold text-champagne hover:bg-champagne/10">
               <Play size={14} /> 시연 모드
             </button>
-            <button onClick={() => start('tutorial')} className="flex items-center justify-center gap-1.5 rounded-lg border border-white/15 py-1.5 text-[0.8rem] font-bold text-[#B9D2D2] hover:border-white/30 hover:text-white">
+            <button onClick={() => start('tutorial')} className="flex items-center justify-center gap-1.5 rounded-lg border border-white/15 py-1.5 text-[0.8rem] font-bold text-white/75 hover:border-white/30 hover:text-white">
               <Sparkles size={14} /> 튜토리얼
             </button>
           </div>
@@ -400,7 +401,7 @@ function SidebarContent({ onNavigate, collapsible }: { onNavigate?: () => void; 
         )}
         <SampleBridgeMini tone="dark" compact />
         <div className="flex items-center justify-between gap-2 pt-0.5">
-          <span className="text-[0.72rem] font-semibold text-[#8FB3B3]">데모 · 가상 샘플 데이터</span>
+          <span className="text-[0.72rem] font-semibold text-white/60">데모 · 가상 샘플 데이터</span>
           <MiraeCredit tone="dark" height={14} label="" />
         </div>
       </div>
@@ -439,12 +440,12 @@ function MoreSheet({ open, onClose, onReset }: { open: boolean; onClose: () => v
   ]
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col justify-end lg:hidden" onClick={onClose}>
-      <div className="absolute inset-0 bg-shell/55" />
-      <div onClick={(e) => e.stopPropagation()} className="slide-up relative max-h-[84vh] overflow-y-auto rounded-t-3xl bg-card pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div className="fixed inset-0 z-[60] flex flex-col justify-end lg:hidden">
+      <Backdrop onClick={onClose} label="전체 메뉴 닫기" className="bg-shell/55" />
+      <div role="dialog" aria-modal="true" aria-label="전체 메뉴" className="slide-up relative max-h-[84vh] overflow-y-auto rounded-t-3xl bg-card pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-card px-5 py-3.5">
           <p className="text-[1rem] font-extrabold">전체 메뉴</p>
-          <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-faint hover:bg-[#EFF1F0]" aria-label="닫기"><X size={20} /></button>
+          <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-faint hover:bg-neutral-soft" aria-label="닫기"><X size={20} /></button>
         </div>
         <div className="space-y-4 px-4 pt-3">
           {entries.map((e) => {
@@ -542,13 +543,14 @@ export default function AxLayout({ children }: { children?: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-ivory">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[280px] bg-shell lg:block">
+      <a href="#main" className="skip-link">본문으로 건너뛰기</a>
+      <aside aria-label="주 메뉴" className="fixed inset-y-0 left-0 z-40 hidden w-[280px] bg-shell lg:block">
         <SidebarContent />
       </aside>
 
       {drawer && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-shell/60" onClick={() => setDrawer(false)} />
+          <Backdrop onClick={() => setDrawer(false)} label="메뉴 닫기" className="bg-shell/60" />
           <aside className="slide-in-left absolute inset-y-0 left-0 flex w-[86vw] max-w-[370px] flex-col bg-shell shadow-pop">
             <button onClick={() => setDrawer(false)} className="absolute right-2 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-lg text-white/70 hover:bg-white/10" aria-label="메뉴 닫기"><X size={22} /></button>
             <SidebarContent onNavigate={() => setDrawer(false)} collapsible />
@@ -574,7 +576,7 @@ export default function AxLayout({ children }: { children?: ReactNode }) {
             <div className="flex min-w-0 items-center gap-2 overflow-hidden">
               <button
                 onClick={() => setDrawer(true)}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-soft hover:bg-[#EFF1F0] lg:hidden"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-soft hover:bg-neutral-soft lg:hidden"
                 aria-label="전체 메뉴"
               >
                 <Menu size={23} />
@@ -590,7 +592,7 @@ export default function AxLayout({ children }: { children?: ReactNode }) {
           </div>
         </header>
 
-        <main className="mx-auto max-w-[1720px] px-4 py-6 pb-24 lg:px-8 lg:pb-10">
+        <main id="main" tabIndex={-1} className="mx-auto max-w-[1720px] px-4 py-6 pb-24 lg:px-8 lg:pb-10">
           {children}
           {/* 샘플을 다 본 뒤의 공통 브릿지 — 모든 AX 화면 하단에 동일하게 붙는다 */}
           <SampleBridgeCTA className="mt-10" />

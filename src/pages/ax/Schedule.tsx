@@ -3,9 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle, MapPin, Sparkles, CheckCircle2, ArrowRight, Users, ChevronRight,
 } from 'lucide-react'
-import { Card, PageHeader, Badge, Btn, StatusPill, StatusText, DemoBadge, EmptyState, Modal, useToast } from '../../components/ui'
+import { Card, PageHeader, Badge, Btn, StatusPill, StatusText, DemoBadge, EmptyState, Modal } from '../../components/ui'
+import { useToast } from '../../components/ui/toast-context'
 import { AIReadyBadge, WhyAIButton, ActionLifecycle } from '../../components/ai'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { customerById, teamById, teamMemberNames, TEAMS } from '../../lib/demo/company'
 import { DISPATCH_CANDIDATES } from '../../lib/demo/operations'
 import { cx, dateWithOffset } from '../../lib/utils'
@@ -125,7 +126,7 @@ export default function Schedule() {
       )}
 
       {/* 보기 전환 */}
-      <div role="tablist" className="mb-3 flex w-fit gap-1 rounded-xl border border-line bg-card p-1">
+      <div role="tablist" aria-label="일정 보기 방식" className="mb-3 flex w-fit gap-1 rounded-xl border border-line bg-card p-1">
         {([['today', '오늘', today.length], ['week', '이번 주', week.length], ['team', '팀별', TEAMS.length]] as [View, string, number][]).map(([v, label, n]) => (
           <button
             key={v}

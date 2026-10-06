@@ -4,11 +4,12 @@ import { CalendarClock, Sparkles, FileText, MessageCircle, RefreshCcw, Siren, Pl
 import CareShell, { CARE_CUSTOMER_ID } from './CareShell'
 import RequestSheet, { type RequestPreset } from './RequestSheet'
 import { Card, Btn, Modal, StatusPill } from '../../components/ui'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { customerById } from '../../lib/demo/company'
 import { dateWithOffset } from '../../lib/utils'
 import { PHOTO, altOf, photoOf } from '../../lib/demo/photos'
 import type { RequestType } from '../../types'
+import { Photo } from '../../components/ui/Photo'
 
 /**
  * 고객 홈 — 고객이 이 화면에 오는 이유 순서대로:
@@ -42,7 +43,8 @@ export default function CareHome() {
       <div className="fade-up space-y-5">
         {/* ① 인사 + 다음 방문 */}
         <section className="relative overflow-hidden rounded-3xl bg-shell p-5 text-white sm:p-6">
-          <img
+          <Photo
+            sizes="100vw"
             src={photoOf(ct.serviceSummary.includes('병') ? '병·의원 청소관리' : '건물 공용부 관리')}
             alt="" aria-hidden="true" width={1448} height={1086}
             className="absolute inset-0 h-full w-full object-cover opacity-25"
@@ -98,7 +100,7 @@ export default function CareHome() {
               </div>
             </div>
             <figure className="order-first overflow-hidden rounded-xl border border-line sm:order-none">
-              <img src={PHOTO.beforeGlass} alt={altOf(PHOTO.beforeGlass)} width={1448} height={1086} loading="lazy" className="aspect-[16/9] w-full object-cover sm:aspect-[4/3]" />
+              <Photo src={PHOTO.beforeGlass} alt={altOf(PHOTO.beforeGlass)} width={1448} height={1086} loading="lazy" className="aspect-[16/9] w-full object-cover sm:aspect-[4/3]" />
               <figcaption className="bg-ivory px-2 py-1 text-center text-[0.74rem] font-bold text-ink-faint">최근 방문 기록 사진</figcaption>
             </figure>
           </div>

@@ -3,7 +3,7 @@ import { AlertTriangle, RefreshCcw, TrendingUp, ClipboardX, ArrowRight, UserMinu
 import { Card, PageHeader, Badge, Btn, DemoBadge, EmptyState } from '../../components/ui'
 import { ActionLifecycle } from '../../components/ai'
 import { cx } from '../../lib/utils'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 
 const ICONS = {
   danger: <AlertTriangle size={13} />,

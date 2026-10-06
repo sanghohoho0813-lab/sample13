@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { X, Smartphone, Monitor, MonitorSmartphone, Maximize2, Move } from 'lucide-react'
 import { isInPreview, previewUrl, MOBILE_PREVIEW, PC_PREVIEW, type PreviewKind } from '../../lib/preview'
 import { cx } from '../../lib/utils'
+import { Backdrop } from '../ui'
 import { useHideHistoryNav } from '../../lib/historyNav'
 
 /**
@@ -65,7 +66,7 @@ function PreviewModal({ kind, url, onClose }: { kind: PreviewKind; url: string; 
 
   // Header의 backdrop-filter가 fixed의 containing block이 되므로 body로 portal 한다
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex flex-col bg-shell/75 backdrop-blur-sm" onClick={onClose}>
+    <div role="dialog" aria-modal="true" aria-label={kind === 'mobile' ? '모바일 미리보기' : 'PC 미리보기'} className="fixed inset-0 z-[80] flex flex-col bg-shell/75 backdrop-blur-sm">
       <div className="flex shrink-0 items-center justify-between gap-2 px-3 py-3 text-white sm:px-6">
         <p className="flex min-w-0 items-center gap-2 text-[0.8rem] font-bold sm:text-[0.85rem]">
           <MonitorSmartphone size={17} className="shrink-0" />
@@ -77,14 +78,14 @@ function PreviewModal({ kind, url, onClose }: { kind: PreviewKind; url: string; 
         <div className="flex shrink-0 items-center gap-1.5">
           {kind === 'pc' && (
             <button
-              onClick={(e) => { e.stopPropagation(); setFitWidth((v) => !v) }}
+              onClick={() => setFitWidth((v) => !v)}
               className="flex items-center gap-1 rounded-xl bg-white/12 px-2.5 py-2 text-[0.75rem] font-bold hover:bg-white/25"
             >
               {fitWidth ? <><Move size={14} /> 실제 비율</> : <><Maximize2 size={14} /> 폭 맞춤</>}
             </button>
           )}
           <button
-            onClick={(e) => { e.stopPropagation(); onClose() }}
+            onClick={onClose}
             className="flex items-center gap-1.5 rounded-xl bg-white/12 px-3 py-2 text-[0.8rem] font-bold hover:bg-white/25"
           >
             <X size={16} /> 닫기
@@ -94,14 +95,14 @@ function PreviewModal({ kind, url, onClose }: { kind: PreviewKind; url: string; 
 
       <div
         ref={stageRef}
-        className={cx('flex min-h-0 flex-1 px-2 pb-4', panning ? 'overflow-auto' : 'items-center justify-center overflow-hidden')}
-        onClick={onClose}
+        className={cx('relative flex min-h-0 flex-1 px-2 pb-4', panning ? 'overflow-auto' : 'items-center justify-center overflow-hidden')}
       >
+        {/* 기기 틀 바깥(빈 영역)을 누르면 닫힌다 */}
+        <Backdrop onClick={onClose} label="미리보기 닫기" />
         {/* 외곽 Frame이 실제 표시 크기를 갖도록 하여 Pan/Scroll 영역과 시각 크기를 일치시킨다 */}
         <div
-          onClick={(e) => e.stopPropagation()}
           style={{ width: frame.w * scale, height: frame.h * scale }}
-          className={cx('m-auto shrink-0 overflow-hidden', kind === 'mobile' ? 'phone-frame' : 'desk-frame')}
+          className={cx('relative m-auto shrink-0 overflow-hidden', kind === 'mobile' ? 'phone-frame' : 'desk-frame')}
         >
           <iframe
             key={url}

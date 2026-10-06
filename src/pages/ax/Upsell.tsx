@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { TrendingUp, ArrowRight, Send } from 'lucide-react'
-import { Card, PageHeader, Badge, Btn, DemoBadge, StatusPill, useToast, StatTile } from '../../components/ui'
+import { Card, PageHeader, Badge, Btn, DemoBadge, StatusPill, StatTile } from '../../components/ui'
+import { useToast } from '../../components/ui/toast-context'
 import { WhyAIButton } from '../../components/ai'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { customerById } from '../../lib/demo/company'
 import { fmtManwon } from '../../lib/utils'
 

@@ -3,8 +3,9 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home, FileText, Inbox, LayoutDashboard, Compass, Menu, X, ChevronDown, ArrowRight, Sparkles,
 } from 'lucide-react'
-import { DemoBadge, Badge, Btn, toneBg, type Tone } from '../../components/ui'
-import { useDemo } from '../../lib/data/store'
+import { Backdrop, DemoBadge, Btn, type Tone } from '../../components/ui'
+import { toneBg } from '../../lib/tone'
+import { useDemo } from '../../lib/data/context'
 import { cx, nowClock, nowDateCompact } from '../../lib/utils'
 import DevicePreview from '../../components/layout/DevicePreview'
 import { CUSTOMER_ROADMAP, STAGE_NOTE, type RoadmapStage } from '../../lib/demo/roadmap'
@@ -93,10 +94,10 @@ function CareMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const go = (to: string) => { onClose(); nav(to) }
 
   return (
-    <div className="fixed inset-0 z-[70]" onClick={onClose}>
-      <div className="absolute inset-0 bg-shell/55" />
+    <div className="fixed inset-0 z-[70]">
+      <Backdrop onClick={onClose} label="메뉴 닫기" className="bg-shell/55" />
       <aside
-        onClick={(e) => e.stopPropagation()}
+        aria-label="고객 플랫폼 전체 메뉴"
         className="slide-in-left absolute inset-y-0 left-0 flex w-[86vw] max-w-[370px] flex-col bg-card shadow-pop"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-line px-5 py-3.5">
@@ -104,7 +105,7 @@ function CareMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             <p className="text-[1rem] font-extrabold tracking-wide text-shell">CLEANWAY <span className="text-primary">PARTNERS</span></p>
             <p className="text-[0.72rem] font-bold text-ink-faint">고객 플랫폼 · 전체 메뉴</p>
           </div>
-          <button onClick={onClose} className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-faint hover:bg-[#EFF1F0]" aria-label="메뉴 닫기">
+          <button onClick={onClose} className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-faint hover:bg-neutral-soft" aria-label="메뉴 닫기">
             <X size={22} />
           </button>
         </div>
@@ -158,7 +159,7 @@ function CareMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
                       aria-expanded={isOpen}
                       className={cx(
                         'flex w-full items-center gap-1.5 rounded-xl px-2 py-2 text-left transition-colors',
-                        isOpen ? 'bg-mint/50' : 'hover:bg-[#F3F5F4]',
+                        isOpen ? 'bg-mint/50' : 'hover:bg-neutral-soft',
                       )}
                     >
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: `${r.color}1F`, color: r.color }}>
@@ -222,6 +223,7 @@ export default function CareShell({ children, wide }: { children: ReactNode; wid
 
   return (
     <div className="min-h-screen bg-ivory">
+      <a href="#main" className="skip-link">본문으로 건너뛰기</a>
       <header className="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
         {/* 모바일 데모 툴바 — AX 헤더와 같은 2층 구조 */}
         <div className="flex items-center justify-between gap-2 border-b border-line/70 bg-ivory px-3 py-1.5 xl:hidden">
@@ -245,7 +247,7 @@ export default function CareShell({ children, wide }: { children: ReactNode; wid
               onClick={() => setMenu(true)}
               aria-label="전체 메뉴"
               title="전체 메뉴"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-soft hover:bg-[#EFF1F0]"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-soft hover:bg-neutral-soft"
             >
               <Menu size={23} />
             </button>
@@ -280,7 +282,7 @@ export default function CareShell({ children, wide }: { children: ReactNode; wid
         </div>
       </header>
 
-      <main className={cx('mx-auto px-4 py-6 pb-24 lg:pb-10', wide ? 'max-w-5xl' : 'max-w-3xl')}>
+      <main id="main" tabIndex={-1} className={cx('mx-auto px-4 py-6 pb-24 lg:pb-10', wide ? 'max-w-5xl' : 'max-w-3xl')}>
         {children}
         {/* 고객 화면에서도 동일한 브릿지 — 링크·문구는 src/lib/mirae.ts 단일 원본 */}
         <SampleBridgeCTA className="mt-10" />

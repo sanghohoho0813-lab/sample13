@@ -9,6 +9,7 @@ import { COMPANY } from '../../lib/demo/company'
 import { cx } from '../../lib/utils'
 import { PHOTO, altOf } from '../../lib/demo/photos'
 import { MiraeCredit } from '../../components/brand/MiraeLogo'
+import { Photo } from '../../components/ui/Photo'
 
 // ─── Story building blocks ───────────────────────────────
 function Section({ no, title, children, tour }: { no: string; title: string; children: ReactNode; tour?: string }) {
@@ -79,7 +80,8 @@ export default function WhyAx() {
 
       {/* HERO */}
       <section data-tour="why-hero" className="relative mb-6 overflow-hidden rounded-3xl bg-shell px-6 py-10 text-white sm:px-10 sm:py-14">
-        <img
+        <Photo
+          sizes="100vw"
           src={PHOTO.axConnect}
           alt={altOf(PHOTO.axConnect)}
           width={1448} height={1086}
@@ -266,7 +268,7 @@ export default function WhyAx() {
               { src: PHOTO.managerInspection, t: '③ 품질 점검', d: '관리자가 확인하고 기준을 맞춤' },
             ].map((x) => (
               <figure key={x.t} className="overflow-hidden rounded-xl border border-line">
-                <img src={x.src} alt={altOf(x.src)} width={1448} height={1086} loading="lazy" className="aspect-[4/3] w-full object-cover" />
+                <Photo src={x.src} alt={altOf(x.src)} width={1448} height={1086} loading="lazy" className="aspect-[4/3] w-full object-cover" />
                 <figcaption className="p-3">
                   <p className="text-[0.85rem] font-extrabold text-primary">{x.t}</p>
                   <p className="mt-0.5 text-[0.78rem] leading-snug text-ink-soft">{x.d}</p>
@@ -304,7 +306,7 @@ export default function WhyAx() {
           <div className="grid grid-cols-2 gap-3">
             {([['발견된 상태', PHOTO.beforeGlass], ['집중관리 후', PHOTO.afterGlass]] as const).map(([tag, src]) => (
               <figure key={tag} className="relative overflow-hidden rounded-xl border border-line">
-                <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="aspect-[4/3] w-full object-cover" />
+                <Photo src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="aspect-[4/3] w-full object-cover" />
                 <figcaption className="absolute left-2 top-2 rounded-md bg-ink/75 px-2 py-0.5 text-[0.72rem] font-extrabold text-white">{tag}</figcaption>
               </figure>
             ))}

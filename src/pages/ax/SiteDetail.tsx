@@ -2,11 +2,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { MapPin, ArrowLeft, Camera, CheckCircle2, FileText, AlertTriangle, ArrowRight, ImageOff } from 'lucide-react'
 import { Card, PageHeader, Badge, Btn, StatusPill, DemoBadge, SectionTitle, EmptyState } from '../../components/ui'
 import { WhyAIButton, AIReadyBadge } from '../../components/ai'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { customerById, siteByCustomer, teamById, teamMemberNames } from '../../lib/demo/company'
 import { CHECKLIST_TEMPLATE } from '../../lib/demo/operations'
 import { SEED_QUALITY } from '../../lib/demo/intelligence'
 import { beforeAfterFor, altOf, photoForSite } from '../../lib/demo/photos'
+import { Photo } from '../../components/ui/Photo'
 
 function WorkPhoto({ label, taken, src }: { label: string; taken: boolean; src: string }) {
   if (!taken) {
@@ -20,7 +21,7 @@ function WorkPhoto({ label, taken, src }: { label: string; taken: boolean; src: 
   }
   return (
     <figure className="relative aspect-[4/3] overflow-hidden rounded-xl border border-line bg-ivory">
-      <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
+      <Photo src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
       <figcaption className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-ink/75 px-2 py-0.5 text-[0.72rem] font-extrabold text-white">
         <Camera size={11} /> {label}
       </figcaption>
@@ -67,7 +68,7 @@ export default function SiteDetail() {
 
       {mainJob && (
         <figure className="mb-4 overflow-hidden rounded-2xl border border-line">
-          <img src={siteHero} alt={altOf(siteHero)} width={1448} height={1086} className="h-40 w-full object-cover object-[50%_30%] sm:h-56" />
+          <Photo src={siteHero} alt={altOf(siteHero)} width={1448} height={1086} className="h-40 w-full object-cover object-[50%_30%] sm:h-56" />
         </figure>
       )}
 

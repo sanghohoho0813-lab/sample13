@@ -1,9 +1,10 @@
 import { useState, type ReactNode } from 'react'
 import { Sparkles, HelpCircle, Database, Brain, Target, TrendingUp } from 'lucide-react'
-import { Badge, Btn, Card, Modal, StatusPill, useToast } from '../ui'
+import { Badge, Btn, Card, Modal, StatusPill } from '../ui'
+import { useToast } from '../ui/toast-context'
 import type { AIInsight, ActionStatus } from '../../types'
 import { ENGINE_LABEL } from '../../types'
-import { useDemo } from '../../lib/data/store'
+import { useDemo } from '../../lib/data/context'
 import { cx } from '../../lib/utils'
 
 // ─── AI READY 표시 ───────────────────────────────────────
@@ -80,7 +81,7 @@ export function ActionLifecycle({ actionId, status, compact }: { actionId: strin
           {FLOW.map((f, i) => (
             <span key={f} className={cx(
               'rounded-full px-2 py-0.5 text-[0.72rem] font-bold',
-              i <= idx ? 'bg-primary text-white' : 'bg-[#EFF1F0] text-ink-faint',
+              i <= idx ? 'bg-primary text-white' : 'bg-neutral-soft text-ink-faint',
             )}>{f}</span>
           ))}
         </div>
