@@ -92,7 +92,7 @@ export default function CareLanding() {
       {/* ── Before / After — 관리 품질이 눈에 보이는 구간 ── */}
       <section className="mt-10">
         <h2 className="text-[1.3rem] font-extrabold">관리 전 · 후</h2>
-        <p className="mt-1 text-[0.88rem] text-ink-soft">모든 작업은 Before / After 사진과 함께 리포트로 남습니다.</p>
+        <p className="mt-1 text-[0.88rem] text-ink-soft">모든 작업은 작업 전 · 후 사진과 함께 리포트로 남습니다.</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {[
             { label: '바닥 세척 · 왁스', before: PHOTO.beforeFloor, after: PHOTO.afterFloor },
@@ -145,7 +145,7 @@ export default function CareLanding() {
             <p className="flex items-center gap-1.5 text-[0.8rem] font-extrabold text-primary"><Sparkles size={14} /> 고객 플랫폼</p>
             <h2 className="mt-1.5 text-[1.35rem] font-extrabold leading-snug">전화하지 않아도, 관리 상태가 보입니다.</h2>
             <ul className="mt-3 space-y-1.5 text-[0.9rem] text-ink-soft">
-              {['다음 방문 일정과 담당팀 확인', '작업 리포트 · Before/After 사진', '일정 변경 · 추가서비스 · 긴급 방문 요청', 'AI가 우리 시설에 필요한 관리를 먼저 제안'].map((x) => (
+              {['다음 방문 일정과 담당팀 확인', '작업 리포트 · 작업 전후 사진', '일정 변경 · 추가서비스 · 긴급 방문 요청', 'AI가 우리 시설에 필요한 관리를 먼저 제안'].map((x) => (
                 <li key={x} className="flex gap-2"><FileText size={15} className="mt-0.5 shrink-0 text-primary" /> {x}</li>
               ))}
             </ul>

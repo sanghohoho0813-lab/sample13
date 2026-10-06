@@ -112,10 +112,10 @@ export default function SiteDetail() {
                     ))}
                   </div>
                 </div>
-                {/* Before / After */}
+                {/* 작업 전 / 후 */}
                 <div className="grid grid-cols-2 gap-3">
-                  <WorkPhoto label="Before" taken={!!ws?.beforePhoto || mainJob.status === '완료'} src={ba.before} />
-                  <WorkPhoto label="After" taken={!!ws?.afterPhoto || mainJob.status === '완료'} src={ba.after} />
+                  <WorkPhoto label="작업 전" taken={!!ws?.beforePhoto || mainJob.status === '완료'} src={ba.before} />
+                  <WorkPhoto label="작업 후" taken={!!ws?.afterPhoto || mainJob.status === '완료'} src={ba.after} />
                 </div>
                 {ws?.note && <p className="rounded-xl bg-ivory p-3 text-[0.85rem]"><b>특이사항</b> — {ws.note}</p>}
               </div>
@@ -162,7 +162,7 @@ export default function SiteDetail() {
                 </div>
               ))}
             </div>
-            <Btn variant="outline" size="sm" className="mt-3.5 w-full" onClick={() => nav(`/customers/${customer.id}`)}>고객 Detail <ArrowRight size={13} className="inline" /></Btn>
+            <Btn variant="outline" size="sm" className="mt-3.5 w-full" onClick={() => nav(`/customers/${customer.id}`)}>고객 상세 <ArrowRight size={13} className="inline" /></Btn>
           </Card>
 
           {/* 품질 이력 */}

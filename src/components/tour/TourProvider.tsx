@@ -48,7 +48,7 @@ export const TUTORIAL_STEPS: Step[] = [
   {
     route: '/evidence', selector: '[data-tour="evidence"]',
     title: '실증 기록 타임라인',
-    body: 'AI 추천이 실제 Action과 결과로 이어진 과정을 기록합니다.',
+    body: 'AI 추천이 실제 실행과 결과로 이어진 과정을 기록합니다.',
   },
 ]
 
@@ -77,13 +77,27 @@ export const useTour = () => useContext(Ctx)
 
 interface Rect { top: number; left: number; width: number; height: number }
 
-export function TourProvider({ children, onRole }: { children: ReactNode; onRole?: (r: NonNullable<Step['role']>) => void }) {
+/** 같은 data-tour가 PC/모바일 레이아웃에 각각 있을 수 있으므로 화면에 실제로 보이는 것만 고른다 */
+function findVisible(selector: string): Element | null {
+  return [...document.querySelectorAll(selector)].find((el) => el.getClientRects().length > 0) ?? null
+}
+
+export function TourProvider({ children, onRole, role }: {
+  children: ReactNode
+  onRole?: (r: NonNullable<Step['role']>) => void
+  /** 투어 시작 시점의 역할 — 투어가 역할을 바꿨다면 종료 시 되돌린다 */
+  role?: NonNullable<Step['role']>
+}) {
   const [active, setActive] = useState<TourKind | null>(null)
   const [idx, setIdx] = useState(0)
   const [rect, setRect] = useState<Rect | null>(null)
   const nav = useNavigate()
   const loc = useLocation()
   const timers = useRef<number[]>([])
+  const startRole = useRef<NonNullable<Step['role']> | undefined>(undefined)
+  const roleTouched = useRef(false)
+  const roleRef = useRef(role)
+  roleRef.current = role
 
   const steps = active === 'presentation' ? PRESENTATION_STEPS : TUTORIAL_STEPS
   const step = active ? steps[idx] : null
@@ -95,12 +109,17 @@ export function TourProvider({ children, onRole }: { children: ReactNode; onRole
     setActive(null)
     setIdx(0)
     setRect(null)
-  }, [])
+    // 시연 중 현장직원·고객 역할로 바꿨다면 원래 역할로 복원 (다음 화면이 엉뚱한 권한으로 보이지 않게)
+    if (roleTouched.current && startRole.current && startRole.current !== roleRef.current) onRole?.(startRole.current)
+    roleTouched.current = false
+  }, [onRole])
 
   const start = useCallback((k: TourKind) => {
     clearTimers()
     setRect(null)
     setIdx(0)
+    startRole.current = roleRef.current
+    roleTouched.current = false
     setActive(k)
   }, [])
 
@@ -109,12 +128,12 @@ export function TourProvider({ children, onRole }: { children: ReactNode; onRole
     if (!step) return
     clearTimers()
     setRect(null)
-    if (step.role) onRole?.(step.role)
+    if (step.role && step.role !== roleRef.current) { roleTouched.current = true; onRole?.(step.role) }
     if (loc.pathname !== step.route) nav(step.route)
 
     let tries = 0
     const seek = () => {
-      const el = step.selector ? document.querySelector(step.selector) : null
+      const el = step.selector ? findVisible(step.selector) : null
       if (el) {
         el.scrollIntoView({ block: 'center', behavior: 'smooth' })
         timers.current.push(window.setTimeout(() => {
@@ -134,7 +153,7 @@ export function TourProvider({ children, onRole }: { children: ReactNode; onRole
   useEffect(() => {
     if (!step?.selector || !rect) return
     const track = () => {
-      const el = document.querySelector(step.selector!)
+      const el = findVisible(step.selector!)
       if (!el) return
       const r = el.getBoundingClientRect()
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height })

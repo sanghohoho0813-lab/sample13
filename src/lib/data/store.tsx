@@ -92,7 +92,8 @@ interface DemoStore extends DemoState {
   // Action Lifecycle
   setActionStatus: (actionId: string, status: ActionStatus, result?: string) => void
   // 고객 플랫폼 → AX Closed Loop
-  addRequest: (customerId: string, type: RequestType, detail: string) => void
+  /** 접수번호를 돌려준다 — 고객 화면에서 접수 완료 안내에 사용 */
+  addRequest: (customerId: string, type: RequestType, detail: string) => string
   setRequestStatus: (requestId: string, status: CustomerRequest['status']) => void
   setUpsellStatus: (id: string, status: UpsellOpportunity['status']) => void
   addEvidence: (engine: EvidenceLog['engine'], text: string, result?: string) => void
@@ -145,7 +146,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       setState((s) => ({
         ...s,
         evidence: [
-          { id: `EV-${Date.now()}`, date: 'TODAY', time: nowTimeHM(), engine, text, result },
+          { id: `EV-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, date: 'TODAY', time: nowTimeHM(), engine, text, result },
           ...s.evidence,
         ],
       }))
@@ -218,22 +219,24 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         }))
         const a = state.actions.find((x) => x.id === actionId)
         if (a && (status === '완료' || status === '실행중')) {
-          pushEvidence(a.engine, `Action ${status === '완료' ? '완료' : '실행'} — ${a.title}`, status === '완료' ? result ?? a.result : undefined)
+          pushEvidence(a.engine, `조치 ${status === '완료' ? '완료' : '실행'} — ${a.title}`, status === '완료' ? result ?? a.result : undefined)
         }
       },
       addRequest: (customerId, type, detail) => {
         const c = customerById(customerId)
+        // 연속 접수 시 ID가 겹치지 않도록 시각 + 난수 (React key 충돌 방지)
+        const id = `R-${Date.now().toString().slice(-6)}${Math.random().toString(36).slice(2, 4).toUpperCase()}`
         setState((s) => ({
           ...s,
           requests: [
-            { id: `R-${Date.now()}`, customerId, type, detail, createdAt: `오늘 ${nowTimeHM()}`, status: '접수', fromPortal: true },
+            { id, customerId, type, detail, createdAt: `오늘 ${nowTimeHM()}`, status: '접수', fromPortal: true },
             ...s.requests,
           ],
           // Closed Loop: 추가서비스 요청 → Upsell Opportunity 자동 생성
           upsell: type === '추가서비스'
             ? [
                 {
-                  id: `U-${Date.now()}`, customerId,
+                  id: `U-${id}`, customerId,
                   currentService: c?.contract.serviceSummary ?? '-',
                   signal: '고객 플랫폼 고객 요청',
                   recommendedService: detail,
@@ -247,8 +250,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         }))
         pushEvidence(
           type === '추가서비스' ? 'upsell' : 'risk',
-          `고객 플랫폼 요청 접수 — ${c?.name ?? customerId} · ${type}${type === '추가서비스' ? ' → 신규 서비스 Opportunity 생성' : type === '일정변경' ? ' → AI Smart Dispatch 재검토 대기' : ''}`,
+          `고객 플랫폼 요청 접수 — ${c?.name ?? customerId} · ${type}${type === '추가서비스' ? ' → 추가매출 기회 자동 생성' : type === '일정변경' ? ' → AI 스마트 배정 재검토 대기' : ''}`,
         )
+        return id
       },
       setRequestStatus: (requestId, status) =>
         setState((s) => ({ ...s, requests: s.requests.map((r) => (r.id === requestId ? { ...r, status } : r)) })),

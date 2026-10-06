@@ -29,7 +29,7 @@ export const SEED_INSIGHTS: AIInsight[] = [
     actionId: 'A-01',
   },
   {
-    id: 'I-02', engine: 'retention', severity: 'risk', title: '계약갱신 Risk', target: '라온메디컬센터', customerId: 'C01',
+    id: 'I-02', engine: 'retention', severity: 'risk', title: '계약갱신 위험', target: '라온메디컬센터', customerId: 'C01',
     found: '계약 종료 D-32. 최근 60일간 일정변경 3회, 품질문의 2회, 만족도 4.6 → 4.1 하락.',
     dataViewed: ['계약기간·갱신 예정일', '작업이력', '민원·문의', '만족도 추이', '일정변경 기록'],
     why: '병의원 고객은 이탈 시 연 3,800만원 규모 계약 손실이며, 갱신 협의 없이 D-30을 넘기면 경쟁 견적 노출 가능성이 높아집니다.',
@@ -146,7 +146,7 @@ export const SEED_REQUESTS: CustomerRequest[] = [
 
 export const SEED_EVIDENCE: EvidenceLog[] = [
   { id: 'EV-01', date: 'TODAY', time: '08:40', engine: 'risk', text: 'AI 방문지연 가능성 감지 — 성수 B오피스 15:30 일정', result: undefined },
-  { id: 'EV-02', date: 'TODAY', time: '08:41', engine: 'retention', text: 'AI 계약갱신 Risk 감지 — 라온메디컬센터 D-32' },
+  { id: 'EV-02', date: 'TODAY', time: '08:41', engine: 'retention', text: 'AI 계약갱신 위험 감지 — 라온메디컬센터 D-32' },
   { id: 'EV-03', date: 'TODAY', time: '08:42', engine: 'upsell', text: 'AI 추가매출 기회 발견 — 에이원교육센터 유리 집중관리' },
   { id: 'EV-04', date: 'D-1', time: '16:05', engine: 'retention', text: '서초 E의원 재계약 협의 착수 — 담당자 Action 실행중' },
   { id: 'EV-05', date: 'D-5', time: '10:30', engine: 'upsell', text: '그랜드타워 에어컨 세척 시즌 제안 → 담당자 제안 완료', result: '9월 정기작업 패키지 계약 추가 (DEMO)' },

@@ -131,7 +131,8 @@ body {
   overflow-x: hidden;
 }
 
-* { min-width: 0; }
+/* base 레이어에 두어야 min-w-[…] 유틸리티가 이 규칙을 이길 수 있다 */
+@layer base { * { min-width: 0; } }
 
 /* 숫자·금액·날짜·시간 — 중간에서 끊기거나 flex 안에서 눌리지 않는다 */
 .tnum { font-variant-numeric: tabular-nums; overflow-wrap: normal; flex-shrink: 0; }

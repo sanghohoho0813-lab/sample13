@@ -64,7 +64,7 @@ export default function Renewals() {
                     <div className="mt-3 space-y-2 border-t border-line pt-3">
                       {retentionAction && <ActionLifecycle actionId={retentionAction.id} status={retentionAction.status} compact />}
                       <div className="flex items-center justify-between">
-                        <Btn size="sm" variant="outline" onClick={() => nav(`/customers/${c.id}`)}>고객 Detail <ArrowRight size={12} className="inline" /></Btn>
+                        <Btn size="sm" variant="outline" onClick={() => nav(`/customers/${c.id}`)}>고객 상세 <ArrowRight size={12} className="inline" /></Btn>
                         {(stage === '위험' || stage.startsWith('D-30')) && <WhyAIButton dataViewed={['계약 갱신일', '만족도 추이', '품질문의', '일정변경 이력']} />}
                       </div>
                     </div>

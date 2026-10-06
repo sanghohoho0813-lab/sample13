@@ -24,13 +24,13 @@ npm run preview  # 빌드 결과 미리보기
 | | `/sites` `/work` `/team` | 현장·작업·직원/팀 |
 | | `/customers` | 고객/계약 + Customer Health |
 | | `/renewals` `/upsell` `/profitability` | 재계약 · Upsell · 수익성(대표 전용) |
-| | `/ai` | AI Operations Center (6 Engine) |
+| | `/ai` | AI Operations Center (6 Engine) · `?tab=risk` 등 탭 딥링크 |
 | | `/evidence` `/why-ax` | AX Evidence Log · 기획의도 16 Section |
 | | `/presentation` | 시연 모드 (Guided Demo 11 Step) |
 | Employee Mobile | `/field` | 현장직원 Action UX (체크인→체크리스트→사진→완료) |
 | Customer Portal | `/care` | Public Landing |
 | | `/care/home` | 고객 Home + Quick Action (Closed Loop) |
-| | `/care/reports` `/care/requests` | Service Report · 요청 현황 |
+| | `/care/reports` `/care/requests` | Service Report · 요청 현황 (요청 폼: 유형별 필수 입력 · 접수번호) |
 
 ## 현장 사진
 
@@ -83,3 +83,12 @@ npm run preview  # 빌드 결과 미리보기
   고객 포털 전체 메뉴 · Field Mobile 내 정보
 - 메인 CTA는 전 화면 `우리 회사도 만들어보기`로 통일, 외부 링크는 새 탭
 - 반짝임은 5.5s 주기 중 64%가 정지 구간인 light sweep 하나뿐이며 motion-reduce에서 꺼진다
+
+## 고도화 (2026-10-06)
+
+- 화면마다 "먼저 볼 것"이 위에 오도록 재배치 — 대시보드 · 일정/배정 · 요청함 · 고객 홈 · 현장 앱
+- 고객 요청은 `RequestSheet` 하나로 — 유형별 필수 입력 · 제출 후 오류 표시 · 접수번호 → AX `처리 필요`로 연결
+- 모바일 일정 상세는 하단 시트, 1280px 이상은 목록 + 상세 2단
+- 공통 폼 부품 `Field` · `TextArea` · `ChoiceGroup` · `ConfirmDialog` (`src/components/ui`)
+- 상세: `docs/PROJECT_SPEC.md` O절 · `DECISIONS.md` 51~61
+

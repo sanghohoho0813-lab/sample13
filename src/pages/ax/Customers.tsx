@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, ArrowRight, Star } from 'lucide-react'
+import { Search, ArrowRight, Star, X } from 'lucide-react'
 import { Card, PageHeader, Badge, DemoBadge, StatusPill, EmptyState } from '../../components/ui'
 import { CUSTOMERS } from '../../lib/demo/company'
 import { SEED_HEALTH } from '../../lib/demo/intelligence'
@@ -12,37 +12,55 @@ export default function Customers() {
   const nav = useNavigate()
   const [q, setQ] = useState('')
   const [type, setType] = useState('전체')
+  // 검색은 공백·대소문자 무시 — "강남c" 로 쳐도 "강남 C클리닉"을 찾는다
+  const norm = (v: string) => v.replace(/\s+/g, '').toLowerCase()
+  const nq = norm(q)
   const list = CUSTOMERS.filter((c) =>
     (type === '전체' || c.type === type) &&
-    (q.trim() === '' || c.name.includes(q.trim()) || c.district.includes(q.trim())),
+    (nq === '' || [c.name, c.district, c.contract.serviceSummary].some((f) => norm(f).includes(nq))),
   )
+  const reset = () => { setQ(''); setType('전체') }
 
   return (
     <div className="fade-up">
       <PageHeader title="고객 / 계약" desc="정기관리 고객사 76곳 중 대표 12곳 표시 (DEMO). 고객 건강도로 상태를 관리합니다." right={<DemoBadge />} />
 
-      <div className="mb-4 flex flex-wrap items-center gap-2.5">
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+      <div className="mb-3 flex flex-col gap-2.5 lg:flex-row lg:items-center">
+        <div className="relative w-full lg:w-80">
+          <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-faint" />
           <input
+            type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="고객사, 지역 검색"
-            className="w-64 rounded-xl border border-line bg-card py-2 pl-9 pr-3 text-[0.88rem] font-semibold outline-none focus:border-primary"
+            placeholder="고객사 · 지역 · 서비스 검색"
+            aria-label="고객 검색"
+            className="w-full rounded-xl border border-line bg-card py-2.5 pl-10 pr-10 text-[0.92rem] font-semibold outline-none focus:border-primary [&::-webkit-search-cancel-button]:hidden"
           />
+          {q && (
+            <button onClick={() => setQ('')} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-ink-faint hover:bg-ivory">
+              <X size={16} />
+            </button>
+          )}
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 lg:mx-0 lg:flex-wrap lg:px-0">
           {TYPES.map((t) => (
-            <button key={t} onClick={() => setType(t)} className={cx(
-              'rounded-full border px-3 py-1.5 text-[0.78rem] font-bold',
+            <button key={t} onClick={() => setType(t)} aria-pressed={type === t} className={cx(
+              'shrink-0 rounded-full border px-3.5 py-1.5 text-[0.84rem] font-bold',
               type === t ? 'border-primary bg-primary text-white' : 'border-line bg-card text-ink-soft hover:border-primary',
             )}>{t}</button>
           ))}
         </div>
       </div>
+      <p className="mb-3 text-[0.84rem] font-bold text-ink-faint">
+        {list.length}곳 {(q || type !== '전체') && <button onClick={reset} className="ml-1.5 text-primary hover:underline">조건 초기화</button>}
+      </p>
 
       {list.length === 0 ? (
-        <EmptyState title="검색 결과가 없습니다." desc="다른 키워드나 필터로 다시 시도해보세요." />
+        <EmptyState
+          title={`'${q || type}'에 해당하는 고객이 없습니다.`}
+          desc="고객사 이름, 지역(예: 강남구), 서비스(예: 병의원)로 찾을 수 있습니다."
+          action={<button onClick={reset} className="rounded-xl border border-line px-4 py-2 text-[0.86rem] font-bold hover:border-primary">조건 초기화</button>}
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {list.map((c) => {
@@ -73,7 +91,7 @@ export default function Customers() {
                     </div>
                   </div>
                 )}
-                <p className="mt-3 flex items-center gap-1 text-[0.78rem] font-bold text-primary">고객 Detail <ArrowRight size={12} /></p>
+                <p className="mt-3 flex items-center gap-1 text-[0.82rem] font-bold text-primary">고객 상세 <ArrowRight size={13} /></p>
               </Card>
             )
           })}

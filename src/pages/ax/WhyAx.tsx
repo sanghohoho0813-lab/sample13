@@ -99,7 +99,7 @@ export default function WhyAx() {
           어디에서 추가매출을 만들 수 있는지</b>를 더 빠르게 판단하기 위한 Service Intelligence System입니다.
         </p>
         <div className="mt-6 flex flex-wrap gap-1.5">
-          {['현장', '일정', '품질', '고객', '재계약', 'Growth'].map((k) => (
+          {['현장', '일정', '품질', '고객', '재계약', '성장'].map((k) => (
             <span key={k} className="rounded-lg bg-white/10 px-3 py-1.5 text-[0.8rem] font-bold text-champagne">{k}</span>
           ))}
         </div>
@@ -141,7 +141,7 @@ export default function WhyAx() {
             <div className="rounded-xl border border-line p-3.5">
               <p className="text-[0.82rem] font-extrabold text-success">AX인 것</p>
               <ul className="mt-1.5 space-y-1 text-[0.85rem] text-ink-soft">
-                {['업무가 흐르며 데이터가 자동으로 쌓임', 'AI가 위험과 기회를 먼저 발견', '추천이 실제 Action과 결과로 이어짐'].map((x) => (
+                {['업무가 흐르며 데이터가 자동으로 쌓임', 'AI가 위험과 기회를 먼저 발견', '추천이 실제 실행과 결과로 이어짐'].map((x) => (
                   <li key={x} className="flex gap-1.5"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-success" />{x}</li>
                 ))}
               </ul>
@@ -183,7 +183,7 @@ export default function WhyAx() {
               <Chip key={x}>{x}</Chip>
             ))}
           </div>
-          <p className="text-[0.82rem] text-ink-faint">모든 수치는 가상의 Demo Data입니다.</p>
+          <p className="text-[0.82rem] text-ink-faint">모든 수치는 가상의 데모 데이터입니다.</p>
         </Section>
 
         <Section no="05" title="지금 가장 먼저 바꿔야 하는 문제는 무엇인가요?">
@@ -245,7 +245,7 @@ export default function WhyAx() {
             </p>
           </div>
           <div className="flex flex-col items-center gap-1 pt-1">
-            {['작업 Data', '고객 상태', 'Retention Risk', 'Upsell Opportunity', '담당자 Action', '재계약 / 추가서비스', 'Result'].map((x, i, arr) => (
+            {['작업 데이터', '고객 상태', '재계약 위험', '추가매출 기회', '담당자 실행', '재계약 / 추가서비스', '결과'].map((x, i, arr) => (
               <div key={x} className="flex w-full max-w-xs flex-col items-center">
                 <div className={cx(
                   'w-full rounded-xl border px-4 py-2 text-center text-[0.86rem] font-extrabold',
@@ -318,15 +318,15 @@ export default function WhyAx() {
         </Section>
 
         <Section no="11" title="AI는 실제로 무엇을 하나요?">
-          <p>챗봇이 아니라, 업무 화면 안에서 <b>Data → 판단 → Action</b> 구조로 동작하는 6개의 Engine입니다.</p>
+          <p>챗봇이 아니라, 업무 화면 안에서 <b>데이터 → 판단 → 실행</b> 구조로 동작하는 6개의 엔진입니다.</p>
           <div className="grid gap-2 sm:grid-cols-2">
             {[
-              ['AI Smart Dispatch', '일정·위치·숙련도·여유', '누구를 어디에 배정할지 추천'],
-              ['AI Service Risk Radar', '진행상황·이동·근태', '지연·겹침·미완료·결원을 먼저 탐지'],
-              ['AI Customer Retention', '계약일·만족도·민원', '이탈 가능성 있는 고객 발견'],
-              ['AI Upsell Finder', '작업기록·특이사항', '추가 매출 기회 발굴'],
-              ['AI Service Profitability', '작업시간·이동·소모품', '표면 마진이 아닌 실제 기여마진 판단'],
-              ['AI Executive Briefing', '위 5개 Engine 결과', '대표가 오늘 볼 것을 종합 설명'],
+              ['AI 스마트 배정', '일정·위치·숙련도·여유', '누구를 어디에 배정할지 추천'],
+              ['AI 서비스 위험 감지', '진행상황·이동·근태', '지연·겹침·미완료·결원을 먼저 탐지'],
+              ['AI 재계약 관리', '계약일·만족도·민원', '이탈 가능성 있는 고객 발견'],
+              ['AI 추가매출 발굴', '작업기록·특이사항', '추가 매출 기회 발굴'],
+              ['AI 서비스 수익성', '작업시간·이동·소모품', '표면 마진이 아닌 실제 기여마진 판단'],
+              ['AI 경영 브리핑', '위 5개 엔진 결과', '대표가 오늘 볼 것을 종합 설명'],
             ].map(([t, data, act]) => (
               <div key={t} className="rounded-xl border border-line p-3.5">
                 <p className="flex items-center gap-1.5 text-[0.88rem] font-extrabold text-ai-strong"><Sparkles size={14} /> {t}</p>
@@ -370,7 +370,7 @@ export default function WhyAx() {
             <div className="rounded-xl border border-primary bg-mint/40 p-3.5">
               <p className="text-[0.84rem] font-extrabold text-primary-strong">AX에 남는 것</p>
               <ul className="mt-1.5 space-y-1 text-[0.84rem] text-ink-soft">
-                {['신규 Service Opportunity', 'Dispatch 재검토 요청', 'Customer Health 신호', '요청 응답시간 기록'].map((x) => <li key={x}>· {x}</li>)}
+                {['신규 매출 기회', '배정 재검토 요청', '고객 건강도 신호', '요청 응답시간 기록'].map((x) => <li key={x}>· {x}</li>)}
               </ul>
             </div>
           </div>
@@ -400,7 +400,7 @@ export default function WhyAx() {
           <div className="grid gap-2 sm:grid-cols-3">
             {[
               [<Database key="i" size={16} />, '데이터 자산', '작업·고객·품질·수익성 데이터의 축적 구조'],
-              [<ShieldCheck key="i" size={16} />, 'AX 실증', 'AI 추천 → Action → 결과가 Evidence Log로 기록'],
+              [<ShieldCheck key="i" size={16} />, 'AX 실증', 'AI 추천 → 실행 → 결과가 실증 기록으로 남음'],
               [<TrendingUp key="i" size={16} />, '사업 확장성', '운영 표준화를 통한 서비스 확장 가능성'],
             ].map(([icon, t, d]) => (
               <div key={t as string} className="rounded-xl border border-line p-3.5">
@@ -443,19 +443,19 @@ export default function WhyAx() {
       {/* Escape Path — 반드시 돌아갈 경로 제공 */}
       <div className="mt-7 flex flex-wrap justify-center gap-2.5">
         <Btn size="lg" onClick={() => nav('/')}>
-          <LayoutDashboard size={17} className="mr-1 inline" /> AX Dashboard로 돌아가기
+          <LayoutDashboard size={17} className="mr-1 inline" /> 대시보드로 돌아가기
         </Btn>
         <Btn size="lg" variant="outline" onClick={() => nav('/renewals')}>
           <RefreshCcw size={16} className="mr-1 inline" /> 재계약 관리 보기
         </Btn>
         <Btn size="lg" variant="outline" onClick={() => nav('/evidence')}>
-          AX Evidence 보기 <ArrowRight size={15} className="inline" />
+          AX 실증 기록 보기 <ArrowRight size={15} className="inline" />
         </Btn>
       </div>
 
       <div className="mt-8 flex flex-col items-center gap-2 border-t border-line pt-6">
         <MiraeCredit label="Designed & Built by" height={26} />
-        <p className="text-[0.72rem] text-ink-faint">Service Intelligence AX · Website Reference MVP</p>
+        <p className="text-[0.72rem] text-ink-faint">Service Intelligence AX · 웹사이트 레퍼런스 MVP</p>
       </div>
     </div>
   )

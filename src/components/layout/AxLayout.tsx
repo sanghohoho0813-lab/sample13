@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { cloneElement, isValidElement, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Zap, CalendarClock, MapPin, ClipboardList, Users, Building2,
@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../lib/data/store'
 import { ROLE_LABEL, type Role } from '../../types'
-import { Badge, Freshness } from '../ui'
+import { Badge, ConfirmDialog, useToast } from '../ui'
 import { cx, nowClock, nowDateLong, nowDateCompact } from '../../lib/utils'
 import DevicePreview from './DevicePreview'
 import { useTour, useAutoTutorial } from '../tour/TourProvider'
@@ -87,6 +87,11 @@ export const NAV: NavEntry[] = [
   },
 ]
 
+/** NAV에 정의된 lucide 아이콘 엘리먼트를 원하는 크기로 다시 렌더 */
+function iconOf(icon: ReactNode, size: number) {
+  return isValidElement<{ size?: number }>(icon) ? cloneElement(icon, { size }) : icon
+}
+
 /** Role 필터를 적용한 메뉴 */
 function useNav(role: Role) {
   return useMemo(
@@ -106,9 +111,9 @@ function activeGroupKey(pathname: string) {
   return null
 }
 
-const IconTile = ({ color, children, dark, size = 8 }: { color: string; children: ReactNode; dark?: boolean; size?: 7 | 8 }) => (
+const IconTile = ({ color, children, dark, size = 8 }: { color: string; children: ReactNode; dark?: boolean; size?: 6 | 7 | 8 }) => (
   <span
-    className={cx('flex shrink-0 items-center justify-center rounded-lg', size === 8 ? 'h-8 w-8' : 'h-7 w-7')}
+    className={cx('flex shrink-0 items-center justify-center rounded-lg', size === 8 ? 'h-8 w-8' : size === 7 ? 'h-7 w-7' : 'h-6 w-6 rounded-md')}
     style={{ background: dark ? `${color}26` : `${color}1F`, color }}
   >
     {children}
@@ -128,7 +133,7 @@ const readRoadmapOpen = () => {
   try { return localStorage.getItem(ROADMAP_OPEN_KEY) === '1' } catch { return false }
 }
 
-function NextRoadmap({ onNavigate }: { onNavigate?: () => void }) {
+function NextRoadmap({ dense }: { dense?: boolean }) {
   const [expanded, setExpanded] = useState(readRoadmapOpen)
   const [open, setOpen] = useState<string | null>(null)
   const toggle = () => {
@@ -139,15 +144,17 @@ function NextRoadmap({ onNavigate }: { onNavigate?: () => void }) {
       return next
     })
   }
-  void onNavigate
   return (
     <div>
       <button
         onClick={toggle}
         aria-expanded={expanded}
-        className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[0.9rem] font-bold text-[#9FBDBD] hover:bg-white/6 hover:text-white"
+        className={cx(
+          'flex w-full items-center gap-2.5 rounded-lg px-2.5 text-left font-bold text-[#9FBDBD] hover:bg-white/6 hover:text-white',
+          dense ? 'py-1 text-[0.86rem]' : 'py-2 text-[0.9rem]',
+        )}
       >
-        <IconTile color={FAMILY.system} dark><Handshake size={18} /></IconTile>
+        <IconTile color={FAMILY.system} dark size={dense ? 6 : 8}><Handshake size={dense ? 15 : 18} /></IconTile>
         <span className="min-w-0 flex-1 truncate">확장 기능 보기</span>
         <span className="rounded-md border border-white/20 px-1.5 py-[0.05rem] text-[0.7rem] font-bold text-[#8FB3B3]">{ROADMAP.length}</span>
         <ChevronDown size={15} className={cx('shrink-0 text-white/40 transition-transform', expanded && 'rotate-180')} />
@@ -283,64 +290,73 @@ function CustomerPlatformButton({ variant }: { variant: 'header' | 'drawer' | 't
 }
 
 /* ─── Sidebar / Drawer 본문 ────────────────────────────────────────
-   Desktop: 그룹을 모두 펼쳐 보여준다 (폭이 있으므로).
-   Mobile Drawer: 그룹은 접이식 — 현재 화면이 속한 그룹만 열린 채 시작한다. */
+   그룹은 접이식 — 현재 화면이 속한 그룹이 자동으로 열린다 (처음 보이는 항목 ≈ 12줄).
+   Desktop: 여러 그룹을 동시에 열어둘 수 있고, 다른 화면으로 가도 열어둔 그룹은 유지.
+   Mobile Drawer: 한 번에 한 그룹만 — 좁은 화면에서 목록이 길어지지 않게. */
 function SidebarContent({ onNavigate, collapsible }: { onNavigate?: () => void; collapsible?: boolean }) {
   const { role } = useDemo()
   const { start } = useTour()
   const loc = useLocation()
   const entries = useNav(role)
-  const [openKey, setOpenKey] = useState<string | null>(() => activeGroupKey(loc.pathname))
-  useEffect(() => { setOpenKey(activeGroupKey(loc.pathname)) }, [loc.pathname])
+  const [openKeys, setOpenKeys] = useState<Set<string>>(() => new Set([activeGroupKey(loc.pathname) ?? '']))
+  useEffect(() => {
+    const active = activeGroupKey(loc.pathname)
+    setOpenKeys((prev) => (collapsible ? new Set(active ? [active] : []) : new Set(active ? [...prev, active] : prev)))
+  }, [loc.pathname, collapsible])
+  const toggleGroup = (key: string) => setOpenKeys((prev) => {
+    const next = new Set(collapsible ? [] : prev)
+    if (prev.has(key)) next.delete(key); else next.add(key)
+    return next
+  })
 
+  // 데스크톱은 메뉴 전체가 한 화면(약 800px)에 들어오도록 촘촘하게, 모바일 Drawer는 터치 크기를 유지한다
+  const dense = !collapsible
+  const tile: 6 | 7 | 8 = dense ? 6 : 8
   const linkCls = (isActive: boolean, sub?: boolean) => cx(
-    'flex items-center gap-2.5 rounded-xl px-2.5 text-left font-bold transition-colors',
-    sub ? 'py-1.5 text-[0.88rem]' : 'py-2 text-[0.92rem]',
+    'flex items-center gap-2.5 rounded-lg px-2.5 text-left font-bold transition-colors',
+    dense ? 'py-1 text-[0.88rem]' : sub ? 'py-1.5 text-[0.88rem]' : 'py-2 text-[0.92rem]',
     isActive ? 'bg-white/12 text-white' : 'text-[#B9D2D2] hover:bg-white/8 hover:text-white',
   )
+  const iconSize = dense ? 15 : 18
 
   return (
     <div className="flex h-full flex-col">
-      <div className="px-6 pt-5 pb-3">
-        <p className="text-[1.08rem] font-extrabold tracking-wide text-white leading-tight">CLEANWAY<br />PARTNERS</p>
-        <p className="mt-1 text-[0.82rem] font-bold tracking-[0.14em] text-champagne">Service Intelligence AX</p>
+      <div className={cx('px-6', dense ? 'pt-4 pb-2' : 'pt-5 pb-3')}>
+        <p className={cx('font-extrabold tracking-wide text-white leading-tight', dense ? 'text-[1rem]' : 'text-[1.08rem]')}>CLEANWAY<br />PARTNERS</p>
+        <p className="mt-0.5 text-[0.76rem] font-bold tracking-[0.14em] text-champagne">Service Intelligence AX</p>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3.5 pb-4 space-y-0.5">
+      <nav className={cx('flex-1 overflow-y-auto px-3.5 space-y-0.5', dense ? 'pb-2' : 'pb-4')}>
         {entries.map((e) => {
           const color = FAMILY[e.family]
           if (e.to) {
             return (
               <NavLink key={e.key} to={e.to} end={e.to === '/'} onClick={onNavigate} className={({ isActive }) => linkCls(isActive)}>
-                <IconTile color={color} dark>{e.icon}</IconTile>
+                <IconTile color={color} dark size={tile}>{iconOf(e.icon, iconSize)}</IconTile>
                 {e.label}
               </NavLink>
             )
           }
           const groupActive = activeGroupKey(loc.pathname) === e.key
-          const isOpen = collapsible ? openKey === e.key : true
+          const isOpen = openKeys.has(e.key)
           return (
             <div key={e.key}>
-              {collapsible ? (
-                <button
-                  onClick={() => setOpenKey(isOpen ? null : e.key)}
-                  aria-expanded={isOpen}
-                  className={cx(linkCls(false), 'w-full', groupActive && 'text-white')}
-                >
-                  <IconTile color={color} dark>{e.icon}</IconTile>
-                  <span className="min-w-0 flex-1 truncate">{e.label}</span>
-                  <ChevronDown size={15} className={cx('shrink-0 text-white/40 transition-transform', isOpen && 'rotate-180')} />
-                </button>
-              ) : (
-                <p className="flex items-center gap-2.5 px-2.5 pt-3 pb-1 text-[0.74rem] font-bold tracking-[0.08em] text-aqua">
-                  {e.label}
-                </p>
-              )}
+              <button
+                onClick={() => toggleGroup(e.key)}
+                aria-expanded={isOpen}
+                className={cx(linkCls(false), 'w-full', groupActive && 'text-white')}
+              >
+                <IconTile color={color} dark size={tile}>{iconOf(e.icon, iconSize)}</IconTile>
+                <span className="min-w-0 flex-1 truncate">{e.label}</span>
+                {/* 접힌 그룹은 하위 항목 수를 보여줘 무엇이 들어있는지 짐작하게 한다 */}
+                {!isOpen && <span className="text-[0.72rem] font-bold text-white/35">{e.items!.length}</span>}
+                <ChevronDown size={15} className={cx('shrink-0 text-white/40 transition-transform', isOpen && 'rotate-180')} />
+              </button>
               {isOpen && (
-                <div className={cx('space-y-0.5', collapsible ? 'fade-up ml-4 border-l border-shell-line pl-2 py-1' : '')}>
+                <div className={cx('fade-up space-y-0.5 border-l border-shell-line', dense ? 'ml-[1.3rem] pl-2 py-0.5' : 'ml-4 pl-2 py-1')}>
                   {e.items!.map((i) => (
-                    <NavLink key={i.to} to={i.to} onClick={onNavigate} className={({ isActive }) => linkCls(isActive, collapsible)}>
-                      <IconTile color={color} dark size={collapsible ? 7 : 8}>{i.icon}</IconTile>
+                    <NavLink key={i.to} to={i.to} onClick={onNavigate} className={({ isActive }) => linkCls(isActive, true)}>
+                      <IconTile color={color} dark size={dense ? 6 : 7}>{iconOf(i.icon, dense ? 14 : 17)}</IconTile>
                       {i.label}
                     </NavLink>
                   ))}
@@ -350,21 +366,36 @@ function SidebarContent({ onNavigate, collapsible }: { onNavigate?: () => void; 
           )
         })}
 
-        {/* 데모 도구 — 소개·설정과 같은 계열 */}
+        {/* 데모 도구 — 소개·설정과 같은 계열 (모바일 Drawer에서만 메뉴 안에) */}
         <div className="pt-2">
-          <button onClick={() => { onNavigate?.(); start('presentation') }} className={cx(linkCls(false), 'w-full')}>
-            <IconTile color={FAMILY.system} dark><Play size={18} /></IconTile> 시연 모드
-          </button>
-          <button onClick={() => { onNavigate?.(); start('tutorial') }} className={cx(linkCls(false), 'w-full')}>
-            <IconTile color={FAMILY.system} dark><Sparkles size={18} /></IconTile> 튜토리얼
-          </button>
-          <NextRoadmap onNavigate={onNavigate} />
+          {!dense && (
+            <>
+              <button onClick={() => { onNavigate?.(); start('presentation') }} className={cx(linkCls(false), 'w-full')}>
+                <IconTile color={FAMILY.system} dark><Play size={18} /></IconTile> 시연 모드
+              </button>
+              <button onClick={() => { onNavigate?.(); start('tutorial') }} className={cx(linkCls(false), 'w-full')}>
+                <IconTile color={FAMILY.system} dark><Sparkles size={18} /></IconTile> 튜토리얼
+              </button>
+            </>
+          )}
+          <NextRoadmap dense={dense} />
         </div>
       </nav>
 
-      {/* 하단 — 부가 기능 + 고객 플랫폼 CTA */}
+      {/* 하단 — 데모 도구(데스크톱) + 고객 플랫폼 CTA(모바일) + 미래AI랩 */}
       <div className="border-t border-shell-line px-4 pt-3 pb-3 space-y-2">
-        {role !== 'customer' && <CustomerPlatformButton variant="drawer" />}
+        {dense ? (
+          <div className="grid grid-cols-2 gap-1.5">
+            <button onClick={() => start('presentation')} className="flex items-center justify-center gap-1.5 rounded-lg border border-champagne/40 py-1.5 text-[0.8rem] font-bold text-champagne hover:bg-champagne/10">
+              <Play size={14} /> 시연 모드
+            </button>
+            <button onClick={() => start('tutorial')} className="flex items-center justify-center gap-1.5 rounded-lg border border-white/15 py-1.5 text-[0.8rem] font-bold text-[#B9D2D2] hover:border-white/30 hover:text-white">
+              <Sparkles size={14} /> 튜토리얼
+            </button>
+          </div>
+        ) : (
+          role !== 'customer' && <CustomerPlatformButton variant="drawer" />
+        )}
         <SampleBridgeMini tone="dark" compact />
         <div className="flex items-center justify-between gap-2 pt-0.5">
           <span className="text-[0.72rem] font-semibold text-[#8FB3B3]">데모 · 가상 샘플 데이터</span>
@@ -376,8 +407,8 @@ function SidebarContent({ onNavigate, collapsible }: { onNavigate?: () => void; 
 }
 
 /* ─── 더보기 Sheet — 햄버거 메뉴와 같은 정보구조 (그룹별) ───────────── */
-function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { role, resetDemo } = useDemo()
+function MoreSheet({ open, onClose, onReset }: { open: boolean; onClose: () => void; onReset: () => void }) {
+  const { role } = useDemo()
   const { start } = useTour()
   const nav = useNavigate()
   const loc = useLocation()
@@ -401,7 +432,7 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
     { label: '현장직원 앱 보기', icon: <Smartphone size={17} />, run: () => go('/field') },
     { label: '시연 모드', icon: <Play size={17} />, run: () => { onClose(); start('presentation') } },
     { label: '튜토리얼', icon: <Sparkles size={17} />, run: () => { onClose(); start('tutorial') } },
-    { label: '데모 초기화', icon: <RotateCcw size={17} />, run: () => { if (confirm('데모 상태를 초기 시연 상태로 되돌릴까요?')) { resetDemo(); onClose() } } },
+    { label: '데모 초기화', icon: <RotateCcw size={17} />, run: () => { onClose(); onReset() } },
   ]
 
   return (
@@ -488,8 +519,10 @@ function AxBottomNav({ onMore }: { onMore: () => void }) {
 export default function AxLayout({ children }: { children: ReactNode }) {
   const [drawer, setDrawer] = useState(false)
   const [more, setMore] = useState(false)
+  const [askReset, setAskReset] = useState(false)
   const loc = useLocation()
-  const { tutorialSeen, markTutorialSeen, role } = useDemo()
+  const { tutorialSeen, markTutorialSeen, role, resetDemo } = useDemo()
+  const toast = useToast()
 
   useEffect(() => { setDrawer(false); setMore(false) }, [loc.pathname])
   useEffect(() => {
@@ -546,7 +579,6 @@ export default function AxLayout({ children }: { children: ReactNode }) {
             </div>
             {/* Desktop 액션 — 모바일에서는 위 툴바로 이동 */}
             <div className="hidden shrink-0 items-center gap-2 lg:flex">
-              <div className="hidden xl:block"><Freshness /></div>
               <DevicePreview compact />
               {role !== 'customer' && <CustomerPlatformButton variant="header" />}
               <RoleSwitcher compact />
@@ -562,7 +594,16 @@ export default function AxLayout({ children }: { children: ReactNode }) {
       </div>
 
       <AxBottomNav onMore={() => setMore(true)} />
-      <MoreSheet open={more} onClose={() => setMore(false)} />
+      <MoreSheet open={more} onClose={() => setMore(false)} onReset={() => setAskReset(true)} />
+      <ConfirmDialog
+        open={askReset}
+        onClose={() => setAskReset(false)}
+        onConfirm={() => { resetDemo(); toast('데모를 초기 상태로 되돌렸습니다.') }}
+        title="데모를 초기화할까요?"
+        desc="실행 상태 · 배정 · 고객 요청이 처음 시연 상태로 돌아갑니다."
+        confirmLabel="초기화"
+        danger
+      />
     </div>
   )
 }

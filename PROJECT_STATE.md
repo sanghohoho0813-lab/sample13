@@ -93,6 +93,15 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 12px 미만 글자 0 · 넘침 0 · 세로깨짐 0 · 단어 중간 끊김 0 · 헤더 겹침 0 (360~1440px)
 - 긴 회사명/금액 stress test 통과
 
+## 완료 — 한 단계 고도화 (2026-10-06)
+- 대시보드 정보 재배치(중복 차트·카운터 제거, 브리핑 칩 → AI 센터 해당 탭)
+- 일정/배정: 모바일 하단 시트 상세 · 미배정 배너 · 컴팩트 목록 · 넓은 화면 2단
+- 고객 요청 폼(유형별 필수 입력 · 검증 · 접수번호 · 회신 안내), 고객 홈 주요 동작 상단 배치, 계약 정보 모달
+- AX 요청함 상태 탭(처리 필요 · 처리중 · 완료 · 전체), 고객 요청 현황 3단계 진행
+- 현장 앱 4단계 진행 표시 + 남은 항목 안내, 고객 검색(공백·대소문자 무시 · 초기화)
+- 데스크톱 사이드바 접이식(스크롤 없음), 시연 종료 시 역할 복원, 확인 대화상자, Modal 접근성
+- 남은 영문 문구 정리, CSS `min-width` 레이어 버그 수정, 360px 단어 중간 끊김 0
+
 ## QA 결과 (Whole-App Acceptance Run)
 - 자동 검증 **51 PASS / 0 FAIL** (Playwright)
 - Gate A~N 전부 충족 · P0 Bug 0건
@@ -101,6 +110,7 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 사진 반영 후 재검증: 51 PASS / 0 FAIL · 이미지 404 0건 · 깨진 이미지 0건
 - 로고 반영 후 재검증: 51 PASS / 0 FAIL · tsc·build Green
 - 로드맵·헤더 반영 후 재검증: 57 PASS / 0 FAIL · 360/390px 가로 스크롤 0 · 라벨 잘림 0
+- 고도화 후 재검증(2026-10-06): flows 38 · qa 37 · regress 26 PASS / 0 FAIL · 360~1440px 넘침·겹침·12px 미만·단어 중간 끊김 0 · 콘솔 오류 0 · tsc·build Green
 
 ## 미완료 (PLUS — 범위 외)
 - 고급 Map UX / Route Visualization
@@ -138,3 +148,4 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 2026-09-03: 고객 포털 상단 전체 메뉴 Drawer
 - 2026-09-18: 미래AI랩 브릿지 CTA 5곳 적용 (상담·다른 샘플·홈페이지)
 - 2026-09-30: UI/UX 안정화 — 메뉴 IA 재분류 · 한글 UI · 햄버거 왼쪽 · 반응형 overflow 0
+- 2026-10-06: 한 단계 고도화 — 화면 우선순위 재배치 · 요청 폼 검증 · 모바일 상세 시트 · 요청함 상태 탭 · E2E 플로우 검증

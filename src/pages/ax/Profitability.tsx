@@ -89,8 +89,8 @@ export default function Profitability() {
               <p className="text-[1rem] font-extrabold">{customerById(r.customerId)?.name}</p>
               <StatusPill status={r.grade} />
             </div>
-            <p className="mt-2 rounded-xl bg-ai-soft p-3 text-[0.85rem] leading-relaxed"><b className="text-ai-strong">AI Insight</b> — {r.aiNote}</p>
-            <Btn size="sm" variant="outline" className="mt-3" onClick={() => nav(`/customers/${r.customerId}`)}>고객 Detail</Btn>
+            <p className="mt-2 rounded-xl bg-ai-soft p-3 text-[0.85rem] leading-relaxed"><b className="text-ai-strong">AI 분석</b> — {r.aiNote}</p>
+            <Btn size="sm" variant="outline" className="mt-3" onClick={() => nav(`/customers/${r.customerId}`)}>고객 상세</Btn>
           </Card>
         ))}
       </div>

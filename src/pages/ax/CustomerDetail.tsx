@@ -52,11 +52,11 @@ export default function CustomerDetail() {
                 </div>
                 <div className="grid flex-1 gap-3 sm:grid-cols-2 min-w-[240px]">
                   <div>
-                    <p className="mb-1.5 text-[0.78rem] font-extrabold text-success">Positive</p>
+                    <p className="mb-1.5 text-[0.78rem] font-extrabold text-success">좋은 점</p>
                     <ul className="space-y-1">{h.positives.map((p) => <li key={p} className="flex gap-1.5 text-[0.82rem] text-ink-soft"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-success" />{p}</li>)}</ul>
                   </div>
                   <div>
-                    <p className="mb-1.5 text-[0.78rem] font-extrabold text-warning">Watch</p>
+                    <p className="mb-1.5 text-[0.78rem] font-extrabold text-warning">살펴볼 점</p>
                     {h.watch.length === 0 ? <p className="text-[0.82rem] text-ink-faint">관찰 항목 없음</p> :
                       <ul className="space-y-1">{h.watch.map((p) => <li key={p} className="flex gap-1.5 text-[0.82rem] text-ink-soft"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-warning" />{p}</li>)}</ul>}
                   </div>
@@ -124,13 +124,13 @@ export default function CustomerDetail() {
             </div>
             <div className="mt-3.5 flex gap-2">
               <Btn variant="outline" size="sm" className="flex-1" onClick={() => nav('/renewals')}>재계약 관리</Btn>
-              <Btn variant="outline" size="sm" className="flex-1" onClick={() => nav(`/sites/${customer.id}`)}>현장 Detail</Btn>
+              <Btn variant="outline" size="sm" className="flex-1" onClick={() => nav(`/sites/${customer.id}`)}>현장 상세</Btn>
             </div>
           </Card>
 
           {/* Upsell */}
           <Card className="p-5">
-            <SectionTitle right={<TrendingUp size={16} className="text-success" />}>Upsell Opportunity</SectionTitle>
+            <SectionTitle right={<TrendingUp size={16} className="text-success" />}>추가매출 기회</SectionTitle>
             {ups.length === 0 ? <p className="text-[0.84rem] text-ink-faint">발견된 기회가 없습니다.</p> : (
               <div className="space-y-2">
                 {ups.map((u) => (
@@ -144,7 +144,7 @@ export default function CustomerDetail() {
                 ))}
               </div>
             )}
-            <Btn variant="ghost" size="sm" className="mt-2.5" onClick={() => nav('/upsell')}>Upsell Center <ArrowRight size={13} className="inline" /></Btn>
+            <Btn variant="ghost" size="sm" className="mt-2.5" onClick={() => nav('/upsell')}>추가서비스 <ArrowRight size={13} className="inline" /></Btn>
           </Card>
 
           {/* 요청 / 품질 */}

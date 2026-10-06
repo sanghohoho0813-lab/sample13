@@ -4,7 +4,7 @@ import {
   Navigation, MapPin, CheckCircle2, Camera, Sparkles, Bell, FileText, User,
   CalendarDays, ClipboardCheck, ArrowLeft, Play, Check, ImagePlus,
 } from 'lucide-react'
-import { Badge, Btn, Card, DemoBadge, StatusPill, useToast } from '../../components/ui'
+import { Badge, Btn, Card, DemoBadge, StatusPill, TextArea, useToast } from '../../components/ui'
 import { useDemo } from '../../lib/data/store'
 import { customerById, teamMemberNames } from '../../lib/demo/company'
 import { CHECKLIST_TEMPLATE } from '../../lib/demo/operations'
@@ -41,6 +41,14 @@ export default function FieldApp() {
   const checklist = ws?.checklist ?? Object.fromEntries(CHECKLIST_TEMPLATE.map((c) => [c, false]))
   const doneCount = Object.values(checklist).filter(Boolean).length
   const canComplete = !!ws?.checkinAt && doneCount === CHECKLIST_TEMPLATE.length && ws.beforePhoto && ws.afterPhoto
+  // 완료 전에 남은 일 — "왜 완료가 안 되지?"를 바로 알 수 있게 구체적으로
+  const remaining = [
+    doneCount < CHECKLIST_TEMPLATE.length && `체크리스트 ${CHECKLIST_TEMPLATE.length - doneCount}개`,
+    !ws?.beforePhoto && '작업 전 사진',
+    !ws?.afterPhoto && '작업 후 사진',
+  ].filter(Boolean) as string[]
+  // 진행 단계: 도착 → 작업 시작 → 기록(체크리스트·사진) → 완료
+  const stepIdx = !ws?.checkinAt ? 0 : !ws.startedAt ? 1 : 2
   const myReports = reports.filter((r) => r.team === 'Clean Team B')
 
   const ba = beforeAfterFor(`${nextJob?.service ?? ''} ${ws?.note ?? ''}`)
@@ -88,7 +96,15 @@ export default function FieldApp() {
                     <p className="tnum mt-0.5 text-[0.95rem] font-bold text-champagne">{nextJob.time} · {nextJob.service}</p>
                   </div>
                   <div className="p-4 space-y-3">
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[0.8rem] text-ink-soft">
+                    <ol className="flex items-center gap-1.5" aria-label="작업 진행 단계">
+                      {['도착', '작업 시작', '기록', '완료'].map((label, i) => (
+                        <li key={label} className="flex flex-1 flex-col items-center gap-1">
+                          <span className={cx('h-1.5 w-full rounded-full', i < stepIdx ? 'bg-primary' : i === stepIdx ? 'bg-primary/45' : 'bg-line')} />
+                          <span className={cx('text-[0.74rem] font-bold', i <= stepIdx ? 'text-primary' : 'text-ink-faint')}>{label}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[0.82rem] text-ink-soft">
                       <span className="flex items-center gap-1"><MapPin size={13} /> {nextCustomer.address}</span>
                       <span>예상 이동 {nextJob.travelMin}분 · 작업 {nextJob.durationMin}분</span>
                     </div>
@@ -143,19 +159,19 @@ export default function FieldApp() {
                                     <figure key={kind} className="relative aspect-[4/3] overflow-hidden rounded-xl border border-primary">
                                       <img src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
                                       <figcaption className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-ink/75 px-2 py-0.5 text-[0.72rem] font-extrabold text-white">
-                                        <Camera size={11} /> {kind === 'before' ? 'Before' : 'After'}
+                                        <Camera size={11} /> {kind === 'before' ? '작업 전' : '작업 후'}
                                       </figcaption>
                                     </figure>
                                   )
                                 }
                                 return (
-                                  <button key={kind} onClick={() => { setPhoto(nextJob.id, kind); toast(`${kind === 'before' ? 'Before' : 'After'} 사진을 등록했습니다. (DEMO)`) }}
+                                  <button key={kind} onClick={() => { setPhoto(nextJob.id, kind); toast(`${kind === 'before' ? '작업 전' : '작업 후'} 사진을 등록했습니다. (데모)`) }}
                                     className={cx(
                                       'flex aspect-[4/3] flex-col items-center justify-center gap-1.5 rounded-xl border text-[0.82rem] font-bold',
                                       'border-dashed border-line bg-card text-ink-soft',
                                     )}>
                                     <ImagePlus size={22} />
-                                    {kind === 'before' ? 'Before Photo' : 'After Photo'}
+                                    {kind === 'before' ? '작업 전 사진' : '작업 후 사진'}
                                     <span className="text-[0.72rem] font-semibold text-ink-faint">탭하여 등록</span>
                                   </button>
                                 )
@@ -164,12 +180,12 @@ export default function FieldApp() {
 
                             {/* 특이사항 */}
                             <div>
-                              <p className="mb-1.5 text-[0.85rem] font-extrabold">특이사항</p>
-                              <textarea
-                                value={ws.note || noteDraft}
-                                onChange={(e) => { setNoteDraft(e.target.value); setNote(nextJob.id, e.target.value) }}
+                              <p className="mb-1.5 text-[0.88rem] font-extrabold">특이사항 <span className="text-[0.76rem] font-semibold text-ink-faint">(선택 · 고객 리포트에 함께 남습니다)</span></p>
+                              <TextArea
+                                value={ws.note ?? noteDraft}
+                                onChange={(v) => { setNoteDraft(v); setNote(nextJob.id, v) }}
+                                maxLength={200}
                                 placeholder="예) 대기실 유리 얼룩 재청소 완료, 소모품 보충 필요"
-                                className="h-20 w-full rounded-xl border border-line bg-card p-3 text-[0.88rem] outline-none focus:border-primary"
                               />
                             </div>
 
@@ -177,7 +193,11 @@ export default function FieldApp() {
                               onClick={() => { completeWork(nextJob.id); toast('작업 완료 — 작업 리포트가 생성되었습니다.'); setNoteDraft('') }}>
                               <CheckCircle2 size={18} className="mr-1 inline" /> 작업 완료
                             </Btn>
-                            {!canComplete && <p className="text-center text-[0.72rem] text-ink-faint">체크리스트 전체 완료 + Before/After 사진 등록 후 완료할 수 있습니다.</p>}
+                            {!canComplete && remaining.length > 0 && (
+                              <p className="rounded-lg bg-warning-soft px-3 py-2 text-center text-[0.82rem] font-bold text-warning">
+                                남은 항목 — {remaining.join(' · ')}
+                              </p>
+                            )}
                           </>
                         )}
                       </>
@@ -194,7 +214,7 @@ export default function FieldApp() {
 
               {/* AI 현장 알림 */}
               <Card className="p-4">
-                <p className="mb-2 flex items-center gap-1.5 text-[0.88rem] font-extrabold text-ai-strong"><Sparkles size={15} /> AI 현장 알림 <Badge tone="ai" className="text-[0.6rem]">AI READY</Badge></p>
+                <p className="mb-2 flex items-center gap-1.5 text-[0.88rem] font-extrabold text-ai-strong"><Sparkles size={15} /> 이 현장 메모 <span className="text-[0.74rem] font-bold text-ai-strong/70">AI 정리</span></p>
                 <ul className="space-y-1.5">
                   {aiNotes.map((n) => <li key={n} className="flex gap-2 rounded-lg bg-ai-soft/60 px-3 py-2 text-[0.82rem] leading-snug">{n}</li>)}
                 </ul>

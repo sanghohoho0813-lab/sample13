@@ -68,7 +68,7 @@ function PreviewModal({ kind, url, onClose }: { kind: PreviewKind; url: string; 
         <p className="flex min-w-0 items-center gap-2 text-[0.8rem] font-bold sm:text-[0.85rem]">
           <MonitorSmartphone size={17} className="shrink-0" />
           <span className="truncate">
-            {kind === 'mobile' ? 'Mobile Preview · 390 × 844' : 'PC Preview · 1440 × 900'}
+            {kind === 'mobile' ? '모바일 미리보기 · 390 × 844' : 'PC 미리보기 · 1440 × 900'}
             <span className="hidden md:inline"> — 동일 화면 · 동일 데이터 · 동일 설정</span>
           </span>
         </p>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Sparkles } from 'lucide-react'
 import { PageHeader, DemoBadge, EmptyState } from '../../components/ui'
 import { AIReadyBadge, InsightCard } from '../../components/ai'
@@ -18,7 +18,10 @@ const TABS: Array<{ id: Tab; label: string }> = [
 ]
 
 export default function AiCenter() {
-  const [tab, setTab] = useState<Tab>('today')
+  // 탭은 URL(?tab=)에 둔다 — 대시보드 브리핑에서 특정 엔진으로 바로 들어오고, 새로고침해도 유지된다
+  const [params, setParams] = useSearchParams()
+  const tab: Tab = TABS.some((t) => t.id === params.get('tab')) ? (params.get('tab') as Tab) : 'today'
+  const setTab = (t: Tab) => setParams(t === 'today' ? {} : { tab: t }, { replace: true })
   const list = tab === 'today' ? SEED_INSIGHTS : SEED_INSIGHTS.filter((i) => i.engine === tab)
 
   return (
@@ -42,13 +45,21 @@ export default function AiCenter() {
         </div>
       )}
 
-      <div className="mb-4 flex flex-wrap gap-1.5 rounded-xl border border-line bg-card p-1 w-fit">
-        {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={cx(
-            'rounded-lg px-3.5 py-1.5 text-[0.84rem] font-bold',
-            tab === t.id ? 'bg-ai text-white' : 'text-ink-soft hover:text-ai-strong',
-          )}>{t.label}</button>
-        ))}
+      <div className="-mx-4 mb-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div role="tablist" className="flex w-max gap-1 rounded-xl border border-line bg-card p-1">
+          {TABS.map((t) => {
+            const n = t.id === 'today' ? SEED_INSIGHTS.length : SEED_INSIGHTS.filter((i) => i.engine === t.id).length
+            return (
+              <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={cx(
+                'flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-1.5 text-[0.86rem] font-bold',
+                tab === t.id ? 'bg-ai text-white' : 'text-ink-soft hover:text-ai-strong',
+              )}>
+                {t.label}
+                <span className={cx('tnum text-[0.74rem]', tab === t.id ? 'text-white/80' : 'text-ink-faint')}>{n}</span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {list.length === 0 ? (
@@ -60,7 +71,7 @@ export default function AiCenter() {
       )}
 
       <p className="mt-6 flex items-center gap-1.5 text-[0.76rem] leading-relaxed text-ink-faint">
-        <Sparkles size={13} className="text-ai" /> 모든 Insight는 규칙 기반 Demo Logic으로 생성됩니다. 실서비스에서는 GPT/Claude 등 LLM API가 동일한 service interface로 연결됩니다.
+        <Sparkles size={13} className="text-ai" /> 모든 분석은 규칙 기반 데모 로직으로 생성됩니다. 실서비스에서는 GPT · Claude 등 생성형 AI가 같은 연결 구조로 붙습니다.
       </p>
     </div>
   )

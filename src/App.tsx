@@ -37,9 +37,9 @@ function ScrollToTop() {
 const ax = (el: React.ReactNode) => <AxLayout>{el}</AxLayout>
 
 export default function App() {
-  const { setRole } = useDemo()
+  const { setRole, role } = useDemo()
   return (
-    <TourProvider onRole={setRole}>
+    <TourProvider onRole={setRole} role={role}>
       <ScrollToTop />
       <Routes>
         <Route path="/" element={ax(<Dashboard />)} />

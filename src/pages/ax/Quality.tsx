@@ -57,7 +57,7 @@ export default function Quality() {
               </button>
             ))}
           </div>
-          <p className="mt-3 flex items-center gap-1.5 border-t border-line pt-3 text-[0.76rem] text-ink-faint"><ShieldCheck size={13} /> 만족도가 하락한 고객은 AI Retention 감시 대상에 자동 포함됩니다.</p>
+          <p className="mt-3 flex items-center gap-1.5 border-t border-line pt-3 text-[0.76rem] text-ink-faint"><ShieldCheck size={13} /> 만족도가 하락한 고객은 AI 재계약 관리 대상에 자동 포함됩니다.</p>
         </Card>
       </div>
     </div>

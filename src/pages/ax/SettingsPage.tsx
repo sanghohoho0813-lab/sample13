@@ -1,9 +1,10 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Check, Minus, X, RotateCcw, Upload, FileSpreadsheet, Database, HelpCircle,
   Palette, Type, Sparkles, Play, Users, Store, Smartphone, Bell, Zap, ShieldCheck,
 } from 'lucide-react'
-import { Card, PageHeader, Badge, Btn, DemoBadge, useToast, Freshness } from '../../components/ui'
+import { Card, PageHeader, Badge, Btn, DemoBadge, useToast, Freshness, ConfirmDialog } from '../../components/ui'
 import { useDemo, THEMES, type FontScale } from '../../lib/data/store'
 import { useTour } from '../../components/tour/TourProvider'
 import { ROLE_LABEL, type Role } from '../../types'
@@ -14,12 +15,12 @@ const MATRIX: Array<{ item: string; ceo: 0 | 1 | 2; manager: 0 | 1 | 2; field: 0
   { item: '전체 일정 / 배정', ceo: 2, manager: 2, field: 0, customer: 0 },
   { item: '전체 고객 / 계약', ceo: 2, manager: 2, field: 0, customer: 0 },
   { item: '직원 / 팀 관리', ceo: 2, manager: 2, field: 0, customer: 0 },
-  { item: 'AI 전략 (Retention·Profit)', ceo: 2, manager: 1, field: 0, customer: 0 },
+  { item: 'AI 전략 (재계약·수익성)', ceo: 2, manager: 1, field: 0, customer: 0 },
   { item: '본인 일정 / 현장 업무', ceo: 2, manager: 2, field: 2, customer: 0 },
   { item: '체크인 / 체크리스트 / 사진', ceo: 1, manager: 2, field: 2, customer: 0 },
   { item: '본인 계약 / 작업 리포트', ceo: 2, manager: 2, field: 0, customer: 2 },
   { item: '본인 요청 / 일정변경', ceo: 2, manager: 2, field: 0, customer: 2 },
-  { item: 'AX Evidence / 설정', ceo: 2, manager: 0, field: 0, customer: 0 },
+  { item: 'AX 실증 기록 / 설정', ceo: 2, manager: 0, field: 0, customer: 0 },
 ]
 
 const Mark = ({ v }: { v: 0 | 1 | 2 }) =>
@@ -50,6 +51,7 @@ export default function SettingsPage() {
   const { start } = useTour()
   const toast = useToast()
   const nav = useNavigate()
+  const [askReset, setAskReset] = useState(false)
 
   return (
     <div className="fade-up">
@@ -164,7 +166,7 @@ export default function SettingsPage() {
         <Group icon={<Play size={19} />} title="데모" desc="데모 / 실서비스 구분 · 초기화 · 튜토리얼 · 시연 모드">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <Badge tone="warning">데모 모드</Badge>
-            <span className="text-[0.8rem] text-ink-soft">모든 데이터는 가상의 Sample Data입니다. 실제 운영처럼 위장하지 않습니다.</span>
+            <span className="text-[0.8rem] text-ink-soft">모든 데이터는 가상의 샘플 데이터이며, 실제 운영 데이터처럼 표시하지 않습니다.</span>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             <Btn variant="outline" size="sm" className="justify-center" onClick={() => start('tutorial')}>
@@ -173,11 +175,7 @@ export default function SettingsPage() {
             <Btn variant="outline" size="sm" className="justify-center" onClick={() => start('presentation')}>
               <Play size={14} className="mr-1 inline" /> 시연 모드 시작
             </Btn>
-            <Btn variant="outline" size="sm" className="justify-center sm:col-span-2" onClick={() => {
-              if (confirm('Action 상태·배정·고객 요청을 초기 시연 상태로 되돌릴까요? (테마·글자 설정은 유지됩니다)')) {
-                resetDemo(); toast('데모를 초기화했습니다.')
-              }
-            }}>
+            <Btn variant="outline" size="sm" className="justify-center sm:col-span-2" onClick={() => setAskReset(true)}>
               <RotateCcw size={14} className="mr-1 inline" /> 데모 초기화
             </Btn>
           </div>
@@ -216,7 +214,7 @@ export default function SettingsPage() {
               <span className="font-bold">생성형 AI 연결 (GPT / Claude)</span>
               <Badge tone="ai">AI READY</Badge>
             </div>
-            <p className="text-[0.78rem] text-ink-faint">실제 API Key가 없어도 완료 조건이 아닙니다. 연결 시 동일한 service interface로 교체됩니다.</p>
+            <p className="text-[0.78rem] text-ink-faint">현재는 API 키 없이 규칙 기반으로 동작하며, 연결 시 같은 화면·흐름 그대로 생성형 AI로 교체됩니다.</p>
           </div>
         </Group>
 
@@ -243,13 +241,23 @@ export default function SettingsPage() {
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
         <p className="flex items-center gap-1.5 text-[0.76rem] text-ink-faint">
-          <Users size={13} /> 본 시스템은 Website Reference MVP입니다. 실제 회사·고객 정보가 아닙니다.
+          <Users size={13} /> 웹사이트 레퍼런스용 MVP이며, 실제 회사·고객 정보가 아닙니다.
         </p>
         {/* 사이드바 하단에 이미 제작사 크레딧이 상시 노출되므로 여기서는 텍스트로만 표기한다 */}
         <p className="text-[0.7rem] font-bold tracking-[0.12em] text-ink-faint">
           POWERED BY 미래AI랩
         </p>
       </div>
+
+      <ConfirmDialog
+        open={askReset}
+        onClose={() => setAskReset(false)}
+        onConfirm={() => { resetDemo(); toast('데모를 초기 상태로 되돌렸습니다.') }}
+        title="데모를 초기화할까요?"
+        desc="실행 상태 · 배정 · 고객 요청이 처음 시연 상태로 돌아갑니다. 테마와 글자 크기 설정은 유지됩니다."
+        confirmLabel="초기화"
+        danger
+      />
     </div>
   )
 }

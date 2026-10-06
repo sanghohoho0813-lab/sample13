@@ -101,14 +101,12 @@ export function InsightCard({ insight, footer }: { insight: AIInsight; footer?: 
   const sevTone = insight.severity === 'risk' ? 'danger' : insight.severity === 'opportunity' ? 'success' : 'ai'
   return (
     <Card className="p-5 space-y-3">
-      <div className="flex items-start justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Badge tone={sevTone as 'danger'}>{insight.title}</Badge>
-          <Badge tone="ai"><Sparkles size={11} /> {ENGINE_LABEL[insight.engine]}</Badge>
-        </div>
-        <AIReadyBadge small />
+      {/* 배지는 하나(무엇을 발견했나)만 — 엔진명은 보조 텍스트, AI READY는 화면 상단에 한 번만 */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <Badge tone={sevTone as 'danger'}>{insight.title}</Badge>
+        <span className="flex items-center gap-1 text-[0.76rem] font-bold text-ai-strong"><Sparkles size={12} /> {ENGINE_LABEL[insight.engine]}</span>
       </div>
-      <p className="text-[1.02rem] font-extrabold tracking-tight">{insight.target}</p>
+      <p className="text-[1.05rem] font-extrabold tracking-tight">{insight.target}</p>
       <p className="text-[0.88rem] leading-relaxed text-ink">{insight.found}</p>
       <div className="grid gap-2 text-[0.82rem]">
         <div className="flex gap-2"><Target size={15} className="mt-0.5 shrink-0 text-ink-faint" /><span className="text-ink-soft"><b className="text-ink">왜 중요한가</b> — {insight.why}</span></div>

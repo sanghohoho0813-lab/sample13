@@ -44,7 +44,7 @@ export default function Upsell() {
               <p className="mt-2.5 text-[1.05rem] font-extrabold">{c?.name}</p>
               <div className="mt-2 space-y-1.5 text-[0.82rem]">
                 <p><span className="font-bold text-ink-faint">현재</span> — {u.currentService}</p>
-                <p><span className="font-bold text-ink-faint">발견 Signal</span> — {u.signal}</p>
+                <p><span className="font-bold text-ink-faint">발견 신호</span> — {u.signal}</p>
                 <p className="rounded-lg bg-mint px-2.5 py-1.5 font-extrabold text-primary-strong">추천 · {u.recommendedService}</p>
                 <p className="text-ink-soft">{u.reason}</p>
               </div>
