@@ -2,7 +2,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Sparkles } from 'lucide-react'
 import { PageHeader, DemoBadge, EmptyState } from '../../components/ui'
 import { AIReadyBadge, InsightCard } from '../../components/ai'
-import { SEED_INSIGHTS, DAILY_BRIEFING } from '../../lib/demo/intelligence'
+import { SEED_INSIGHTS } from '../../lib/demo/intelligence'
 import { cx } from '../../lib/utils'
 import type { AIEngine } from '../../types'
 
@@ -32,26 +32,14 @@ export default function AiCenter() {
         right={<><AIReadyBadge /><DemoBadge /></>}
       />
 
-      {tab === 'today' && (
-        <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {DAILY_BRIEFING.counters.map((c) => (
-            <div key={c.label} className={cx('rounded-2xl border border-line p-4 text-center bg-card')}>
-              <p className="text-[0.74rem] font-bold text-ink-faint">{c.label}</p>
-              <p className={cx('tnum mt-1 text-[1.5rem] font-extrabold', {
-                danger: 'text-danger', success: 'text-success', warning: 'text-warning', info: 'text-info',
-              }[c.tone])}>{c.value}건</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="-mx-4 mb-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <div role="tablist" className="flex w-max gap-1 rounded-xl border border-line bg-card p-1">
+      {/* 탭 6개 — 모바일은 3×2로 모두 보이게 (가로 스크롤에 숨지 않게) */}
+      <div className="mb-4">
+        <div role="tablist" aria-label="AI 엔진" className="grid grid-cols-3 gap-1 rounded-xl border border-line bg-card p-1 sm:flex sm:w-max">
           {TABS.map((t) => {
             const n = t.id === 'today' ? SEED_INSIGHTS.length : SEED_INSIGHTS.filter((i) => i.engine === t.id).length
             return (
               <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={cx(
-                'flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-1.5 text-[0.86rem] font-bold',
+                'flex items-center justify-center gap-1 whitespace-nowrap rounded-lg px-2 py-1.5 text-[0.86rem] font-bold sm:gap-1.5 sm:px-3.5',
                 tab === t.id ? 'bg-ai text-white' : 'text-ink-soft hover:text-ai-strong',
               )}>
                 {t.label}

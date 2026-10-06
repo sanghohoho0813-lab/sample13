@@ -24,7 +24,7 @@ export function WhyAIButton({ dataViewed, aiDoes, className }: {
     <>
       <button
         onClick={() => setOpen(true)}
-        className={cx('inline-flex items-center gap-1 text-[0.75rem] font-bold text-ai-strong hover:underline', className)}
+        className={cx('inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-[0.78rem] font-bold text-ai-strong hover:underline', className)}
       >
         <HelpCircle size={13} /> 왜 이렇게 판단했나요?
       </button>
@@ -60,6 +60,13 @@ export function WhyAIButton({ dataViewed, aiDoes, className }: {
 
 // ─── Action Lifecycle Control ────────────────────────────
 const FLOW: ActionStatus[] = ['추천됨', '확인', '실행중', '완료']
+// 다음 단계 버튼은 '무엇을 하는지'를 동사로 — "확인으로" 같은 상태명 대신
+const NEXT_LABEL: Partial<Record<ActionStatus, string>> = { 확인: '검토 시작', 실행중: '실행 시작', 완료: '완료 처리' }
+const NEXT_TOAST: Partial<Record<ActionStatus, string>> = {
+  확인: '검토를 시작했습니다.',
+  실행중: '실행 중으로 표시했습니다.',
+  완료: '완료 처리했습니다 — AX 실증 기록에 남았습니다.',
+}
 
 export function ActionLifecycle({ actionId, status, compact }: { actionId: string; status: ActionStatus; compact?: boolean }) {
   const { setActionStatus } = useDemo()
@@ -80,8 +87,8 @@ export function ActionLifecycle({ actionId, status, compact }: { actionId: strin
       )}
       {compact && <StatusPill status={status} />}
       {next && (
-        <Btn size="sm" variant="outline" onClick={() => { setActionStatus(actionId, next); toast(`실행 상태 변경: ${next}`, 'info') }}>
-          {next === '완료' ? '완료 처리' : `${next}으로`}
+        <Btn size="sm" onClick={() => { setActionStatus(actionId, next); toast(NEXT_TOAST[next] ?? '', next === '완료' ? 'success' : 'info') }}>
+          {NEXT_LABEL[next]}
         </Btn>
       )}
       {status !== '보류' && status !== '무시' && status !== '완료' && (

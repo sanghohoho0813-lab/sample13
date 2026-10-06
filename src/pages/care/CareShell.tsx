@@ -224,7 +224,7 @@ export default function CareShell({ children, wide }: { children: ReactNode; wid
     <div className="min-h-screen bg-ivory">
       <header className="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
         {/* 모바일 데모 툴바 — AX 헤더와 같은 2층 구조 */}
-        <div className="flex items-center justify-between gap-2 border-b border-line/70 bg-ivory px-3 py-1.5 md:hidden">
+        <div className="flex items-center justify-between gap-2 border-b border-line/70 bg-ivory px-3 py-1.5 xl:hidden">
           <div className="flex min-w-0 items-center gap-1.5">
             <span className="shrink-0"><DemoBadge label="DEMO" /></span>
             <span className="hidden truncate text-[0.74rem] font-bold text-ink-faint min-[430px]:inline">{role === 'customer' ? '고객 권한' : `${role === 'ceo' ? '대표' : '관리자'} 권한으로 보는 중`}</span>
@@ -239,8 +239,8 @@ export default function CareShell({ children, wide }: { children: ReactNode; wid
           </div>
         </div>
 
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-3 py-2 sm:px-4 md:py-3">
-          <div className="flex min-w-0 items-center gap-1.5">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-2 sm:px-4 lg:py-3">
+          <div className="flex min-w-0 items-center gap-1.5 lg:shrink-0">
             <button
               onClick={() => setMenu(true)}
               aria-label="전체 메뉴"
@@ -254,20 +254,20 @@ export default function CareShell({ children, wide }: { children: ReactNode; wid
               <p className="text-[0.7rem] font-bold text-ink-faint">고객 플랫폼</p>
             </button>
           </div>
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex xl:flex-none">
             {[
               ['/care/home', '내 관리현황'],
               ['/care/reports', '작업 리포트'],
               ['/care/requests', '요청 · 문의'],
             ].map(([to, label]) => (
               <NavLink key={to} to={to} className={({ isActive }) => cx(
-                'rounded-xl px-3.5 py-2 text-[0.9rem] font-bold',
+                'whitespace-nowrap rounded-xl px-3.5 py-2 text-[0.9rem] font-bold',
                 isActive ? 'bg-mint text-primary-strong' : 'text-ink-soft hover:text-primary',
               )}>{label}</NavLink>
             ))}
           </nav>
           {/* Desktop 액션 — 모바일에서는 위 툴바로 */}
-          <div className="hidden shrink-0 items-center gap-1.5 md:flex">
+          <div className="hidden shrink-0 items-center gap-1.5 xl:flex">
             <CareClock />
             <DemoBadge label="DEMO" />
             <DevicePreview compact />
@@ -280,7 +280,7 @@ export default function CareShell({ children, wide }: { children: ReactNode; wid
         </div>
       </header>
 
-      <main className={cx('mx-auto px-4 py-6 pb-24 md:pb-10', wide ? 'max-w-5xl' : 'max-w-3xl')}>
+      <main className={cx('mx-auto px-4 py-6 pb-24 lg:pb-10', wide ? 'max-w-5xl' : 'max-w-3xl')}>
         {children}
         {/* 고객 화면에서도 동일한 브릿지 — 링크·문구는 src/lib/mirae.ts 단일 원본 */}
         <SampleBridgeCTA className="mt-10" />
@@ -289,7 +289,7 @@ export default function CareShell({ children, wide }: { children: ReactNode; wid
       <CareMenu open={menu} onClose={() => setMenu(false)} />
 
       {/* Mobile bottom nav — 핵심 4개 */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 flex border-t border-line bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed bottom-0 inset-x-0 z-40 flex border-t border-line bg-card pb-[env(safe-area-inset-bottom)] lg:hidden">
         {[
           { to: '/care/home', label: '홈', icon: <Home size={21} /> },
           { to: '/care/reports', label: '리포트', icon: <FileText size={21} /> },

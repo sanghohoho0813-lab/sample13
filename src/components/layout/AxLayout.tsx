@@ -302,7 +302,8 @@ function SidebarContent({ onNavigate, collapsible }: { onNavigate?: () => void; 
   const [openKeys, setOpenKeys] = useState<Set<string>>(() => new Set([activeGroupKey(loc.pathname) ?? '']))
   useEffect(() => {
     const active = activeGroupKey(loc.pathname)
-    setOpenKeys((prev) => (collapsible ? new Set(active ? [active] : []) : new Set(active ? [...prev, active] : prev)))
+    // 화면을 옮기면 그 화면의 그룹만 펼친다 — 레이아웃이 유지되므로 펼친 그룹이 쌓여 메뉴가 길어지지 않게
+    setOpenKeys(new Set(active ? [active] : []))
   }, [loc.pathname, collapsible])
   const toggleGroup = (key: string) => setOpenKeys((prev) => {
     const next = new Set(collapsible ? [] : prev)
@@ -518,7 +519,7 @@ function AxBottomNav({ onMore }: { onMore: () => void }) {
 }
 
 /* ─── Layout ─────────────────────────────────────────────────────── */
-export default function AxLayout({ children }: { children: ReactNode }) {
+export default function AxLayout({ children }: { children?: ReactNode }) {
   const [drawer, setDrawer] = useState(false)
   const [more, setMore] = useState(false)
   const [askReset, setAskReset] = useState(false)

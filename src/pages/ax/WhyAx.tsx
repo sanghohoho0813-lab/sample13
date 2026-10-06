@@ -416,9 +416,9 @@ export default function WhyAx() {
         </Section>
 
         <Section no="16" title="하나의 시스템에서 여러 성장경로가 열립니다">
-          <div className="grid gap-2 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             {[
-              ['01', '운영효율'], ['02', '서비스품질'], ['03', '재계약'], ['04', '추가매출'], ['05', 'Data Asset'],
+              ['01', '운영효율'], ['02', '서비스 품질'], ['03', '재계약'], ['04', '추가매출'], ['05', '데이터 자산'],
             ].map(([n, t]) => (
               <div key={n} className="rounded-xl bg-mint/60 p-3.5 text-center">
                 <p className="tnum text-[0.7rem] font-extrabold text-primary">{n}</p>

@@ -1,9 +1,11 @@
+import { useNavigate } from 'react-router-dom'
 import { Users, AlertTriangle } from 'lucide-react'
-import { Card, PageHeader, Badge, DemoBadge, SectionTitle } from '../../components/ui'
+import { Card, PageHeader, Badge, DemoBadge, SectionTitle, StatTile, type Tone } from '../../components/ui'
 import { useDemo } from '../../lib/data/store'
 import { TEAMS, EMPLOYEES, customerById } from '../../lib/demo/company'
 
 export default function Team() {
+  const nav = useNavigate()
   const { schedules } = useDemo()
   const today = schedules.filter((s) => s.dayOffset === 0)
 
@@ -13,14 +15,11 @@ export default function Team() {
 
       <div className="mb-5 grid grid-cols-3 gap-3 sm:max-w-md">
         {[
-          ['근무', EMPLOYEES.filter((e) => e.status === '근무').length, 'text-success'],
-          ['휴무', EMPLOYEES.filter((e) => e.status === '휴무').length, 'text-ink-faint'],
-          ['결원', EMPLOYEES.filter((e) => e.status === '결원').length, 'text-danger'],
-        ].map(([l, v, cls]) => (
-          <Card key={l as string} className="p-4 text-center">
-            <p className="text-[0.75rem] font-bold text-ink-faint">{l}</p>
-            <p className={`tnum text-[1.5rem] font-extrabold ${cls}`}>{v}명</p>
-          </Card>
+          ['근무', EMPLOYEES.filter((e) => e.status === '근무').length, 'success'],
+          ['휴무', EMPLOYEES.filter((e) => e.status === '휴무').length, 'neutral'],
+          ['결원', EMPLOYEES.filter((e) => e.status === '결원').length, 'danger'],
+        ].map(([l, v, tone]) => (
+          <StatTile key={l as string} label={l as string} value={`${v}명`} tone={tone as Tone} />
         ))}
       </div>
 
@@ -52,10 +51,10 @@ export default function Team() {
                 ) : (
                   <div className="space-y-1">
                     {jobs.sort((a, b) => a.time.localeCompare(b.time)).map((s) => (
-                      <p key={s.id} className="flex gap-2 text-[0.78rem]">
+                      <button key={s.id} onClick={() => nav(`/schedule?id=${s.id}`)} className="-mx-1.5 flex w-[calc(100%+0.75rem)] gap-2 rounded-md px-1.5 py-0.5 text-left text-[0.8rem] hover:bg-mint/50">
                         <span className="tnum font-extrabold text-primary">{s.time}</span>
                         <span className="min-w-0 flex-1 truncate font-semibold">{customerById(s.customerId)?.name}</span>
-                      </p>
+                      </button>
                     ))}
                   </div>
                 )}

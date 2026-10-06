@@ -51,7 +51,7 @@ const dateChoices = () => {
   return out
 }
 
-export interface RequestPreset { service?: string; topic?: (typeof TOPIC)[number] }
+export interface RequestPreset { service?: string; topic?: (typeof TOPIC)[number]; memo?: string }
 
 export default function RequestSheet({ type, onClose, preset }: { type: RequestType | null; onClose: () => void; preset?: RequestPreset }) {
   const { addRequest } = useDemo()
@@ -70,8 +70,8 @@ export default function RequestSheet({ type, onClose, preset }: { type: RequestT
   useEffect(() => {
     if (!type) return
     setService(preset?.service ?? null); setWhen(null); setDate(null); setSlot(null)
-    setUrgent(null); setTopic(preset?.topic ?? null); setMemo(''); setTried(false); setDoneId(null)
-  }, [type, preset?.service, preset?.topic])
+    setUrgent(null); setTopic(preset?.topic ?? null); setMemo(preset?.memo ?? ''); setTried(false); setDoneId(null)
+  }, [type, preset?.service, preset?.topic, preset?.memo])
 
   if (!type) return null
 

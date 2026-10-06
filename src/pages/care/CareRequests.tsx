@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { PlusCircle, RefreshCcw, Siren, MessageCircle } from 'lucide-react'
 import CareShell, { CARE_CUSTOMER_ID } from './CareShell'
-import RequestSheet from './RequestSheet'
+import RequestSheet, { type RequestPreset } from './RequestSheet'
 import { Card, Badge, EmptyState } from '../../components/ui'
 import { useDemo } from '../../lib/data/store'
 import { cx } from '../../lib/utils'
@@ -13,6 +14,16 @@ const TYPE_TONE = { 긴급방문: 'danger', 추가서비스: 'success', 일정�
 export default function CareRequests() {
   const { requests } = useDemo()
   const [sheet, setSheet] = useState<RequestType | null>(null)
+  const [preset, setPreset] = useState<RequestPreset | undefined>(undefined)
+  // 다른 화면(서비스 소개 등)에서 "상담 요청"으로 들어오면 요청 폼을 바로 연다 — 한 번 더 누를 필요 없이
+  const [params, setParams] = useSearchParams()
+  useEffect(() => {
+    const t = params.get('new') as RequestType | null
+    if (!t || !['추가서비스', '일정변경', '긴급방문', '문의'].includes(t)) return
+    setPreset({ topic: (params.get('topic') as RequestPreset['topic']) ?? undefined, memo: params.get('memo') ?? undefined })
+    setSheet(t)
+    setParams({}, { replace: true })
+  }, [params, setParams])
   const [filter, setFilter] = useState<'진행' | '완료'>('진행')
   const mine = requests.filter((r) => r.customerId === CARE_CUSTOMER_ID)
   const open = mine.filter((r) => r.status !== '완료')
@@ -92,7 +103,7 @@ export default function CareRequests() {
           요청은 클린웨이 운영화면(AX)에 실시간 접수되어 담당자가 확인합니다.
         </p>
       </div>
-      <RequestSheet type={sheet} onClose={() => setSheet(null)} />
+      <RequestSheet type={sheet} preset={preset} onClose={() => { setSheet(null); setPreset(undefined) }} />
     </CareShell>
   )
 }

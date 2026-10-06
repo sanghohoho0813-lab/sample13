@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Star, ShieldCheck } from 'lucide-react'
-import { Card, PageHeader, Badge, DemoBadge, SectionTitle } from '../../components/ui'
+import { Card, PageHeader, Badge, DemoBadge, SectionTitle, StatTile } from '../../components/ui'
 import { CUSTOMERS, customerById } from '../../lib/demo/company'
 import { SEED_QUALITY } from '../../lib/demo/intelligence'
 
@@ -12,19 +12,10 @@ export default function Quality() {
     <div className="fade-up">
       <PageHeader title="품질 / 만족도" desc="현장 품질 이슈와 고객 만족도를 추적하여 재계약 관리에 연결합니다." right={<DemoBadge />} />
 
-      <div className="mb-5 grid grid-cols-2 gap-3 sm:max-w-lg sm:grid-cols-3">
-        <Card className="p-4 text-center">
-          <p className="text-[0.75rem] font-bold text-ink-faint">평균 만족도</p>
-          <p className="tnum flex items-center justify-center gap-1 text-[1.5rem] font-extrabold text-warning"><Star size={19} fill="currentColor" /> {avg.toFixed(1)}</p>
-        </Card>
-        <Card className="p-4 text-center">
-          <p className="text-[0.75rem] font-bold text-ink-faint">미해결 이슈</p>
-          <p className="tnum text-[1.5rem] font-extrabold text-danger">{SEED_QUALITY.filter((q) => q.status !== '해결').length}건</p>
-        </Card>
-        <Card className="p-4 text-center col-span-2 sm:col-span-1">
-          <p className="text-[0.75rem] font-bold text-ink-faint">이번 달 처리</p>
-          <p className="tnum text-[1.5rem] font-extrabold text-success">{SEED_QUALITY.filter((q) => q.status === '해결').length}건</p>
-        </Card>
+      <div className="mb-5 grid grid-cols-3 gap-2.5 sm:max-w-lg sm:gap-3">
+        <StatTile label="평균 만족도" value={avg.toFixed(1)} tone="warning" icon={<Star size={19} fill="currentColor" />} />
+        <StatTile label="미해결 이슈" value={`${SEED_QUALITY.filter((q) => q.status !== '해결').length}건`} tone="danger" />
+        <StatTile label="이번 달 처리" value={`${SEED_QUALITY.filter((q) => q.status === '해결').length}건`} tone="success" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-2">

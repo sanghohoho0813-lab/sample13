@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { TrendingUp, ArrowRight, Send } from 'lucide-react'
-import { Card, PageHeader, Badge, Btn, DemoBadge, StatusPill, useToast } from '../../components/ui'
-import { AIReadyBadge, WhyAIButton } from '../../components/ai'
+import { Card, PageHeader, Badge, Btn, DemoBadge, StatusPill, useToast, StatTile } from '../../components/ui'
+import { WhyAIButton } from '../../components/ai'
 import { useDemo } from '../../lib/data/store'
 import { customerById } from '../../lib/demo/company'
 import { fmtManwon } from '../../lib/utils'
@@ -18,18 +18,12 @@ export default function Upsell() {
       <PageHeader
         title="추가서비스"
         desc="AI 추가매출 발굴이 계약·현장 기록에서 찾아낸 추가 매출 기회를 관리합니다."
-        right={<><AIReadyBadge /><DemoBadge /></>}
+        right={<DemoBadge />}
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 sm:max-w-md">
-        <Card className="p-4 text-center">
-          <p className="text-[0.75rem] font-bold text-ink-faint">진행 중인 기회</p>
-          <p className="tnum text-[1.4rem] font-extrabold text-primary">{fmtManwon(totalExpected)}</p>
-        </Card>
-        <Card className="p-4 text-center">
-          <p className="text-[0.75rem] font-bold text-ink-faint">이번 달 성사</p>
-          <p className="tnum text-[1.4rem] font-extrabold text-success">{fmtManwon(closed)}</p>
-        </Card>
+        <StatTile label="진행 중인 기회" value={fmtManwon(totalExpected)} />
+        <StatTile label="이번 달 성사" value={fmtManwon(closed)} tone="success" />
       </div>
 
       <div data-tour="upsell" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

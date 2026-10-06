@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { RefreshCcw, ArrowRight } from 'lucide-react'
 import { Card, PageHeader, Badge, Btn, DemoBadge, StatusPill } from '../../components/ui'
-import { ActionLifecycle, AIReadyBadge, WhyAIButton } from '../../components/ai'
+import { ActionLifecycle, WhyAIButton } from '../../components/ai'
 import { useDemo } from '../../lib/data/store'
 import { CUSTOMERS } from '../../lib/demo/company'
 import { SEED_HEALTH } from '../../lib/demo/intelligence'
@@ -32,7 +32,7 @@ export default function Renewals() {
       <PageHeader
         title="재계약 관리"
         desc="계약 종료일과 고객 건강도를 함께 보고 AI 재계약 조치를 연결합니다."
-        right={<><AIReadyBadge /><DemoBadge /></>}
+        right={<DemoBadge />}
       />
       <div className="space-y-6">
         {order.filter((o) => groups[o]?.length).map((stage) => (
@@ -63,7 +63,7 @@ export default function Renewals() {
                     )}
                     <div className="mt-3 space-y-2 border-t border-line pt-3">
                       {retentionAction && <ActionLifecycle actionId={retentionAction.id} status={retentionAction.status} compact />}
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <Btn size="sm" variant="outline" onClick={() => nav(`/customers/${c.id}`)}>고객 상세 <ArrowRight size={12} className="inline" /></Btn>
                         {(stage === '위험' || stage.startsWith('D-30')) && <WhyAIButton dataViewed={['계약 갱신일', '만족도 추이', '품질문의', '일정변경 이력']} />}
                       </div>

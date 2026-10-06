@@ -46,6 +46,14 @@ export default function SiteDetail() {
   const issues = SEED_QUALITY.filter((q) => q.customerId === customer.id)
   const checklist = ws?.checklist ?? Object.fromEntries(CHECKLIST_TEMPLATE.map((c) => [c, mainJob?.status === '완료']))
   const ba = beforeAfterFor(`${mainJob?.service ?? ''} ${site.note ?? ''} ${ws?.note ?? ''}`)
+  const doneMark = mainJob?.status === '완료' ? '완료' : undefined
+  const steps: Array<[string, string | undefined]> = [
+    ['도착', ws?.checkinAt ?? doneMark],
+    ['작업 시작', ws?.startedAt ?? doneMark],
+    ['작업 완료', ws?.completedAt ?? doneMark],
+    ['체크아웃', ws?.checkoutAt ?? doneMark],
+  ]
+  const started = !!ws?.startedAt || mainJob?.status === '작업중' || mainJob?.status === '완료' || Object.values(ws?.checklist ?? {}).some(Boolean)
   const siteHero = photoForSite(customer.type, mainJob?.service)
 
   return (
@@ -87,36 +95,44 @@ export default function SiteDetail() {
                     <p className="mt-0.5 text-ink">{mainJob.risk.detail}</p>
                   </div>
                 )}
-                {/* 체크인 흐름 */}
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 text-center">
-                  {[
-                    ['체크인', ws?.checkinAt ?? (mainJob.status === '완료' ? '완료' : '-')],
-                    ['작업시작', ws?.startedAt ?? (mainJob.status === '완료' ? '완료' : '-')],
-                    ['작업완료', ws?.completedAt ?? (mainJob.status === '완료' ? '완료' : '-')],
-                    ['체크아웃', ws?.checkoutAt ?? (mainJob.status === '완료' ? '완료' : '-')],
-                  ].map(([l, v]) => (
-                    <div key={l} className="rounded-xl bg-ivory px-2 py-2.5">
-                      <p className="text-[0.72rem] font-bold text-ink-faint">{l}</p>
-                      <p className="tnum mt-0.5 text-[0.88rem] font-extrabold">{v}</p>
-                    </div>
+                {/* 진행 단계 — 시각이 찍힌 단계만 채운다 (현장직원 앱과 같은 4단계) */}
+                <ol className="grid grid-cols-4 gap-1.5" aria-label="작업 진행 단계">
+                  {steps.map(([l, v]) => (
+                    <li key={l} className="text-center">
+                      <span className={`block h-1.5 rounded-full ${v ? 'bg-primary' : 'bg-line'}`} />
+                      <span className={`mt-1.5 block text-[0.76rem] font-bold ${v ? 'text-primary-strong' : 'text-ink-faint'}`}>{l}</span>
+                      <span className="tnum block text-[0.82rem] font-extrabold text-ink">{v ?? '—'}</span>
+                    </li>
                   ))}
-                </div>
-                {/* 체크리스트 */}
-                <div>
-                  <p className="mb-2 text-[0.85rem] font-bold text-ink-soft">체크리스트</p>
-                  <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-                    {CHECKLIST_TEMPLATE.map((item) => (
-                      <div key={item} className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[0.78rem] font-bold ${checklist[item] ? 'bg-success-soft text-success' : 'bg-ivory text-ink-faint'}`}>
-                        <CheckCircle2 size={14} /> {item}
+                </ol>
+                {started ? (
+                  <>
+                    {/* 체크리스트 */}
+                    <div>
+                      <p className="mb-2 flex items-center justify-between text-[0.85rem] font-bold text-ink-soft">
+                        체크리스트 <span className="tnum text-primary">{CHECKLIST_TEMPLATE.filter((i) => checklist[i]).length} / {CHECKLIST_TEMPLATE.length}</span>
+                      </p>
+                      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                        {CHECKLIST_TEMPLATE.map((item) => (
+                          <div key={item} className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[0.8rem] font-bold ${checklist[item] ? 'bg-success-soft text-success' : 'bg-ivory text-ink-faint'}`}>
+                            <CheckCircle2 size={14} className="shrink-0" /> {item}
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                    {/* 작업 전 / 후 */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <WorkPhoto label="작업 전" taken={!!ws?.beforePhoto || mainJob.status === '완료'} src={ba.before} />
+                      <WorkPhoto label="작업 후" taken={!!ws?.afterPhoto || mainJob.status === '완료'} src={ba.after} />
+                    </div>
+                  </>
+                ) : (
+                  // 시작 전에는 빈 체크리스트·빈 사진칸 대신 한 줄 안내
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ivory px-4 py-3">
+                    <p className="text-[0.86rem] text-ink-soft">아직 작업 전입니다. 현장에서 체크인하면 체크리스트·사진이 이곳에 바로 표시됩니다.</p>
+                    <Btn size="sm" variant="outline" onClick={() => nav('/field')}>현장직원 앱 보기</Btn>
                   </div>
-                </div>
-                {/* 작업 전 / 후 */}
-                <div className="grid grid-cols-2 gap-3">
-                  <WorkPhoto label="작업 전" taken={!!ws?.beforePhoto || mainJob.status === '완료'} src={ba.before} />
-                  <WorkPhoto label="작업 후" taken={!!ws?.afterPhoto || mainJob.status === '완료'} src={ba.after} />
-                </div>
+                )}
                 {ws?.note && <p className="rounded-xl bg-ivory p-3 text-[0.85rem]"><b>특이사항</b> — {ws.note}</p>}
               </div>
             ) : (

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useId, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cx } from '../../lib/utils'
@@ -41,14 +41,38 @@ export function Card({ children, className, onClick, hover, tour }: { children: 
     <div
       data-tour={tour}
       onClick={onClick}
+      // 눌러서 이동하는 카드는 키보드(Tab · Enter · Space)로도 열 수 있어야 한다
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => {
+        if (e.target !== e.currentTarget) return
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() }
+      } : undefined}
       className={cx(
         'rounded-2xl bg-card border border-line shadow-card',
         (hover || onClick) && 'transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5 cursor-pointer',
+        onClick && 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
         className,
       )}
     >
       {children}
     </div>
+  )
+}
+
+// ─── Stat Tile — 화면 상단 요약 숫자 (팀·품질·추가서비스·수익성 공통) ───────
+const toneValue: Record<Tone, string> = {
+  success: 'text-success', warning: 'text-warning', danger: 'text-danger', info: 'text-info',
+  ai: 'text-ai-strong', neutral: 'text-ink-soft', brand: 'text-primary',
+}
+export function StatTile({ label, value, tone = 'brand', icon, className }: {
+  label: string; value: ReactNode; tone?: Tone; icon?: ReactNode; className?: string
+}) {
+  return (
+    <Card className={cx('px-4 py-3.5', className)}>
+      <p className="text-[0.8rem] font-bold text-ink-faint">{label}</p>
+      <p className={cx('mt-0.5 flex flex-wrap items-center gap-1 text-[clamp(1.15rem,5vw,1.45rem)] font-extrabold leading-tight tabular-nums [overflow-wrap:anywhere]', toneValue[tone])}>{icon}<span className="min-w-0">{value}</span></p>
+    </Card>
   )
 }
 
@@ -128,7 +152,24 @@ export function Modal({ open, onClose, title, children, wide }: {
   open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; wide?: boolean
 }) {
   const titleId = useId()
+  const boxRef = useRef<HTMLDivElement>(null)
   useHideHistoryNav(open)
+  // 열리면 대화상자로 포커스를 옮기고, 닫히면 연 버튼으로 되돌린다 (키보드·스크린리더 사용자)
+  useEffect(() => {
+    if (!open) return
+    const prev = document.activeElement as HTMLElement | null
+    boxRef.current?.focus({ preventScroll: true })
+    return () => { if (prev && document.contains(prev)) prev.focus({ preventScroll: true }) }
+  }, [open])
+  // Tab 이 대화상자 밖으로 빠져나가지 않게
+  const trap = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Tab' || !boxRef.current) return
+    const f = [...boxRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')]
+    if (!f.length) return
+    const first = f[0], last = f[f.length - 1]
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === boxRef.current)) { e.preventDefault(); last.focus() }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+  }
   // ESC 닫기 + 배경 스크롤 잠금 (닫힐 때 반드시 원복)
   useEffect(() => {
     if (!open) return
@@ -143,12 +184,15 @@ export function Modal({ open, onClose, title, children, wide }: {
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-shell/50 backdrop-blur-sm p-0 sm:p-6" onClick={onClose}>
       <div
+        ref={boxRef}
+        tabIndex={-1}
+        onKeyDown={trap}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
         className={cx(
-          'pop-in w-full bg-card sm:rounded-2xl rounded-t-2xl shadow-pop max-h-[88vh] overflow-y-auto overscroll-contain',
+          'pop-in w-full bg-card outline-none sm:rounded-2xl rounded-t-2xl shadow-pop max-h-[88vh] overflow-y-auto overscroll-contain',
           wide ? 'sm:max-w-2xl' : 'sm:max-w-lg',
         )}
       >
@@ -248,7 +292,9 @@ export function statusTone(status: string): Tone {
     : status === '추천됨' || status === '발견됨' || status === '접수' || status === '재계약 주의' || status === 'Retention Watch' ? 'warning'
     : 'neutral'
 }
-const statusLabel = (status: string) => (HEALTH_STATUS_LABEL as Record<string, string>)[status] ?? status
+// 데이터 값은 그대로 두고 화면 표기만 자연스럽게 (실행 단계 '확인' → '검토 중')
+const DISPLAY_LABEL: Record<string, string> = { ...HEALTH_STATUS_LABEL, 확인: '검토 중', 실행중: '실행 중' }
+const statusLabel = (status: string) => DISPLAY_LABEL[status] ?? status
 
 export function StatusPill({ status }: { status: string }) {
   return <Badge tone={statusTone(status)}>{statusLabel(status)}</Badge>

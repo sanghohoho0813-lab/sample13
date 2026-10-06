@@ -20,7 +20,7 @@ npm run preview  # 빌드 결과 미리보기
 |---|---|---|
 | Business AX | `/` | Executive Dashboard + AI 오늘의 운영 브리핑 |
 | | `/today` | 오늘의 AX (행동 우선순위) |
-| | `/schedule` | 일정/배정 + **AI Smart Dispatch** |
+| | `/schedule` | 일정/배정 + **AI Smart Dispatch** · `?id=SC-14`로 특정 일정 바로 열기 |
 | | `/sites` `/work` `/team` | 현장·작업·직원/팀 |
 | | `/customers` | 고객/계약 + Customer Health |
 | | `/renewals` `/upsell` `/profitability` | 재계약 · Upsell · 수익성(대표 전용) |
@@ -91,4 +91,12 @@ npm run preview  # 빌드 결과 미리보기
 - 모바일 일정 상세는 하단 시트, 1280px 이상은 목록 + 상세 2단
 - 공통 폼 부품 `Field` · `TextArea` · `ChoiceGroup` · `ConfirmDialog` (`src/components/ui`)
 - 상세: `docs/PROJECT_SPEC.md` O절 · `DECISIONS.md` 51~62
+
+## 2차 고도화 (2026-10-07)
+
+- 처음 쓰는 사람의 동선 기준으로 클릭 단계 축소 — 특정 일정 바로 열기(`/schedule?id=`), 고객 상담 폼 바로 열기(`/care/requests?new=문의`)
+- 눌렀을 때 숫자가 바뀌지 않게 브리핑 칩과 AI 센터 탭 건수 통일
+- 표 화면은 좁을 때 목록형, 탭 6개 화면은 모바일 3×2, 고객 헤더 태블릿 대응
+- 공통 부품 `StatTile`, 카드 키보드 접근, Modal 포커스 관리, 404 안내
+- 상세: `docs/PROJECT_SPEC.md` P절 · `DECISIONS.md` 63~73
 

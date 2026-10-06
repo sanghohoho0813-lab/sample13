@@ -35,7 +35,7 @@ export default function CareLanding() {
             <Btn size="lg" className="bg-champagne text-shell hover:opacity-90" onClick={() => nav('/care/home')}>
               내 관리현황 보기 <ArrowRight size={17} className="inline" />
             </Btn>
-            <Btn size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:border-champagne hover:text-champagne" onClick={() => nav('/care/requests')}>
+            <Btn size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:border-champagne hover:text-champagne" onClick={() => nav(`/care/requests?new=문의&topic=${encodeURIComponent('기타')}&memo=${encodeURIComponent('서비스 상담을 원합니다. ')}`)}>
               서비스 상담
             </Btn>
           </div>
@@ -69,7 +69,8 @@ export default function CareLanding() {
             return (
               <button
                 key={s}
-                onClick={() => nav('/care/requests')}
+                onClick={() => nav(`/care/requests?new=문의&topic=${encodeURIComponent('기타')}&memo=${encodeURIComponent(`${s} 상담을 원합니다. `)}`)}
+                aria-label={`${s} 상담 요청`}
                 className="group overflow-hidden rounded-2xl border border-line bg-card text-left transition-all hover:border-primary hover:shadow-card-hover"
               >
                 <div className="aspect-[4/3] overflow-hidden bg-ivory">

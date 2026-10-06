@@ -208,17 +208,18 @@ export default function FieldApp() {
                 <Card className="p-6 text-center">
                   <CheckCircle2 size={30} className="mx-auto text-success" />
                   <p className="mt-2 text-[1.05rem] font-extrabold">오늘 배정된 작업을 모두 완료했습니다!</p>
-                  <p className="mt-1 text-[0.82rem] text-ink-soft">작업 리포트는 리포트 탭에서 확인할 수 있습니다.</p>
+                  <p className="mt-1 text-[0.82rem] text-ink-soft">수고하셨습니다. 오늘 남긴 기록은 고객 리포트로 전달되었습니다.</p>
+                  <Btn variant="outline" className="mt-4" onClick={() => setTab('reports')}>내 작업 리포트 보기</Btn>
                 </Card>
               )}
 
-              {/* AI 현장 알림 */}
-              <Card className="p-4">
+              {/* AI 현장 알림 — 다음 현장이 있을 때만 (모두 끝나면 지난 현장 메모가 남지 않게) */}
+              {nextJob && <Card className="p-4">
                 <p className="mb-2 flex items-center gap-1.5 text-[0.88rem] font-extrabold text-ai-strong"><Sparkles size={15} /> 이 현장 메모 <span className="text-[0.74rem] font-bold text-ai-strong/70">AI 정리</span></p>
                 <ul className="space-y-1.5">
                   {aiNotes.map((n) => <li key={n} className="flex gap-2 rounded-lg bg-ai-soft/60 px-3 py-2 text-[0.82rem] leading-snug">{n}</li>)}
                 </ul>
-              </Card>
+              </Card>}
 
               {/* 오늘 타임라인 */}
               <div>

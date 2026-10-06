@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle, MapPin, Sparkles, CheckCircle2, ArrowRight, Users, ChevronRight,
 } from 'lucide-react'
@@ -27,8 +27,19 @@ export default function Schedule() {
   const toast = useToast()
   const wide = useIsWide()
   const [view, setView] = useState<View>('today')
-  const [selectedId, setSelectedId] = useState<string>('SC-16')
-  const [sheetOpen, setSheetOpen] = useState(false)
+  // ?id=SC-14 로 들어오면 그 일정을 바로 선택(모바일은 시트로 연다) — 대시보드·오늘의 AX에서 한 번에 도착
+  const [params, setParams] = useSearchParams()
+  const deepId = params.get('id')
+  const [selectedId, setSelectedId] = useState<string>(() => (deepId && schedules.some((s) => s.id === deepId) ? deepId : 'SC-16'))
+  const [sheetOpen, setSheetOpen] = useState(() => !!deepId && !wide && schedules.some((s) => s.id === deepId))
+  useEffect(() => {
+    if (!deepId) return
+    if (schedules.some((s) => s.id === deepId)) {
+      setSelectedId(deepId)
+      if (!wide) setSheetOpen(true)
+    }
+    setParams({}, { replace: true })
+  }, [deepId, schedules, wide, setParams])
 
   const today = useMemo(() => schedules.filter((s) => s.dayOffset === 0).sort((a, b) => a.time.localeCompare(b.time)), [schedules])
   const week = useMemo(() => schedules.filter((s) => s.dayOffset > 0).sort((a, b) => a.dayOffset - b.dayOffset || a.time.localeCompare(b.time)), [schedules])
@@ -78,7 +89,7 @@ export default function Schedule() {
       <PageHeader
         title="일정 / 배정"
         desc="오늘 일정과 팀 배정을 한 화면에서 확인하고, 미배정 일정은 AI 추천으로 바로 배정합니다."
-        right={<><AIReadyBadge /><DemoBadge /></>}
+        right={<DemoBadge />}
       />
 
       {/* 먼저 처리할 것 — 미배정 / 위험 */}

@@ -9,7 +9,7 @@ import { Card, KpiCard, SectionTitle, Btn, StatusPill, StatusText, Freshness, Sk
 import { AIReadyBadge, WhyAIButton } from '../../components/ai'
 import { useDemo } from '../../lib/data/store'
 import { customerById, teamById, TEAMS, EMPLOYEES } from '../../lib/demo/company'
-import { DAILY_BRIEFING, WEEKLY_TREND, MONTH_REVENUE } from '../../lib/demo/intelligence'
+import { DAILY_BRIEFING, WEEKLY_TREND, MONTH_REVENUE, SEED_INSIGHTS } from '../../lib/demo/intelligence'
 import { fmtManwon, cx } from '../../lib/utils'
 
 // 오늘 진행 상황 막대 — 상태별 색 (StatusPill 의미색과 동일 계열)
@@ -21,11 +21,17 @@ const STATUS_ORDER: Array<{ key: string; label: string; color: string }> = [
 ]
 
 // AI 브리핑 → AI 센터 해당 탭으로 바로 이동
-const BRIEF_TAB = ['risk', 'upsell', 'retention', 'dispatch']
+// 브리핑 칩 — 숫자는 AI 센터 해당 탭의 건수와 같은 원본에서 센다 (누른 뒤 숫자가 달라 보이지 않게)
+const BRIEF_CHIPS: Array<{ tab: 'risk' | 'upsell' | 'retention' | 'dispatch'; label: string; tone: Tone }> = [
+  { tab: 'risk', label: '위험', tone: 'danger' },
+  { tab: 'retention', label: '재계약', tone: 'warning' },
+  { tab: 'upsell', label: '추가매출', tone: 'success' },
+  { tab: 'dispatch', label: '배정 추천', tone: 'info' },
+]
 
 // 오늘 먼저 확인할 것 — 오늘의 AX 상위 4건 (전체는 오늘의 AX에서)
 const PRIORITIES: Array<{ tone: Tone; tag: string; title: string; desc: string; to: string }> = [
-  { tone: 'danger', tag: '방문지연 위험', title: '성수 B오피스', desc: '이전 작업 32분 지연 · 예상 도착 15:47', to: '/schedule' },
+  { tone: 'danger', tag: '방문지연 위험', title: '성수 B오피스', desc: '이전 작업 32분 지연 · 예상 도착 15:47', to: '/schedule?id=SC-14' },
   { tone: 'warning', tag: '재계약 사전관리', title: '라온메디컬센터', desc: '계약 종료 D-32 · 품질문의 증가', to: '/customers/C01' },
   { tone: 'success', tag: '추가서비스 제안', title: '에이원교육센터', desc: '유리 오염 특이사항 4회 → 집중관리 제안', to: '/upsell' },
   { tone: 'info', tag: '미완료 보고', title: '강남 C클리닉', desc: '08:30 작업 보고 미제출', to: '/sites/C04' },
@@ -94,13 +100,13 @@ export default function Dashboard() {
             </ul>
             {/* AI 엔진별 발견 건수 — 누르면 AI 센터의 해당 탭으로 */}
             <div className="flex flex-wrap gap-2 pt-2">
-              {DAILY_BRIEFING.counters.map((c, i) => (
+              {BRIEF_CHIPS.map((c) => (
                 <button
-                  key={c.label}
-                  onClick={() => nav(`/ai?tab=${BRIEF_TAB[i]}`)}
+                  key={c.tab}
+                  onClick={() => nav(`/ai?tab=${c.tab}`)}
                   className={cx('flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.82rem] font-bold transition-opacity hover:opacity-80', toneBg[c.tone])}
                 >
-                  {c.label} <span className="tnum text-[0.95rem] font-extrabold">{c.value}</span>
+                  {c.label} <span className="tnum text-[0.95rem] font-extrabold">{SEED_INSIGHTS.filter((i) => i.engine === c.tab).length}</span>
                 </button>
               ))}
             </div>

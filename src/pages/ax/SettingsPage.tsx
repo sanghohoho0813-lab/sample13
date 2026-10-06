@@ -134,7 +134,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[500px] text-[0.82rem]">
+            <table className="w-full min-w-[340px] text-[0.82rem]">
               <thead>
                 <tr className="border-b border-line bg-ivory text-[0.72rem] text-ink-faint">
                   <th className="px-3 py-2.5 text-left font-bold">항목</th>
@@ -144,7 +144,7 @@ export default function SettingsPage() {
               <tbody>
                 {MATRIX.map((row) => (
                   <tr key={row.item} className="border-b border-line/60">
-                    <td className="px-3 py-2.5 font-bold whitespace-nowrap">{row.item}</td>
+                    <td className="px-3 py-2.5 font-bold leading-snug">{row.item}</td>
                     <td className="px-2 py-2.5"><Mark v={row.ceo} /></td>
                     <td className="px-2 py-2.5"><Mark v={row.manager} /></td>
                     <td className="px-2 py-2.5"><Mark v={row.field} /></td>
