@@ -10,6 +10,7 @@ import DevicePreview from '../../components/layout/DevicePreview'
 import { CUSTOMER_ROADMAP, STAGE_NOTE, type RoadmapStage } from '../../lib/demo/roadmap'
 import { MiraeCredit } from '../../components/brand/MiraeLogo'
 import { SampleBridgeCTA, SampleBridgeMini } from '../../components/brand/SampleBridgeCTA'
+import { useHideHistoryNav } from '../../lib/historyNav'
 
 // Customer Demo Persona: 라온메디컬센터 (C01) 김수연 실장
 export const CARE_CUSTOMER_ID = 'C01'
@@ -77,6 +78,7 @@ function CareMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const loc = useLocation()
   const [roadmapOpen, setRoadmapOpen] = useState(false)
   const [detail, setDetail] = useState<string | null>(null)
+  useHideHistoryNav(open)
 
   useEffect(() => {
     if (!open) return

@@ -90,5 +90,5 @@ npm run preview  # 빌드 결과 미리보기
 - 고객 요청은 `RequestSheet` 하나로 — 유형별 필수 입력 · 제출 후 오류 표시 · 접수번호 → AX `처리 필요`로 연결
 - 모바일 일정 상세는 하단 시트, 1280px 이상은 목록 + 상세 2단
 - 공통 폼 부품 `Field` · `TextArea` · `ChoiceGroup` · `ConfirmDialog` (`src/components/ui`)
-- 상세: `docs/PROJECT_SPEC.md` O절 · `DECISIONS.md` 51~61
+- 상세: `docs/PROJECT_SPEC.md` O절 · `DECISIONS.md` 51~62
 

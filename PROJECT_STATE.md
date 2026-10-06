@@ -101,6 +101,7 @@ PROJECT FINAL OBJECTIVE: docs/PROJECT_SPEC.md 참조
 - 현장 앱 4단계 진행 표시 + 남은 항목 안내, 고객 검색(공백·대소문자 무시 · 초기화)
 - 데스크톱 사이드바 접이식(스크롤 없음), 시연 종료 시 역할 복원, 확인 대화상자, Modal 접근성
 - 남은 영문 문구 정리, CSS `min-width` 레이어 버그 수정, 360px 단어 중간 끊김 0
+- 미래AI랩 공용 뒤로·앞으로 버튼과 공존 — 시트·드로어·대화상자·투어 중에는 숨김
 
 ## QA 결과 (Whole-App Acceptance Run)
 - 자동 검증 **51 PASS / 0 FAIL** (Playwright)

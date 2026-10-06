@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, X, Sparkles, Play, Check } from 'lucide-react'
 import { isInPreview } from '../../lib/preview'
 import { cx } from '../../lib/utils'
+import { useHideHistoryNav } from '../../lib/historyNav'
 
 /**
  * Guided In-App Tour
@@ -91,6 +92,7 @@ export function TourProvider({ children, onRole, role }: {
   const [active, setActive] = useState<TourKind | null>(null)
   const [idx, setIdx] = useState(0)
   const [rect, setRect] = useState<Rect | null>(null)
+  useHideHistoryNav(!!active)
   const nav = useNavigate()
   const loc = useLocation()
   const timers = useRef<number[]>([])

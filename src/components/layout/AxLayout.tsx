@@ -15,6 +15,7 @@ import { useTour, useAutoTutorial } from '../tour/TourProvider'
 import { MiraeCredit } from '../brand/MiraeLogo'
 import { SampleBridgeCTA, SampleBridgeMini } from '../brand/SampleBridgeCTA'
 import { ROADMAP, STAGE_NOTE, type RoadmapStage } from '../../lib/demo/roadmap'
+import { useHideHistoryNav } from '../../lib/historyNav'
 
 /* ═══════════════════════════════════════════════════════════════════
    Navigation 정보구조 (IA)
@@ -413,6 +414,7 @@ function MoreSheet({ open, onClose, onReset }: { open: boolean; onClose: () => v
   const nav = useNavigate()
   const loc = useLocation()
   const entries = useNav(role)
+  useHideHistoryNav(open)
   useEffect(() => {
     if (!open) return
     const prev = document.body.style.overflow
@@ -520,6 +522,7 @@ export default function AxLayout({ children }: { children: ReactNode }) {
   const [drawer, setDrawer] = useState(false)
   const [more, setMore] = useState(false)
   const [askReset, setAskReset] = useState(false)
+  useHideHistoryNav(drawer)
   const loc = useLocation()
   const { tutorialSeen, markTutorialSeen, role, resetDemo } = useDemo()
   const toast = useToast()

@@ -531,6 +531,7 @@ AX 화면 본문(Dashboard·오늘의 AX·일정·현장·고객·AI·Evidence)�
 - `Field` · `TextArea`(글자 수 표시) · `ChoiceGroup`(radiogroup) — 폼의 라벨 · 필수 표시 · 오류 위치를 화면마다 같게.
 - `Modal` — ESC · 배경 스크롤 잠금 · `aria-modal` · 모바일 하단 시트 · 40px 닫기 버튼.
 - `ConfirmDialog` — 브라우저 `confirm()` 대체 (데모 초기화). 미리보기 iframe에서도 동작.
+- `useHideHistoryNav` (`src/lib/historyNav.ts`) — Modal · 드로어 · 더보기 시트 · 투어 · 기기 미리보기가 열린 동안 미래AI랩 공용 뒤로·앞으로 버튼을 숨긴다(시트 안 버튼 가림 방지).
 - `StatusText` — 400px 미만 목록 행에서 상태 Pill 대신 보조줄 앞에 상태를 표시해, 띄어쓰기 없는 현장명이 단어 중간에서 끊기지 않게 한다.
 
 ## 셸 · 투어

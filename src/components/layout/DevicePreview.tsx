@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { X, Smartphone, Monitor, MonitorSmartphone, Maximize2, Move } from 'lucide-react'
 import { isInPreview, previewUrl, MOBILE_PREVIEW, PC_PREVIEW, type PreviewKind } from '../../lib/preview'
 import { cx } from '../../lib/utils'
+import { useHideHistoryNav } from '../../lib/historyNav'
 
 /**
  * Device Preview
@@ -31,6 +32,7 @@ function PreviewModal({ kind, url, onClose }: { kind: PreviewKind; url: string; 
   const [scale, setScale] = useState(1)
   // PC Preview는 폭을 억지로 맞춰 읽기 불가능하게 만들지 않고 세로에 맞춘 뒤 가로 Pan을 기본으로 한다
   const [fitWidth, setFitWidth] = useState(false)
+  useHideHistoryNav(true)
 
   useLayoutEffect(() => {
     const fit = () => {

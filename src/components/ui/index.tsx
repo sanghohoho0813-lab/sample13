@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cx } from '../../lib/utils'
 import { HEALTH_STATUS_LABEL } from '../../types'
+import { useHideHistoryNav } from '../../lib/historyNav'
 
 // ─── Tone system (의미색 고정) ───────────────────────────
 export type Tone = 'success' | 'warning' | 'danger' | 'info' | 'ai' | 'neutral' | 'brand'
@@ -127,6 +128,7 @@ export function Modal({ open, onClose, title, children, wide }: {
   open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; wide?: boolean
 }) {
   const titleId = useId()
+  useHideHistoryNav(open)
   // ESC 닫기 + 배경 스크롤 잠금 (닫힐 때 반드시 원복)
   useEffect(() => {
     if (!open) return
