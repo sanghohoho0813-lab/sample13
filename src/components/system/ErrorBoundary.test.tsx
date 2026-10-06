@@ -1,10 +1,15 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { ErrorBoundary } from './ErrorBoundary'
 
 afterEach(cleanup)
+
+// 일부러 던진 오류를 jsdom 이 콘솔에 스택으로 찍지 않게 — 테스트 로그는 실패만 보이도록
+beforeAll(() => {
+  window.addEventListener('error', (e) => e.preventDefault())
+})
 
 let shouldThrow = true
 function Flaky() {
