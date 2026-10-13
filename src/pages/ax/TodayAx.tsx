@@ -1,74 +1,224 @@
+import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, RefreshCcw, TrendingUp, ClipboardX, ArrowRight, UserMinus } from 'lucide-react'
-import { Card, PageHeader, Badge, Btn, DemoBadge, EmptyState } from '../../components/ui'
+import { ArrowRight, CheckCircle2, ClipboardList, Inbox, ShieldCheck, Shuffle, Sparkles, Wrench } from 'lucide-react'
+import { Badge, Btn, Card, DemoBadge, EmptyState, PageHeader, SectionTitle, StatusPill } from '../../components/ui'
+import { useToast } from '../../components/ui/toast-context'
 import { ActionLifecycle } from '../../components/ai'
-import { cx } from '../../lib/utils'
+import { AuditTrail } from '../../components/ops'
 import { useDemo } from '../../lib/data/context'
+import { STAFF, customerById, teamById } from '../../lib/demo/company'
+import { can, needsSecondApprover } from '../../lib/ops/governance'
+import { cx } from '../../lib/utils'
+import type { Tone } from '../../lib/tone'
 
-const ICONS = {
-  danger: <AlertTriangle size={13} />,
-  warning: <RefreshCcw size={13} />,
-  success: <TrendingUp size={13} />,
-  info: <ClipboardX size={13} />,
-  neutral: <UserMinus size={13} />,
+type Kind = '배정' | '요청' | '이슈' | '조치'
+interface Item {
+  id: string
+  kind: Kind
+  title: string
+  sub: string
+  status: string
+  owner?: string
+  due?: string
+  /** 낮을수록 먼저 — 승인 대기 · 신규 요청 · 긴급 이슈 순 */
+  rank: number
+  tone: Tone
+  controls: ReactNode
 }
 
-export default function TodayAx() {
-  const { actions } = useDemo()
-  const nav = useNavigate()
-  const ids = ['A-01', 'A-02', 'A-03', 'A-04']
-  const tracked = ids.length
-  const done = actions.filter((a) => ids.includes(a.id) && a.status === '완료').length
+const KIND_ICON: Record<Kind, ReactNode> = {
+  배정: <Shuffle size={13} />, 요청: <Inbox size={13} />, 이슈: <Wrench size={13} />, 조치: <Sparkles size={13} />,
+}
+const KIND_TONE: Record<Kind, Tone> = { 배정: 'ai', 요청: 'warning', 이슈: 'danger', 조치: 'info' }
+const FILTERS: Array<'전체' | Kind> = ['전체', '배정', '요청', '이슈', '조치']
+const name = (customerId: string) => customerById(customerId)?.name ?? customerId
 
-  const cards = [
-    { tone: 'danger' as const, badge: '방문지연 위험', title: '성수 B오피스', desc: '담당팀 이전 작업 32분 지연 — 예상 도착 15:47. 재배정 또는 고객 사전 안내가 필요합니다.', to: '/schedule?id=SC-14', link: '일정 보기', actionId: 'A-01' },
-    { tone: 'warning' as const, badge: '재계약 사전관리', title: '라온메디컬센터', desc: '계약 종료 D-32 · 최근 60일 일정변경 3회 · 품질문의 2회. 이번 주 내 담당자 미팅을 권장합니다.', to: '/customers/C01', link: '고객 보기', actionId: 'A-02' },
-    { tone: 'success' as const, badge: '추가서비스 제안', title: '에이원교육센터', desc: '유리 오염 특이사항 4회 반복 — 외부 유리 집중관리 제안 (예상 DEMO 85만원).', to: '/upsell', link: '매출 기회 보기', actionId: 'A-03' },
-    { tone: 'info' as const, badge: '미완료 보고', title: '강남 C클리닉', desc: '08:30 작업의 완료 보고가 아직 제출되지 않았습니다. 체크리스트·사진 확인이 필요합니다.', to: '/sites/C04', link: '현장 보기', actionId: 'A-04' },
-    { tone: 'neutral' as const, badge: '직원 결원', title: 'Clean Team G', desc: '신우철 결원 — 오늘 소독 일정 2건 단독 작업. 오후 지원 배치 검토가 필요합니다.', to: '/team', link: '팀 일정 보기' },
-  ]
+/**
+ * 운영 처리함 — 운영관리자가 하루 종일 여는 처리 화면
+ * 배정안 · 고객 요청 · 현장 이슈 · AI 조치를 한 줄로 세우고, 담당 · 상태 · 기한과 바로 할 수 있는 결정을 붙인다.
+ * 판단 근거가 더 필요한 결정(배정 검토 · 요청 회신)은 상세 화면으로 이어진다.
+ */
+export default function TodayAx() {
+  const store = useDemo()
+  const { proposals, schedules, requests, issues, actions, audit, role, actor } = store
+  const nav = useNavigate()
+  const toast = useToast()
+  const [filter, setFilter] = useState<'전체' | Kind>('전체')
+  const [mine, setMine] = useState(false)
+
+  const items = useMemo<Item[]>(() => {
+    const list: Item[] = []
+    // 배정안 — AI 조치와 묶인 것은 배정안 한 줄로만 보여준다
+    for (const p of proposals.filter((x) => ['추천', '검토', '보류'].includes(x.status))) {
+      const s = schedules.find((x) => x.id === p.scheduleId)
+      if (!s) continue
+      const self = p.status === '검토' && needsSecondApprover(p.kind) && p.reviewer === actor
+      list.push({
+        id: p.id, kind: '배정',
+        title: `${s.dayOffset === 0 ? '' : `D+${s.dayOffset} `}${s.time} ${name(s.customerId)} — ${p.kind}`,
+        sub: p.status === '검토' ? `${p.reviewer} 검토 · ${teamById(p.toTeamId ?? null)?.name} 선택${p.reviewNote ? ` — ${p.reviewNote}` : ''}` : p.status === '보류' ? `보류 사유 — ${p.holdReason}` : p.reason,
+        status: p.status === '검토' ? '승인 대기' : p.status === '추천' ? '검토 필요' : '보류',
+        owner: p.reviewer, due: s.dayOffset === 0 ? `오늘 ${s.time} 전` : undefined,
+        rank: p.status === '검토' ? 0 : p.status === '추천' ? (s.dayOffset === 0 ? 1 : 3) : 6,
+        tone: p.status === '검토' ? 'warning' : 'ai',
+        controls: p.status === '검토' && can(role, 'dispatch.approve') && !self ? (
+          <>
+            <Btn size="sm" onClick={() => { store.approveProposal(p.id); toast(`승인 — ${teamById(p.toTeamId ?? null)?.name} 일정 반영 · 현장 앱 알림`) }}>승인 · 반영</Btn>
+            <Btn size="sm" variant="outline" onClick={() => nav(`/schedule?id=${s.id}`)}>근거 보기</Btn>
+          </>
+        ) : (
+          <>
+            {self && <span className="flex items-center gap-1 text-[0.76rem] font-bold text-warning"><ShieldCheck size={13} />직무 분리 — 다른 승인권자 필요</span>}
+            <Btn size="sm" variant={self ? 'outline' : 'ai'} onClick={() => nav(`/schedule?id=${s.id}`)}>{p.status === '검토' ? '배정안 보기' : '검토하기'}</Btn>
+          </>
+        ),
+      })
+    }
+    // 고객 요청
+    for (const r of requests.filter((x) => ['접수', '검토중', '처리중'].includes(x.status))) {
+      list.push({
+        id: r.id, kind: '요청', title: `${name(r.customerId)} — ${r.type}`, sub: r.detail,
+        status: r.status, owner: r.assignee, due: r.type === '긴급방문' ? '즉시' : r.status === '접수' ? '오늘 응답' : undefined,
+        rank: r.status === '접수' ? (r.type === '긴급방문' ? 0 : 1) : 4, tone: r.type === '긴급방문' ? 'danger' : 'warning',
+        controls: (
+          <>
+            {r.status === '접수' && can(role, 'request.handle') && (
+              <Btn size="sm" variant="outline" onClick={() => { store.assignRequest(r.id, actor); toast(`${r.id} 담당자로 지정되었습니다 — 고객 화면에 표시됩니다.`) }}>내가 담당</Btn>
+            )}
+            <Btn size="sm" onClick={() => nav(`/requests?id=${r.id}`)}>처리하기</Btn>
+          </>
+        ),
+      })
+    }
+    // 현장 이슈
+    for (const i of issues.filter((x) => x.status !== '해결')) {
+      list.push({
+        id: i.id, kind: '이슈', title: `${name(i.customerId)} — ${i.type}`, sub: `${i.detail} · 보고 ${i.reportedBy} ${i.at}`,
+        status: i.status, owner: i.owner, due: i.severity === '긴급' ? '즉시' : undefined,
+        rank: i.severity === '긴급' ? 0 : i.status === '접수' ? 2 : 5, tone: i.severity === '긴급' ? 'danger' : 'warning',
+        controls: !can(role, 'issue.handle') ? null : i.status === '접수' ? (
+          <Btn size="sm" variant="outline" onClick={() => { store.updateIssue(i.id, '조치중', actor); toast('이슈 담당을 맡았습니다.') }}>내가 조치</Btn>
+        ) : (
+          <Btn size="sm" variant="success" onClick={() => { store.updateIssue(i.id, '해결'); toast('조치 완료 — 고객 건강도에 반영됩니다.') }}>조치 완료</Btn>
+        ),
+      })
+    }
+    // AI 조치 — 배정안과 묶인 것은 위 배정 줄에서 처리
+    const linked = new Set(proposals.filter((p) => ['추천', '검토', '보류'].includes(p.status)).map((p) => p.actionId))
+    for (const a of actions.filter((x) => !['완료', '무시'].includes(x.status) && !linked.has(x.id))) {
+      list.push({
+        id: a.id, kind: '조치', title: a.title, sub: a.detail,
+        status: a.status, owner: a.owner, due: a.due,
+        rank: a.status === '보류' ? 8 : a.due?.startsWith('오늘') ? 2 : 7, tone: 'info',
+        controls: (
+          <>
+            <ActionLifecycle actionId={a.id} status={a.status} compact />
+            {can(role, 'action.update') && (
+              <label className="flex items-center gap-1 text-[0.76rem] font-bold text-ink-faint">
+                담당
+                <select
+                  value={a.owner}
+                  onChange={(e) => { store.setActionOwner(a.id, e.target.value); toast(`담당자를 ${e.target.value}(으)로 변경했습니다.`, 'info') }}
+                  className="rounded-lg border border-line bg-card px-1.5 py-1 text-[0.78rem] font-bold text-ink"
+                >
+                  {[...new Set([a.owner, ...STAFF])].map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </label>
+            )}
+          </>
+        ),
+      })
+    }
+    return list.sort((a, b) => a.rank - b.rank)
+  }, [proposals, schedules, requests, issues, actions, role, actor, store, nav, toast])
+
+  const isMine = (i: Item) => !i.owner || i.owner === actor
+  const shown = items.filter((i) => (filter === '전체' || i.kind === filter) && (!mine || isMine(i)))
+  const handledToday = audit.filter((a) => a.day === 'TODAY' && a.role !== 'system' && a.role !== 'customer')
 
   return (
     <div className="fade-up">
       <PageHeader
-        title="오늘의 AX"
-        desc="AI가 오늘 실제로 행동해야 할 것을 우선순위로 정리했습니다."
+        title="운영 처리함"
+        desc="배정안 · 고객 요청 · 현장 이슈 · AI 조치를 담당 · 상태 · 기한과 함께 한 줄로 처리합니다. 모든 결정은 변경 이력에 남습니다."
         right={<DemoBadge />}
       />
-      {/* 오늘 처리 진행률 — 끝낸 것과 남은 것을 한눈에 */}
-      <div className="mb-4 flex items-center gap-3 rounded-2xl border border-line bg-card px-4 py-3">
-        <p className="shrink-0 text-[0.9rem] font-extrabold">
-          {done === tracked
-            ? <span className="text-success">오늘 할 일을 모두 마쳤습니다</span>
-            : <>오늘 할 일 <span className="tnum text-primary">{done}</span><span className="tnum text-ink-faint"> / {tracked}</span> 완료</>}
-        </p>
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-ivory" role="progressbar" aria-valuenow={done} aria-valuemin={0} aria-valuemax={tracked} aria-label="오늘 할 일 완료">
-          <div className="h-full rounded-full bg-success transition-all" style={{ width: `${tracked ? (done / tracked) * 100 : 0}%` }} />
+
+      <div className="grid items-start gap-5 xl:grid-cols-[1fr_340px]">
+        <div className="min-w-0 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <div role="tablist" aria-label="처리 항목 종류" className="flex flex-wrap gap-1 rounded-xl border border-line bg-card p-1">
+              {FILTERS.map((f) => {
+                const n = f === '전체' ? items.length : items.filter((i) => i.kind === f).length
+                return (
+                  <button key={f} role="tab" aria-selected={filter === f} onClick={() => setFilter(f)}
+                    className={cx('flex items-center gap-1 rounded-lg px-3 py-1.5 text-[0.84rem] font-bold', filter === f ? 'bg-primary text-white' : 'text-ink-soft hover:text-primary')}>
+                    {f === '전체' ? '전체' : f === '요청' ? '고객 요청' : f === '이슈' ? '현장 이슈' : f === '조치' ? 'AI 조치' : '배정'}
+                    <span className={cx('tnum text-[0.74rem]', filter === f ? 'text-white/80' : 'text-ink-faint')}>{n}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <label className="flex cursor-pointer items-center gap-1.5 text-[0.84rem] font-bold text-ink-soft">
+              <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} className="h-4 w-4 accent-[var(--color-primary)]" />
+              내 담당 · 미지정만
+            </label>
+          </div>
+
+          {shown.length === 0 ? (
+            <EmptyState title="처리할 항목이 없습니다." desc="새 배정안 · 고객 요청 · 현장 이슈가 생기면 이곳에 바로 쌓입니다." />
+          ) : (
+            <ul className="space-y-2">
+              {shown.map((i) => (
+                <li key={`${i.kind}-${i.id}`}>
+                  <Card className="p-3.5 sm:p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Badge tone={KIND_TONE[i.kind]}>{KIND_ICON[i.kind]} {i.kind}</Badge>
+                          <StatusPill status={i.status} />
+                          {i.due && <span className={cx('text-[0.76rem] font-bold', i.due === '즉시' ? 'text-danger' : 'text-ink-faint')}>기한 {i.due}</span>}
+                          <span className="text-[0.72rem] font-semibold text-ink-faint">{i.id}</span>
+                        </div>
+                        <p className="mt-1.5 text-[0.95rem] font-extrabold leading-snug">{i.title}</p>
+                        <p className="mt-0.5 text-[0.84rem] leading-relaxed text-ink-soft [overflow-wrap:anywhere]">{i.sub}</p>
+                      </div>
+                      <span className="shrink-0 text-[0.78rem] font-bold text-ink-faint">담당 {i.owner ?? <span className="text-warning">미지정</span>}</span>
+                    </div>
+                    {i.controls && <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-line pt-2.5">{i.controls}</div>}
+                  </Card>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
+
+        <aside className="space-y-4 xl:sticky xl:top-20">
+          <Card className="p-4">
+            <p className="flex items-center gap-1.5 text-[0.92rem] font-extrabold"><ClipboardList size={16} className="text-primary" /> 오늘 처리 현황</p>
+            <dl className="mt-3 grid grid-cols-2 gap-2">
+              {[
+                ['남은 항목', items.length, 'text-ink'],
+                ['승인 대기', items.filter((i) => i.status === '승인 대기').length, 'text-warning'],
+                ['담당 미지정', items.filter((i) => !i.owner).length, 'text-danger'],
+                ['오늘 처리', handledToday.length, 'text-success'],
+              ].map(([l, v, c]) => (
+                <div key={l as string} className="rounded-xl bg-ivory px-3 py-2">
+                  <dt className="text-[0.74rem] font-bold text-ink-faint">{l}</dt>
+                  <dd className={cx('tnum text-[1.2rem] font-extrabold', c as string)}>{v}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-2.5 flex items-center gap-1.5 text-[0.78rem] text-ink-faint"><CheckCircle2 size={13} /> 지금 처리자 — <b className="text-ink-soft">{actor}</b></p>
+          </Card>
+          <Card className="p-4">
+            <SectionTitle className="mb-2.5" right={role === 'ceo' ? <button onClick={() => nav('/evidence?tab=audit')} className="text-[0.78rem] font-bold text-primary hover:underline">전체 <ArrowRight size={12} className="inline" /></button> : undefined}>
+              <span className="text-[0.98rem]">최근 변경 이력</span>
+            </SectionTitle>
+            <AuditTrail entries={audit.filter((a) => a.day === 'TODAY')} limit={6} compact />
+          </Card>
+        </aside>
       </div>
-      {cards.length === 0 ? (
-        <EmptyState title="현재 확인이 필요한 현장이 없습니다." desc="AI 위험 감지가 새 위험을 발견하면 이곳에 표시됩니다." />
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {cards.map((c) => {
-            const action = c.actionId ? actions.find((a) => a.id === c.actionId) : undefined
-            return (
-              <Card key={c.title} className={cx('p-5 space-y-3 transition-opacity', action?.status === '완료' && 'opacity-60')}>
-                <div className="flex items-center justify-between gap-2">
-                  <Badge tone={c.tone}>{ICONS[c.tone]} {c.badge}</Badge>
-                  {action && <span className="text-[0.7rem] font-bold text-ink-faint">{action.createdAt}</span>}
-                </div>
-                <p className="text-[1.15rem] font-extrabold">{c.title}</p>
-                <p className="text-[0.88rem] leading-relaxed text-ink-soft">{c.desc}</p>
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
-                  <Btn size="sm" variant="outline" onClick={() => nav(c.to)}>{c.link} <ArrowRight size={13} className="inline" /></Btn>
-                  {action && <ActionLifecycle actionId={action.id} status={action.status} compact />}
-                </div>
-              </Card>
-            )
-          })}
-        </div>
-      )}
     </div>
   )
 }

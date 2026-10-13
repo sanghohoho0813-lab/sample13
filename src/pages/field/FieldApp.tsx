@@ -1,212 +1,170 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Navigation, MapPin, CheckCircle2, Camera, Sparkles, Bell, FileText, User,
-  CalendarDays, ClipboardCheck, ArrowLeft, Play, Check, ImagePlus,
+  ArrowLeft, Bell, BellRing, CalendarDays, CheckCircle2, CloudOff, FileText, Signal, SignalLow, Star, User, Wifi,
 } from 'lucide-react'
-import { Badge, Btn, Card, DemoBadge, StatusPill, TextArea } from '../../components/ui'
+import { Badge, Btn, Card, DemoBadge, StatusPill } from '../../components/ui'
 import { useToast } from '../../components/ui/toast-context'
 import { useDemo } from '../../lib/data/context'
-import { customerById, teamMemberNames } from '../../lib/demo/company'
-import { CHECKLIST_TEMPLATE } from '../../lib/demo/operations'
+import { EMPLOYEES, TEAMS, customerById, employeeById, personaName, teamById, teamMemberNames } from '../../lib/demo/company'
+import type { Net } from '../../lib/field/outbox'
 import { cx, nowClock, nowDateCompact } from '../../lib/utils'
-import { beforeAfterFor, altOf } from '../../lib/demo/photos'
 import { MiraeCredit } from '../../components/brand/MiraeLogo'
 import { SampleBridgeMini } from '../../components/brand/SampleBridgeCTA'
-import { Photo } from '../../components/ui/Photo'
+import JobFlow from './JobFlow'
+import { useFieldSync } from './useFieldSync'
 
-type Tab = 'today' | 'site' | 'alerts' | 'reports' | 'me'
+type Tab = 'today' | 'alerts' | 'reports' | 'me'
 
-// 현장직원 Demo Persona: 김도윤 (Clean Team B)
-const MY_TEAM = 'T-B'
-const MY_NAME = '김도윤'
+const NET_LABEL: Record<Net, { label: string; icon: ReactNode; cls: string }> = {
+  online: { label: '온라인', icon: <Wifi size={13} />, cls: 'bg-white/10 text-white' },
+  weak: { label: '약한 신호', icon: <SignalLow size={13} />, cls: 'bg-warning text-white' },
+  offline: { label: '오프라인', icon: <CloudOff size={13} />, cls: 'bg-danger text-white' },
+}
 
+/**
+ * 현장직원 앱 — 행동 중심
+ * · 화면은 '지금 현장' 하나에 집중하고, 다음 할 일은 아래 고정 버튼 하나로 안내한다
+ * · 신호가 약하거나 끊겨도 기록은 기기에 쌓였다가 연결되면 순서대로 전송된다(useFieldSync)
+ * · 본사에서 승인한 배정 · 시간 변경은 알림으로 오고, '확인'을 누르면 본사 화면에 수신 확인이 남는다
+ */
 export default function FieldApp() {
-  const { schedules, work, checkin, startWork, toggleChecklist, setPhoto, setNote, completeWork, reports, setRole } = useDemo()
+  const { setRole, setFieldPersona } = useDemo()
+  const { view, send, net, setNet, pending, lastSync, meta } = useFieldSync()
   const nav = useNavigate()
   const toast = useToast()
   const [tab, setTab] = useState<Tab>('today')
-  const [noteDraft, setNoteDraft] = useState('')
+  const [netMenu, setNetMenu] = useState(false)
   const [clock, setClock] = useState(nowClock())
   useEffect(() => {
     const id = setInterval(() => setClock(nowClock()), 1000)
     return () => clearInterval(id)
   }, [])
 
+  const me = employeeById(view.fieldPersona) ?? EMPLOYEES[2]
+  const myTeam = me.teamId
+  const myName = personaName(me.id)
   const myJobs = useMemo(
-    () => schedules.filter((s) => s.dayOffset === 0 && s.teamId === MY_TEAM).sort((a, b) => a.time.localeCompare(b.time)),
-    [schedules],
+    () => view.schedules.filter((s) => s.dayOffset === 0 && s.teamId === myTeam).sort((a, b) => a.time.localeCompare(b.time)),
+    [view.schedules, myTeam],
   )
+  const [selected, setSelected] = useState<string | null>(null)
+  useEffect(() => { setSelected(null) }, [myTeam])
   const nextJob = myJobs.find((j) => j.status !== '완료')
-  const ws = nextJob ? work[nextJob.id] : undefined
-  const nextCustomer = nextJob ? customerById(nextJob.customerId) : undefined
-  const checklist = ws?.checklist ?? Object.fromEntries(CHECKLIST_TEMPLATE.map((c) => [c, false]))
-  const doneCount = Object.values(checklist).filter(Boolean).length
-  const canComplete = !!ws?.checkinAt && doneCount === CHECKLIST_TEMPLATE.length && ws.beforePhoto && ws.afterPhoto
-  // 완료 전에 남은 일 — "왜 완료가 안 되지?"를 바로 알 수 있게 구체적으로
-  const remaining = [
-    doneCount < CHECKLIST_TEMPLATE.length && `체크리스트 ${CHECKLIST_TEMPLATE.length - doneCount}개`,
-    !ws?.beforePhoto && '작업 전 사진',
-    !ws?.afterPhoto && '작업 후 사진',
-  ].filter(Boolean) as string[]
-  // 진행 단계: 도착 → 작업 시작 → 기록(체크리스트·사진) → 완료
-  const stepIdx = !ws?.checkinAt ? 0 : !ws.startedAt ? 1 : 2
-  const myReports = reports.filter((r) => r.team === 'Clean Team B')
+  const job = myJobs.find((j) => j.id === selected) ?? nextJob
+  // 지금 작업할 현장 칩이 화면 안에 보이도록 가로 목록을 옮긴다 (완료한 현장이 앞을 가리지 않게)
+  const strip = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = strip.current?.querySelector<HTMLElement>(`[data-job="${job?.id}"]`)
+    if (el && strip.current) strip.current.scrollLeft = Math.max(0, el.offsetLeft - 16 - strip.current.offsetLeft)
+  }, [job?.id, tab])
+  const myNotices = view.notices.filter((n) => n.teamId === myTeam)
+  const unacked = myNotices.filter((n) => !n.ackAt)
+  const myReports = view.reports.filter((r) => r.team === teamById(myTeam)?.name)
+  const myIssues = view.issues.filter((i) => myJobs.some((j) => j.id === i.scheduleId) || i.reportedBy === myName)
 
-  const ba = beforeAfterFor(`${nextJob?.service ?? ''} ${ws?.note ?? ''}`)
-
-  const aiNotes = nextJob?.customerId === 'C01'
-    ? [
-        '이 고객은 지난 방문에서 대기실 유리 얼룩 관련 요청이 있었습니다.',
-        '오늘 해당 영역 작업 후 사진을 남겨주세요.',
-        '진료시간 외 작업 필수 — 13:00~15:00 휴게시간에 진행합니다.',
-      ]
-    : ['이 현장의 최근 특이사항을 확인하고 작업을 시작하세요.']
+  const ack = (id: string, scheduleId: string) => {
+    send({ type: 'noticeAck', noticeId: id, meta: meta() })
+    setSelected(scheduleId)
+    setTab('today')
+    toast(`확인 완료 — 본사에 수신 확인이 전달됩니다${net === 'online' ? '' : ' (연결 시)'}`)
+  }
 
   return (
     <div className="min-h-screen bg-ivory">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
-        {/* Header */}
+        {/* 머리 — 누가 · 지금 연결 상태 */}
         <header className="sticky top-0 z-30 border-b border-line bg-shell px-4 py-3 text-white">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[0.92rem] font-extrabold tracking-wide">CLEANWAY <span className="text-champagne">FIELD</span></p>
-              <p className="tnum text-[0.72rem] text-white/75">{nowDateCompact()} · {clock} · {MY_NAME}</p>
+              <p className="tnum truncate text-[0.72rem] text-white/75">{nowDateCompact()} · {clock} · {me.name} {me.position} · {teamById(myTeam)?.name.replace('Clean ', '')}</p>
             </div>
-            <div className="flex shrink-0 items-center gap-1.5">
-              <DemoBadge label="DEMO" />
+            <div className="relative flex shrink-0 items-center gap-1.5">
+              <button
+                onClick={() => setNetMenu((v) => !v)}
+                aria-expanded={netMenu}
+                aria-label={`네트워크 상태 ${NET_LABEL[net].label}${pending ? ` · 전송 대기 ${pending}건` : ''}`}
+                className={cx('flex items-center gap-1 rounded-lg px-2 py-1.5 text-[0.72rem] font-bold', NET_LABEL[net].cls)}
+              >
+                {NET_LABEL[net].icon}{NET_LABEL[net].label}{pending > 0 && <span className="tnum rounded bg-white/25 px-1">{pending}</span>}
+              </button>
               <button
                 onClick={() => { setRole('manager'); nav('/') }}
                 className="flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1.5 text-[0.72rem] font-bold hover:bg-white/20"
                 title="AX 운영화면 보기 (데모)"
               >
-                <ArrowLeft size={14} /> AX 운영화면
+                <ArrowLeft size={14} /> AX
               </button>
+              {netMenu && (
+                <div className="pop-in absolute right-0 top-full z-40 mt-2 w-60 rounded-xl border border-line bg-card p-1.5 text-ink shadow-pop">
+                  <p className="px-2.5 pb-1 pt-1 text-[0.72rem] font-bold text-ink-faint">네트워크 상황 재현 (데모)</p>
+                  {(['online', 'weak', 'offline'] as Net[]).map((n) => (
+                    <button key={n} onClick={() => { setNet(n); setNetMenu(false) }}
+                      className={cx('flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[0.86rem] font-bold hover:bg-mint', net === n && 'bg-mint text-primary-strong')}>
+                      {n === 'online' ? <Signal size={15} /> : n === 'weak' ? <SignalLow size={15} /> : <CloudOff size={15} />}
+                      {NET_LABEL[n].label}
+                      <span className="ml-auto text-[0.7rem] font-semibold text-ink-faint">{n === 'online' ? '즉시 전송' : n === 'weak' ? '지연 전송' : '기기에 보관'}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </header>
 
-        <main id="main" tabIndex={-1} className="flex-1 px-4 py-4 pb-24 space-y-4">
+        {/* 동기화 상태 — 기록이 사라지지 않았다는 확신을 준다 */}
+        {(pending > 0 || net !== 'online') && (
+          <div role="status" className={cx('px-4 py-2 text-[0.8rem] font-bold', net === 'offline' ? 'bg-danger-soft text-danger' : 'bg-warning-soft text-warning')}>
+            {net === 'offline'
+              ? `오프라인 — 기록 ${pending}건이 기기에 저장되어 있습니다. 연결되면 자동 전송됩니다.`
+              : pending > 0 ? `신호 약함 — ${pending}건 전송 중…` : '신호가 약합니다 — 기록은 기기에 먼저 저장된 뒤 전송됩니다.'}
+          </div>
+        )}
+        {pending === 0 && net === 'online' && lastSync && (
+          <p className="px-4 pt-2 text-right text-[0.7rem] font-semibold text-ink-faint">본사 전송 완료 {lastSync}</p>
+        )}
+
+        <main id="main" tabIndex={-1} className="flex-1 space-y-4 px-4 py-4 pb-24">
           {tab === 'today' && (
             <>
-              {/* 다음 현장 */}
-              {nextJob && nextCustomer ? (
-                <Card tour="field-next" className="overflow-hidden">
-                  <div className="bg-primary px-4 py-3 text-white">
-                    <p className="text-[0.72rem] font-bold text-white/80">다음 현장</p>
-                    <p className="mt-0.5 text-[1.2rem] font-extrabold leading-tight">{nextCustomer.name}</p>
-                    <p className="tnum mt-0.5 text-[0.95rem] font-bold text-champagne">{nextJob.time} · {nextJob.service}</p>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <ol className="flex items-center gap-1.5" aria-label="작업 진행 단계">
-                      {['도착', '작업 시작', '기록', '완료'].map((label, i) => (
-                        <li key={label} className="flex flex-1 flex-col items-center gap-1">
-                          <span className={cx('h-1.5 w-full rounded-full', i < stepIdx ? 'bg-primary' : i === stepIdx ? 'bg-primary/45' : 'bg-line')} />
-                          <span className={cx('text-[0.74rem] font-bold', i <= stepIdx ? 'text-primary' : 'text-ink-faint')}>{label}</span>
-                        </li>
-                      ))}
-                    </ol>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[0.82rem] text-ink-soft">
-                      <span className="flex items-center gap-1"><MapPin size={13} /> {nextCustomer.address}</span>
-                      <span>예상 이동 {nextJob.travelMin}분 · 작업 {nextJob.durationMin}분</span>
-                    </div>
+              {/* 본사에서 온 배정 · 시간 변경 */}
+              {unacked.map((n) => (
+                <div key={n.id} role="alert" className={cx('rounded-2xl border px-4 py-3', n.kind === '배정 해제' ? 'border-line bg-card' : 'border-ai/40 bg-ai-soft')}>
+                  <p className="flex items-center gap-1.5 text-[0.86rem] font-extrabold text-ai-strong"><BellRing size={15} /> {n.kind} · {n.at}</p>
+                  <p className="mt-0.5 text-[0.9rem] font-bold leading-snug">{n.text}</p>
+                  <Btn size="sm" className="mt-2" onClick={() => ack(n.id, n.scheduleId)}>확인했습니다</Btn>
+                </div>
+              ))}
 
-                    {!ws?.checkinAt ? (
-                      <div className="grid grid-cols-2 gap-2.5">
-                        <Btn variant="outline" className="py-3" onClick={() => toast('길찾기는 지도 API 연결 시 활성화됩니다. (연동 준비 상태)', 'info')}>
-                          <Navigation size={17} className="mr-1 inline" /> 길찾기
-                        </Btn>
-                        <Btn className="py-3" onClick={() => { checkin(nextJob.id); toast('체크인 완료 — 도착시간이 기록되었습니다.') }}>
-                          <MapPin size={17} className="mr-1 inline" /> 도착 체크인
-                        </Btn>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-center justify-between rounded-xl bg-mint px-3.5 py-2.5 text-[0.85rem] font-bold text-primary-strong">
-                          <span><Check size={14} className="mr-1 inline" /> 체크인 {ws.checkinAt}</span>
-                          {ws.startedAt ? <span>작업시작 {ws.startedAt}</span> : (
-                            <Btn size="sm" onClick={() => { startWork(nextJob.id); toast('작업을 시작합니다.', 'info') }}><Play size={13} className="mr-0.5 inline" /> 작업 시작</Btn>
-                          )}
-                        </div>
+              {/* 오늘의 업무 — 눌러서 작업할 현장 선택 */}
+              <section aria-label="오늘의 업무">
+                <p className="mb-2 flex items-center justify-between text-[0.88rem] font-extrabold">
+                  <span><CalendarDays size={15} className="mr-1 inline text-primary" />오늘 {myJobs.length}건</span>
+                  <span className="flex items-center gap-2"><span className="tnum text-[0.78rem] text-ink-faint">완료 {myJobs.filter((j) => j.status === '완료').length}</span><DemoBadge label="DEMO" /></span>
+                </p>
+                <div ref={strip} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+                  {myJobs.map((j) => {
+                    const on = j.id === job?.id
+                    return (
+                      <button key={j.id} data-job={j.id} onClick={() => setSelected(j.id)} aria-pressed={on}
+                        className={cx('w-[9.5rem] shrink-0 rounded-xl border px-3 py-2 text-left', on ? 'border-primary bg-mint/60' : 'border-line bg-card', j.status === '완료' && !on && 'opacity-60')}>
+                        <span className="flex items-center justify-between gap-1">
+                          <span className="tnum text-[0.9rem] font-extrabold text-primary">{j.time}</span>
+                          {j.status === '완료' ? <CheckCircle2 size={14} className="text-success" /> : j.id === nextJob?.id ? <Badge tone="brand">다음</Badge> : null}
+                        </span>
+                        <span className="mt-0.5 block truncate text-[0.82rem] font-bold">{customerById(j.customerId)?.name}</span>
+                        <span className="block truncate text-[0.7rem] text-ink-faint">{j.service}</span>
+                      </button>
+                    )
+                  })}
+                  {myJobs.length === 0 && <p className="text-[0.84rem] text-ink-faint">오늘 배정된 일정이 없습니다.</p>}
+                </div>
+              </section>
 
-                        {ws.startedAt && (
-                          <>
-                            {/* 체크리스트 */}
-                            <div>
-                              <p className="mb-2 flex items-center justify-between text-[0.85rem] font-extrabold">
-                                <span><ClipboardCheck size={15} className="mr-1 inline text-primary" /> 체크리스트</span>
-                                <span className="tnum text-primary">{doneCount} / {CHECKLIST_TEMPLATE.length}</span>
-                              </p>
-                              <div className="space-y-1.5">
-                                {CHECKLIST_TEMPLATE.map((item) => (
-                                  <button key={item} onClick={() => toggleChecklist(nextJob.id, item)}
-                                    className={cx(
-                                      'flex w-full items-center gap-2.5 rounded-xl border px-3.5 py-3 text-left text-[0.9rem] font-bold transition-colors',
-                                      checklist[item] ? 'border-success bg-success-soft text-success' : 'border-line bg-card text-ink',
-                                    )}>
-                                    <CheckCircle2 size={19} className={checklist[item] ? '' : 'text-ink-faint/40'} />
-                                    {item}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-
-                            {/* 사진 */}
-                            <div className="grid grid-cols-2 gap-2.5">
-                              {(['before', 'after'] as const).map((kind) => {
-                                const taken = kind === 'before' ? ws.beforePhoto : ws.afterPhoto
-                                const src = kind === 'before' ? ba.before : ba.after
-                                if (taken) {
-                                  return (
-                                    <figure key={kind} className="relative aspect-[4/3] overflow-hidden rounded-xl border border-primary">
-                                      <Photo sizes="240px" src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
-                                      <figcaption className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-ink/75 px-2 py-0.5 text-[0.72rem] font-extrabold text-white">
-                                        <Camera size={11} /> {kind === 'before' ? '작업 전' : '작업 후'}
-                                      </figcaption>
-                                    </figure>
-                                  )
-                                }
-                                return (
-                                  <button key={kind} onClick={() => { setPhoto(nextJob.id, kind); toast(`${kind === 'before' ? '작업 전' : '작업 후'} 사진을 등록했습니다. (데모)`) }}
-                                    className={cx(
-                                      'flex aspect-[4/3] flex-col items-center justify-center gap-1.5 rounded-xl border text-[0.82rem] font-bold',
-                                      'border-dashed border-line bg-card text-ink-soft',
-                                    )}>
-                                    <ImagePlus size={22} />
-                                    {kind === 'before' ? '작업 전 사진' : '작업 후 사진'}
-                                    <span className="text-[0.72rem] font-semibold text-ink-faint">탭하여 등록</span>
-                                  </button>
-                                )
-                              })}
-                            </div>
-
-                            {/* 특이사항 */}
-                            <div>
-                              <p className="mb-1.5 text-[0.88rem] font-extrabold">특이사항 <span className="text-[0.76rem] font-semibold text-ink-faint">(선택 · 고객 리포트에 함께 남습니다)</span></p>
-                              <TextArea
-                                value={ws.note ?? noteDraft}
-                                onChange={(v) => { setNoteDraft(v); setNote(nextJob.id, v) }}
-                                maxLength={200}
-                                placeholder="예) 대기실 유리 얼룩 재청소 완료, 소모품 보충 필요"
-                              />
-                            </div>
-
-                            <Btn size="lg" variant={canComplete ? 'success' : 'primary'} disabled={!canComplete} className="w-full"
-                              onClick={() => { completeWork(nextJob.id); toast('작업 완료 — 작업 리포트가 생성되었습니다.'); setNoteDraft('') }}>
-                              <CheckCircle2 size={18} className="mr-1 inline" /> 작업 완료
-                            </Btn>
-                            {!canComplete && remaining.length > 0 && (
-                              <p className="rounded-lg bg-warning-soft px-3 py-2 text-center text-[0.82rem] font-bold text-warning">
-                                남은 항목 — {remaining.join(' · ')}
-                              </p>
-                            )}
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </Card>
-              ) : (
+              {job ? (
+                <JobFlow key={job.id} job={job} view={view} send={send} meta={meta} net={net} />
+              ) : myJobs.length > 0 && (
                 <Card className="p-6 text-center">
                   <CheckCircle2 size={30} className="mx-auto text-success" />
                   <p className="mt-2 text-[1.05rem] font-extrabold">오늘 배정된 작업을 모두 완료했습니다!</p>
@@ -214,85 +172,51 @@ export default function FieldApp() {
                   <Btn variant="outline" className="mt-4" onClick={() => setTab('reports')}>내 작업 리포트 보기</Btn>
                 </Card>
               )}
-
-              {/* AI 현장 알림 — 다음 현장이 있을 때만 (모두 끝나면 지난 현장 메모가 남지 않게) */}
-              {nextJob && <Card className="p-4">
-                <p className="mb-2 flex items-center gap-1.5 text-[0.88rem] font-extrabold text-ai-strong"><Sparkles size={15} /> 이 현장 메모 <span className="text-[0.74rem] font-bold text-ai-strong/70">AI 정리</span></p>
-                <ul className="space-y-1.5">
-                  {aiNotes.map((n) => <li key={n} className="flex gap-2 rounded-lg bg-ai-soft/60 px-3 py-2 text-[0.82rem] leading-snug">{n}</li>)}
-                </ul>
-              </Card>}
-
-              {/* 오늘 타임라인 */}
-              <div>
-                <p className="mb-2 flex items-center gap-1.5 text-[0.9rem] font-extrabold"><CalendarDays size={15} className="text-primary" /> 오늘의 업무</p>
-                <div className="space-y-2">
-                  {myJobs.map((j) => {
-                    const c = customerById(j.customerId)
-                    const isNext = j.id === nextJob?.id
-                    return (
-                      <div key={j.id} className={cx('flex items-center gap-3 rounded-xl border px-3.5 py-3', isNext ? 'border-primary bg-mint/40' : 'border-line bg-card')}>
-                        <span className="tnum w-12 shrink-0 text-[0.95rem] font-extrabold text-primary">{j.time}</span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[0.9rem] font-bold">{c?.name}</p>
-                          <p className="truncate text-[0.72rem] text-ink-faint">{j.service}</p>
-                        </div>
-                        {isNext ? <Badge tone="brand">다음</Badge> : <StatusPill status={j.status} />}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
             </>
-          )}
-
-          {tab === 'site' && (
-            <div className="space-y-3">
-              <p className="text-[1.05rem] font-extrabold">내 현장</p>
-              {myJobs.map((j) => {
-                const c = customerById(j.customerId)
-                return (
-                  <Card key={j.id} className="p-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-[0.95rem] font-extrabold">{c?.name}</p>
-                      <StatusPill status={j.status} />
-                    </div>
-                    <p className="mt-1 flex items-center gap-1 text-[0.78rem] text-ink-soft"><MapPin size={12} /> {c?.address}</p>
-                    <p className="tnum mt-1 text-[0.8rem] font-bold text-primary">{j.time} · {j.service} · {j.durationMin}분</p>
-                  </Card>
-                )
-              })}
-            </div>
           )}
 
           {tab === 'alerts' && (
             <div className="space-y-3">
               <p className="text-[1.05rem] font-extrabold">알림</p>
-              {[
-                { t: '오늘 14:00', m: '라온메디컬센터 — 진료시간 외 작업 필수 (13:00~15:00 휴게)' },
-                { t: '오늘 08:45', m: '17:00 한빛프라자 일정이 확정되었습니다.' },
-                { t: '어제', m: '에이원교육센터 특이사항(유리 오염)이 접수 처리되었습니다.' },
-              ].map((a) => (
-                <Card key={a.m} className="p-4">
-                  <p className="text-[0.7rem] font-bold text-ink-faint">{a.t}</p>
-                  <p className="mt-0.5 text-[0.88rem] font-semibold leading-snug">{a.m}</p>
+              {myNotices.length === 0 && myIssues.length === 0 && <Card className="p-5 text-center text-[0.85rem] text-ink-faint">새 알림이 없습니다.</Card>}
+              {myNotices.map((n) => (
+                <Card key={n.id} className="p-4">
+                  <p className="flex items-center justify-between text-[0.72rem] font-bold text-ink-faint"><span>{n.kind} · {n.at}</span>{n.ackAt ? <span className="text-success">확인 {n.ackAt}</span> : <span className="text-ai-strong">미확인</span>}</p>
+                  <p className="mt-0.5 text-[0.88rem] font-semibold leading-snug">{n.text}</p>
+                  {!n.ackAt && <Btn size="sm" className="mt-2" onClick={() => ack(n.id, n.scheduleId)}>확인했습니다</Btn>}
                 </Card>
               ))}
-              <p className="text-center text-[0.72rem] text-ink-faint">앱 알림은 실서비스 연결 시 활성화됩니다. (연동 준비 상태)</p>
+              {myIssues.map((i) => (
+                <Card key={i.id} className="p-4">
+                  <p className="flex items-center justify-between text-[0.72rem] font-bold text-ink-faint"><span>내 이슈 보고 · {i.at}</span><StatusPill status={i.status} /></p>
+                  <p className="mt-0.5 text-[0.88rem] font-semibold leading-snug">{customerById(i.customerId)?.name} — {i.type}</p>
+                  <p className="text-[0.8rem] text-ink-soft">{i.status === '해결' ? '본사 조치 완료' : i.owner ? `본사 담당 ${i.owner}` : '본사 확인 대기'}</p>
+                </Card>
+              ))}
             </div>
           )}
 
           {tab === 'reports' && (
             <div className="space-y-3">
-              <p className="text-[1.05rem] font-extrabold">내 작업 리포트</p>
+              <p className="text-[1.05rem] font-extrabold">우리 팀 작업 리포트</p>
               {myReports.length === 0 && <Card className="p-5 text-center text-[0.85rem] text-ink-faint">작업 완료 시 리포트가 생성됩니다.</Card>}
               {myReports.map((r) => (
-                <Card key={r.id} className="p-4">
+                <Card key={r.id} className="space-y-2 p-4">
                   <div className="flex items-center justify-between gap-2">
                     <p className="flex items-center gap-1.5 text-[0.92rem] font-extrabold"><FileText size={15} className="text-primary" /> {customerById(r.customerId)?.name}</p>
                     <span className="tnum text-[0.72rem] font-bold text-ink-faint">{r.date} {r.completedAt}</span>
                   </div>
-                  <p className="mt-1 text-[0.8rem] text-ink-soft">작업항목 {r.itemsDone}/{r.itemsTotal} · {r.note}</p>
+                  <p className="text-[0.8rem] text-ink-soft">체크리스트 {r.itemsDone}/{r.itemsTotal}{r.skipped ? ` · 제외 ${Object.keys(r.skipped).length}` : ''} · {r.note}</p>
+                  {(r.photos?.before?.dataUrl || r.photos?.after?.dataUrl) && (
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {(['before', 'after'] as const).map((k) => r.photos?.[k]?.dataUrl && <img key={k} src={r.photos[k]!.dataUrl} alt={`${k === 'before' ? '작업 전' : '작업 후'} 사진`} className="aspect-[4/3] w-full rounded-lg object-cover" />)}
+                    </div>
+                  )}
+                  {typeof r.rating === 'number' && (
+                    <p className="rounded-lg bg-champagne-soft/70 px-3 py-1.5 text-[0.8rem] font-bold">
+                      <Star size={13} className="mr-0.5 inline fill-current text-warning" /> 고객 평가 {r.rating}점{r.feedback ? ` — “${r.feedback}”` : ''}
+                    </p>
+                  )}
                 </Card>
               ))}
             </div>
@@ -302,39 +226,53 @@ export default function FieldApp() {
             <div className="space-y-3">
               <Card className="p-5 text-center">
                 <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-mint text-primary"><User size={28} /></span>
-                <p className="mt-2 text-[1.1rem] font-extrabold">{MY_NAME} 팀장</p>
-                <p className="text-[0.8rem] text-ink-soft">Clean Team B · {teamMemberNames(MY_TEAM)}</p>
-                <p className="mt-1 text-[0.76rem] text-ink-faint">숙련 서비스 — 병의원 관리 · 품질점검</p>
+                <p className="mt-2 text-[1.1rem] font-extrabold">{me.name} {me.position}</p>
+                <p className="text-[0.8rem] text-ink-soft">{teamById(myTeam)?.name} · {teamMemberNames(myTeam)}</p>
+                <p className="mt-1 text-[0.76rem] text-ink-faint">숙련 — {me.skills.join(' · ')}</p>
               </Card>
               <Card className="p-4">
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  {[['오늘 배정', `${myJobs.length}건`], ['완료', `${myJobs.filter((j) => j.status === '완료').length}건`], ['이번 주', '18건']].map(([l, v]) => (
+                  {[['오늘 배정', `${myJobs.length}건`], ['완료', `${myJobs.filter((j) => j.status === '완료').length}건`], ['전송 대기', `${pending}건`]].map(([l, v]) => (
                     <div key={l}><p className="text-[0.7rem] font-bold text-ink-faint">{l}</p><p className="tnum text-[1.1rem] font-extrabold text-primary">{v}</p></div>
                   ))}
                 </div>
               </Card>
+              <Card className="p-4">
+                <label htmlFor="persona" className="text-[0.86rem] font-extrabold">사용자 전환 (데모)</label>
+                <p className="text-[0.76rem] text-ink-faint">본사에서 배정한 팀의 팀장으로 바꿔 알림 · 작업을 확인합니다.</p>
+                <select
+                  id="persona"
+                  value={me.id}
+                  onChange={(e) => { setFieldPersona(e.target.value); toast(`${personaName(e.target.value)}(으)로 전환했습니다.`, 'info') }}
+                  className="mt-2 w-full rounded-xl border border-line bg-card px-3 py-2.5 text-[0.9rem] font-bold"
+                >
+                  {TEAMS.map((t) => {
+                    const lead = EMPLOYEES.find((e) => e.teamId === t.id && e.position === '팀장')!
+                    return <option key={lead.id} value={lead.id}>{lead.name} 팀장 · {t.name}</option>
+                  })}
+                </select>
+              </Card>
               <p className="text-center text-[0.72rem] leading-relaxed text-ink-faint">
-                현장직원 화면에는 경영 지표·수익성·전체 고객 정보가 표시되지 않습니다.<br />(역할 기반 접근 제어 — RLS)
+                현장직원 화면에는 경영 지표 · 수익성 · 다른 팀 고객 정보가 표시되지 않습니다.<br />(역할 기반 접근 제어)
               </p>
               <div className="flex justify-center pt-1"><MiraeCredit height={19} /></div>
-              {/* 좁은 모바일 화면이라 섹션형 대신 축약형 3버튼 */}
               <SampleBridgeMini className="pt-1" />
             </div>
           )}
         </main>
 
-        {/* Bottom Nav */}
+        {/* 하단 탭 */}
         <nav className="fixed bottom-0 left-1/2 z-40 flex w-full max-w-md -translate-x-1/2 border-t border-line bg-card pb-[env(safe-area-inset-bottom)]">
           {([
             ['today', '오늘', <CalendarDays key="i" size={21} />],
-            ['site', '현장', <MapPin key="i" size={21} />],
             ['alerts', '알림', <Bell key="i" size={21} />],
             ['reports', '리포트', <FileText key="i" size={21} />],
             ['me', '내 정보', <User key="i" size={21} />],
-          ] as Array<[Tab, string, React.ReactNode]>).map(([id, label, icon]) => (
-            <button key={id} onClick={() => setTab(id)}
-              className={cx('flex flex-1 flex-col items-center gap-0.5 py-2 text-[0.72rem] font-bold', tab === id ? 'text-primary' : 'text-ink-faint')}>
+          ] as Array<[Tab, string, ReactNode]>).map(([id, label, icon]) => (
+            <button key={id} onClick={() => setTab(id)} aria-current={tab === id ? 'page' : undefined}
+              className={cx('relative flex min-h-[3.4rem] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[0.72rem] font-bold', tab === id ? 'text-primary' : 'text-ink-faint')}>
               {icon}{label}
+              {id === 'alerts' && unacked.length > 0 && <span className="tnum absolute right-[calc(50%-1.3rem)] top-1.5 min-w-[1.1rem] rounded-full bg-danger px-1 text-[0.66rem] font-extrabold text-white">{unacked.length}</span>}
             </button>
           ))}
         </nav>

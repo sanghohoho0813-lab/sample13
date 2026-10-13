@@ -615,5 +615,45 @@ AX 화면 본문(Dashboard·오늘의 AX·일정·현장·고객·AI·Evidence)�
 - 화면별 `document.title`, `theme-color` · Open Graph 메타.
 
 ## 품질 게이트 (CI)
-`typecheck`(앱 + 테스트 코드, 미사용 금지) → `lint`(ESLint 9 · jsx-a11y, 경고 0) → `test`(Vitest 35) → `build` → `e2e`(Playwright 26, PC · 모바일). `npm audit` 취약점 0 — react-router v7 로 올림.
+`typecheck`(앱 + 테스트 코드, 미사용 금지) → `lint`(ESLint 9 · jsx-a11y, 경고 0) → `test`(Vitest 35) → `build` → `e2e`(Playwright 26, PC · 모바일). `npm audit` 취약점 0 — react-router v7 로 올림. (4차 이후 Vitest 67 · Playwright 32)
 
+
+
+# R. 4차 고도화 — Service Operations Platform (2026-10-13)
+
+목표: 새 메뉴 없이 **고객 → 본사 운영자 → 현장직원 → 작업결과 → 고객 → 재계약/업셀**을 하나의 기록으로 연결.
+
+## 화면 성격
+| 화면 | 성격 | 원칙 |
+|---|---|---|
+| 운영센터 `/` · AI 센터 · 재계약 · 수익성 | 판단 | 사진 없음. 근거 숫자 · 다음 결정 · 처리 화면 링크 |
+| 처리함 `/today` · 일정/배정 · 요청함 · 현장 상세 | 처리 | 담당 · 상태 · 기한 · 버튼 하나로 결정, 사유 입력 |
+| 현장직원 앱 `/field` | 행동 | 다음 할 일 하나(고정 버튼) · 큰 터치 영역 · 오프라인 우선 |
+| 고객 포털 `/care/*` | 신뢰 | 실제 현장 사진 · 시각 · 담당자 · 못 한 일과 사유까지 공개 |
+
+## 도메인 엔진 (`src/lib/ops/`, 순수 함수 · 단위 테스트)
+- **dispatch.ts** — 팀 × 일정 평가. 요인(가중치): 직원 역량 25 · 예상 소요시간 15 · 이동거리 15 · 현재 일정 15 · 현장 난이도 10 · 고객 선호 10 · 연속근무 10. 배정 불가: 근무 인원 0 · 직전 일정 종료가 시작 45분 초과 · 다음 일정과 20분 넘게 겹침. 진행 중 지연(`delayMin`)을 반영한 도착 예측(`arrivalForecast`).
+- **renewal.ts** — 이탈 위험 = 계약 시점 15 · 방문 이력 15 · 불만/요청 30 · 작업 품질 25 · 이용 서비스 15. 건강도 = 100 − 위험(80↑ 안정 · 60↑ 주의 · 미만 위험). 전략: 품질 회복 후 재계약 협의 / 범위 · 단가 재협의(기여마진 20% 미만) / 추가서비스 묶음 재계약 / 현 조건 유지. 예상 손실 = 연 계약액 × 위험 × 0.8.
+- **governance.ts** — 권한 10종 × 역할 4종, 상태 전이표(배정안 · 요청 · AI 조치 · 매출 기회), `needsSecondApprover`(재배정 · 시간 변경).
+- **insights.ts** — 운영센터 7영역(사고 위험 · 배정 비효율 · 인력 부족 · 고객 불만/요청 · 재계약 위험 · 저마진 · 추가서비스), 사건 체인(위험 → 배정 → 건강도 → 수익성 → 조치, 신호 2개 이상 고객).
+
+## 상태 모델 v3 (`src/lib/data/state.ts`)
+- 추가: `proposals`(DispatchProposal) · `issues`(FieldIssue) · `notices`(FieldNotice) · `audit`(AuditEntry) · `fieldPersona`
+- 확장: Schedule `delayMin` `requestId` · WorkSession `skipped` `photos` `worker` · CustomerRequest `assignee` `reply` `history` `opportunityId` `scheduleId` · ServiceReport `checkinAt` `worker` `skipped` `photos` `issueIds` `requestId` `rating` `feedback` · UpsellOpportunity `source` `requestId` `owner`
+- 요청 상태: 접수 → 검토중(담당 지정) → 처리중 → 완료 / 반려
+- 배정안 상태: 추천 → 검토 → 승인 → 현장확인 / 보류 · 반려
+
+## 흐름
+1. 고객 추가서비스 요청 → 요청(접수) + 매출 기회(발견됨, 출처 portal)
+2. 본사 담당 지정(검토중, 기회 협의중) → 견적 · 일정 확정 → 일정(미배정) + 신규 배정안 + 기회 성사
+3. Smart Dispatch 검토 · 승인 → 일정에 팀 반영 · 현장 알림 · 요청 기록 '담당팀 배정'
+4. 현장 앱 알림 확인(배정안 현장확인) → 체크인 · 사진 · 체크리스트 · 완료 → 리포트 · 요청 완료
+5. 고객 리포트 확인 · 평가 → 건강도(작업 품질 · 불만/요청 · 이용 서비스) 갱신 → 재계약 전략
+
+## 현장 앱 신뢰성
+- 오프라인 대기열 `lib/field/outbox.ts` — 동작 + 발생 시각을 localStorage 에 보관, 화면 = 받은 상태 + 대기열(리듀서 겹침), 연결 시 순서대로 전송, 메모는 마지막 저장분만
+- 사진 검사 `lib/field/photoCheck.ts` — 평균 휘도(45~235) · 라플라시안 분산(40↑) · 휘도 표준편차(12↑) · 짧은 변 320px↑ · 8×8 평균 해시(작업 전후 해밍 거리 5 이하 = 같은 장면). 긴 변 480px JPEG 로 축소 저장.
+
+## 검증
+- Vitest 67 — 엔진 · 권한 · 직무 분리 · 요청 Closed Loop · 오프라인 대기열 · 사진 판정 · 저장 데이터 복원
+- Playwright 32 — 통합 흐름(`e2e/closed-loop.spec.ts`), Smart Dispatch 신규 배정 · 직무 분리, 처리함 보류 사유, 현장 앱 사진 · 제외 · 오프라인, PC · 모바일

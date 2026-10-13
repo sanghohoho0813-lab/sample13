@@ -1,22 +1,30 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Star, ArrowRight, TrendingUp, ShieldCheck, Eye } from 'lucide-react'
 import { Card, PageHeader, Badge, Btn, DemoBadge, SectionTitle, StatusPill, EmptyState } from '../../components/ui'
-import { AIReadyBadge, InsightCard, WhyAIButton } from '../../components/ai'
+import { InsightCard } from '../../components/ai'
+import { AuditTrail } from '../../components/ops'
+import CaseChain from '../../components/ops/CaseChain'
+import RenewalPanel from '../../components/ops/RenewalPanel'
 import { useDemo } from '../../lib/data/context'
 import { customerById } from '../../lib/demo/company'
-import { SEED_HEALTH, SEED_INSIGHTS, SEED_PROFITABILITY, SEED_QUALITY } from '../../lib/demo/intelligence'
+import { SEED_INSIGHTS, SEED_PROFITABILITY, SEED_QUALITY } from '../../lib/demo/intelligence'
+import { buildCase } from '../../lib/ops/insights'
+import { assessRenewal } from '../../lib/ops/renewal'
 import { cx } from '../../lib/utils'
 
 export default function CustomerDetail() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { upsell, requests, reports, role } = useDemo()
+  const store = useDemo()
+  const { upsell, requests, reports, role } = store
   const customer = id ? customerById(id) : undefined
   if (!customer) {
     return <EmptyState title="고객을 찾을 수 없습니다." action={<Btn onClick={() => nav('/customers')}>고객 목록으로</Btn>} />
   }
 
-  const h = SEED_HEALTH.find((x) => x.customerId === customer.id)
+  const renewal = assessRenewal(customer.id, store)!
+  const chain = buildCase(customer.id, store)
+  const history = store.audit.filter((a) => a.target === customer.name)
   const insights = SEED_INSIGHTS.filter((i) => i.customerId === customer.id)
   const profit = SEED_PROFITABILITY.find((p) => p.customerId === customer.id)
   const ups = upsell.filter((u) => u.customerId === customer.id)
@@ -30,41 +38,18 @@ export default function CustomerDetail() {
       <PageHeader
         title={customer.name}
         desc={`${customer.address} · ${customer.type}`}
-        right={<>{h && <StatusPill status={h.aiStatus} />}<DemoBadge /></>}
+        right={<><StatusPill status={renewal.status} /><DemoBadge /></>}
       />
+
+      {/* 이 고객의 사건 흐름 — 위험 → 배정 → 건강도 → 수익성 → 조치 */}
+      <Card className="mb-5 p-4">
+        <p className="mb-2.5 text-[0.92rem] font-extrabold">지금 이 고객 — <span className="text-ink-soft">{chain.headline}</span></p>
+        <CaseChain chain={chain} />
+      </Card>
 
       <div className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
         <div className="space-y-5">
-          {/* Customer Health */}
-          {h && (
-            <Card tour="customer-health" className="p-5">
-              <SectionTitle right={<AIReadyBadge small />}>고객 건강도</SectionTitle>
-              <div className="flex flex-wrap items-center gap-5">
-                <div className="relative flex h-28 w-28 items-center justify-center">
-                  <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="var(--color-line)" strokeWidth="10" />
-                    <circle cx="50" cy="50" r="42" fill="none"
-                      stroke={h.score >= 80 ? 'var(--color-success)' : h.score >= 65 ? 'var(--color-warning)' : 'var(--color-danger)'}
-                      strokeWidth="10" strokeLinecap="round"
-                      strokeDasharray={`${(h.score / 100) * 264} 264`} />
-                  </svg>
-                  <span className="tnum absolute text-[1.5rem] font-extrabold">{h.score}</span>
-                </div>
-                <div className="grid flex-1 gap-3 sm:grid-cols-2 min-w-[240px]">
-                  <div>
-                    <p className="mb-1.5 text-[0.78rem] font-extrabold text-success">좋은 점</p>
-                    <ul className="space-y-1">{h.positives.map((p) => <li key={p} className="flex gap-1.5 text-[0.82rem] text-ink-soft"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-success" />{p}</li>)}</ul>
-                  </div>
-                  <div>
-                    <p className="mb-1.5 text-[0.78rem] font-extrabold text-warning">살펴볼 점</p>
-                    {h.watch.length === 0 ? <p className="text-[0.82rem] text-ink-faint">관찰 항목 없음</p> :
-                      <ul className="space-y-1">{h.watch.map((p) => <li key={p} className="flex gap-1.5 text-[0.82rem] text-ink-soft"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-warning" />{p}</li>)}</ul>}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 border-t border-line pt-3"><WhyAIButton dataViewed={['계약기간·갱신일', '작업이력', '민원·문의', '만족도 추이', '일정변경', '추가 요청', '품질 기록']} /></div>
-            </Card>
-          )}
+          <RenewalPanel a={renewal} showMoney={role === 'ceo'} tour="customer-health" />
 
           {/* AI Insights */}
           {insights.map((i) => <InsightCard key={i.id} insight={i} />)}
@@ -152,10 +137,10 @@ export default function CustomerDetail() {
             <SectionTitle right={<ShieldCheck size={16} className="text-info" />}>최근 요청 / 품질</SectionTitle>
             <div className="space-y-2">
               {reqs.map((r) => (
-                <div key={r.id} className="flex items-center justify-between gap-2 rounded-lg bg-ivory px-3 py-2 text-[0.8rem]">
+                <button key={r.id} onClick={() => nav(`/requests?id=${r.id}`)} className="flex w-full items-center justify-between gap-2 rounded-lg bg-ivory px-3 py-2 text-left text-[0.8rem] hover:bg-mint/50">
                   <span className="min-w-0 flex-1"><Badge tone="info" className="mr-1.5">{r.type}</Badge><span className="font-semibold">{r.detail}</span></span>
                   <StatusPill status={r.status} />
-                </div>
+                </button>
               ))}
               {issueList.map((q2) => (
                 <div key={q2.id} className="flex items-center justify-between gap-2 rounded-lg bg-ivory px-3 py-2 text-[0.8rem]">
@@ -166,6 +151,22 @@ export default function CustomerDetail() {
               {reqs.length === 0 && issueList.length === 0 && <p className="text-[0.84rem] text-ink-faint">최근 요청·품질 이슈가 없습니다.</p>}
             </div>
           </Card>
+
+          {/* 현장 이슈 */}
+          {store.issues.some((i) => i.customerId === customer.id) && (
+            <Card className="p-5">
+              <SectionTitle>현장 이슈</SectionTitle>
+              <div className="space-y-2">
+                {store.issues.filter((i) => i.customerId === customer.id).map((i) => (
+                  <div key={i.id} className="rounded-lg bg-ivory px-3 py-2 text-[0.8rem]">
+                    <p className="flex items-center justify-between gap-2 font-bold">{i.type} · {i.severity}<StatusPill status={i.status} /></p>
+                    <p className="text-ink-soft">{i.detail}</p>
+                    <p className="text-[0.74rem] text-ink-faint">보고 {i.reportedBy} {i.at}{i.owner ? ` · 조치 ${i.owner}` : ''}{i.customerVisible ? ' · 고객 공개' : ' · 내부'}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
 
           {/* 최근 리포트 */}
           {myReports.length > 0 && (
@@ -181,6 +182,12 @@ export default function CustomerDetail() {
               </div>
             </Card>
           )}
+
+          {/* 변경 이력 — 이 고객에 대해 누가 무엇을 바꿨는지 */}
+          <Card className="p-5">
+            <SectionTitle>이 고객의 변경 이력</SectionTitle>
+            <AuditTrail entries={history} limit={5} empty="아직 이 고객에 대한 변경 이력이 없습니다." />
+          </Card>
         </div>
       </div>
     </div>

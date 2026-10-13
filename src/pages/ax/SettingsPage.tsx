@@ -10,22 +10,23 @@ import { useDemo } from '../../lib/data/context'
 import { THEMES, type FontScale } from '../../lib/data/state'
 import { useTour } from '../../components/tour/context'
 import { ROLE_LABEL, type Role } from '../../types'
+import { PERMISSION_LABEL, can, type Permission } from '../../lib/ops/governance'
 import { cx } from '../../lib/utils'
 
-const MATRIX: Array<{ item: string; ceo: 0 | 1 | 2; manager: 0 | 1 | 2; field: 0 | 1 | 2; customer: 0 | 1 | 2 }> = [
-  { item: '전체 매출 / 수익성', ceo: 2, manager: 0, field: 0, customer: 0 },
-  { item: '전체 일정 / 배정', ceo: 2, manager: 2, field: 0, customer: 0 },
-  { item: '전체 고객 / 계약', ceo: 2, manager: 2, field: 0, customer: 0 },
-  { item: '직원 / 팀 관리', ceo: 2, manager: 2, field: 0, customer: 0 },
-  { item: 'AI 전략 (재계약·수익성)', ceo: 2, manager: 1, field: 0, customer: 0 },
-  { item: '본인 일정 / 현장 업무', ceo: 2, manager: 2, field: 2, customer: 0 },
-  { item: '체크인 / 체크리스트 / 사진', ceo: 1, manager: 2, field: 2, customer: 0 },
-  { item: '본인 계약 / 작업 리포트', ceo: 2, manager: 2, field: 0, customer: 2 },
-  { item: '본인 요청 / 일정변경', ceo: 2, manager: 2, field: 0, customer: 2 },
-  { item: 'AX 실증 기록 / 설정', ceo: 2, manager: 0, field: 0, customer: 0 },
+// 권한표는 화면 · 리듀서가 쓰는 같은 정책(governance.ts)에서 그린다 — 표와 실제 동작이 어긋날 수 없다
+const MATRIX = (Object.keys(PERMISSION_LABEL) as Permission[]).map((p) => ({
+  item: PERMISSION_LABEL[p],
+  ceo: can('ceo', p) ? 2 : 0, manager: can('manager', p) ? 2 : 0, field: can('field', p) ? 2 : 0, customer: can('customer', p) ? 2 : 0,
+} as const))
+const POLICIES = [
+  '재배정 · 방문 시간 변경은 검토자와 다른 승인권자가 승인 (직무 분리)',
+  '미배정 일정의 신규 배정은 검토자가 바로 확정 가능',
+  '보류 · 반려 · 처리 불가는 사유 없이 확정할 수 없음',
+  '상태는 정해진 단계로만 이동 (예: 검토 없이 승인 불가)',
+  '모든 사람의 결정은 변경 이력에 추가만 됨 — 수정 · 삭제 불가',
 ]
 
-const Mark = ({ v }: { v: 0 | 1 | 2 }) =>
+const Mark = ({ v }: { v: number }) =>
   v === 2 ? <Check size={17} className="mx-auto text-success" strokeWidth={3} />
   : v === 1 ? <Minus size={17} className="mx-auto text-warning" strokeWidth={3} />
   : <X size={16} className="mx-auto text-ink-faint/60" strokeWidth={3} />
@@ -162,6 +163,13 @@ export default function SettingsPage() {
             <span className="flex items-center gap-1"><X size={13} /> 불가</span>
             <span className="text-ink-faint">RLS <HelpCircle size={11} className="inline" /> = 사용자별로 볼 수 있는 데이터를 나누는 보안기능</span>
           </p>
+          <div className="mt-4 rounded-xl bg-ivory p-3.5">
+            <p className="mb-1.5 text-[0.82rem] font-extrabold">승인 · 통제 정책</p>
+            <ul className="space-y-1">
+              {POLICIES.map((t) => <li key={t} className="flex gap-1.5 text-[0.8rem] text-ink-soft"><Check size={13} className="mt-0.5 shrink-0 text-primary" />{t}</li>)}
+            </ul>
+            <button onClick={() => nav('/evidence?tab=audit')} className="mt-2 text-[0.8rem] font-bold text-primary hover:underline">변경 이력 보기 →</button>
+          </div>
         </Group>
 
         {/* ── Demo ── */}

@@ -51,8 +51,8 @@ interface NavEntry {
 const ALL: Role[] = ['ceo', 'manager']
 
 const NAV: NavEntry[] = [
-  { key: 'dashboard', label: '대시보드', icon: <LayoutDashboard size={18} />, family: 'ops', to: '/', roles: ALL },
-  { key: 'today', label: '오늘의 AX', icon: <Zap size={18} />, family: 'ops', to: '/today', roles: ALL },
+  { key: 'dashboard', label: '운영센터', icon: <LayoutDashboard size={18} />, family: 'ops', to: '/', roles: ALL },
+  { key: 'today', label: '운영 처리함', icon: <Zap size={18} />, family: 'ops', to: '/today', roles: ALL },
   {
     key: 'ops', label: '현장 운영', icon: <MapPin size={18} />, family: 'ops', roles: ALL,
     items: [
@@ -76,7 +76,7 @@ const NAV: NavEntry[] = [
     items: [
       { to: '/upsell', label: '추가서비스', icon: <TrendingUp size={17} />, roles: ALL },
       { to: '/profitability', label: '수익성 분석', icon: <PieChart size={17} />, roles: ['ceo'] },
-      { to: '/evidence', label: 'AX 실증 기록', icon: <ScrollText size={17} />, roles: ['ceo'] },
+      { to: '/evidence', label: '실증 · 변경 이력', icon: <ScrollText size={17} />, roles: ALL },
     ],
   },
   { key: 'ai', label: 'AI 센터', icon: <Sparkles size={18} />, family: 'ai', to: '/ai', roles: ALL },
@@ -492,10 +492,10 @@ function MoreSheet({ open, onClose, onReset }: { open: boolean; onClose: () => v
 /* ─── 모바일 하단 내비 — 사용 빈도 상위 4개 + 전체 메뉴 ─────────────── */
 function AxBottomNav({ onMore }: { onMore: () => void }) {
   const items = [
-    { to: '/', label: '홈', icon: <LayoutDashboard size={20} /> },
-    { to: '/schedule', label: '일정', icon: <CalendarClock size={20} /> },
-    { to: '/ai', label: 'AI', icon: <Sparkles size={20} /> },
-    { to: '/customers', label: '고객', icon: <Building2 size={20} /> },
+    { to: '/', label: '운영센터', icon: <LayoutDashboard size={20} /> },
+    { to: '/today', label: '처리함', icon: <Zap size={20} /> },
+    { to: '/schedule', label: '배정', icon: <CalendarClock size={20} /> },
+    { to: '/requests', label: '요청', icon: <Inbox size={20} /> },
   ]
   return (
     <nav className="fixed bottom-0 inset-x-0 z-40 flex border-t border-line bg-card pb-[env(safe-area-inset-bottom)] lg:hidden">

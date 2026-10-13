@@ -2,36 +2,29 @@ import { useNavigate } from 'react-router-dom'
 import { MapPin, ArrowRight, AlertTriangle } from 'lucide-react'
 import { Card, PageHeader, Badge, DemoBadge, StatusPill } from '../../components/ui'
 import { useDemo } from '../../lib/data/context'
-import { CUSTOMERS, SITES, teamById } from '../../lib/demo/company'
-import { photoForSite, altOf } from '../../lib/demo/photos'
-import { Photo } from '../../components/ui/Photo'
+import { CUSTOMERS, SITES, siteProfile, teamById } from '../../lib/demo/company'
 
 export default function Sites() {
-  const { schedules } = useDemo()
+  const { schedules, issues } = useDemo()
   const nav = useNavigate()
   return (
     <div className="fade-up">
-      <PageHeader title="현장관리" desc="정기관리 현장의 오늘 상태와 특이사항을 확인합니다." right={<DemoBadge />} />
+      <PageHeader title="현장관리" desc="정기관리 현장의 오늘 상태 · 난이도 · 특이사항 · 현장 이슈를 확인합니다." right={<DemoBadge />} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {CUSTOMERS.map((c) => {
           const site = SITES.find((s) => s.customerId === c.id)
           const todayJobs = schedules.filter((s) => s.dayOffset === 0 && s.customerId === c.id)
           const risk = todayJobs.find((s) => s.risk)
-          // 썸네일은 "오늘의 작업"이 아니라 현장 유형을 나타낸다 (배지와 의미 일치)
-          const thumb = photoForSite(c.type, todayJobs[0]?.service)
+          const prof = siteProfile(c.id)
+          const openIssues = issues.filter((i) => i.customerId === c.id && i.status !== '해결').length
           return (
             <Card key={c.id} onClick={() => nav(`/sites/${c.id}`)} className="p-5">
-              {/* 현장 식별: 소형 썸네일 + 이름/주소 — 데이터가 카드 상단을 차지한다 */}
+              {/* 판단 화면 — 사진 대신 현장 난이도(배정 판단 근거)를 앞에 둔다 */}
               <div className="flex items-start gap-3">
-                <Photo
-                  sizes="80px"
-                  src={thumb}
-                  alt={altOf(thumb)}
-                  width={1448}
-                  height={1086}
-                  loading="lazy"
-                  className="h-[3.1rem] w-[4.1rem] shrink-0 rounded-xl border border-line object-cover"
-                />
+                <span className={`flex h-[3.1rem] w-[3.1rem] shrink-0 flex-col items-center justify-center rounded-xl ${prof.difficulty >= 70 ? 'bg-warning-soft text-warning' : 'bg-ivory text-ink-soft'}`} title="현장 난이도 (배정 점수에 반영)">
+                  <span className="text-[0.6rem] font-bold">난이도</span>
+                  <span className="tnum text-[1rem] font-extrabold leading-none">{prof.difficulty}</span>
+                </span>
                 <div className="min-w-0 flex-1">
                   {/* 유형 배지는 아래 칩 줄로 내려 현장명이 잘리지 않게 한다 */}
                   <p className="text-[1.02rem] font-extrabold leading-snug">{site?.name}</p>
@@ -48,6 +41,7 @@ export default function Sites() {
               </div>
 
               {site?.note && <p className="mt-2.5 rounded-lg bg-warning-soft px-2.5 py-1.5 text-[0.76rem] font-semibold text-warning">{site.note}</p>}
+              {openIssues > 0 && <p className="mt-1.5 text-[0.76rem] font-bold text-danger">현장 이슈 미해결 {openIssues}건</p>}
 
               <div className="mt-3 flex items-center justify-between border-t border-line pt-3">
                 {todayJobs.length > 0 ? (

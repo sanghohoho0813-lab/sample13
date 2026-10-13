@@ -1,11 +1,14 @@
 import { useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Sparkles, HelpCircle, Database, Brain, Target, TrendingUp } from 'lucide-react'
 import { Badge, Btn, Card, Modal, StatusPill } from '../ui'
 import { useToast } from '../ui/toast-context'
 import type { AIInsight, ActionStatus } from '../../types'
 import { ENGINE_LABEL } from '../../types'
 import { useDemo } from '../../lib/data/context'
+import { can } from '../../lib/ops/governance'
 import { cx } from '../../lib/utils'
+import { ReasonDialog } from '../ops'
 
 // ─── AI READY 표시 ───────────────────────────────────────
 export function AIReadyBadge({ small }: { small?: boolean }) {
@@ -65,17 +68,27 @@ const FLOW: ActionStatus[] = ['추천됨', '확인', '실행중', '완료']
 const NEXT_LABEL: Partial<Record<ActionStatus, string>> = { 확인: '검토 시작', 실행중: '실행 시작', 완료: '완료 처리' }
 const NEXT_TOAST: Partial<Record<ActionStatus, string>> = {
   확인: '검토를 시작했습니다.',
-  실행중: '실행 중으로 표시했습니다.',
-  완료: '완료 처리했습니다 — AX 실증 기록에 남았습니다.',
+  실행중: '실행 중으로 표시했습니다 — 실증 기록에 남았습니다.',
+  완료: '완료 처리했습니다 — 변경 이력 · 실증 기록에 남았습니다.',
 }
+const HOLD_PRESETS = ['고객 일정 확인 중', '담당자 부재', '우선순위 조정', '추가 자료 필요']
 
+/**
+ * AI 조치 실행 단계 — 상태 전이표(ACTION_FLOW)에 있는 단계만 버튼으로 보여준다.
+ * 배정과 묶인 조치는 여기서 '완료'로 넘기지 않고 배정안 승인으로 닫히게 한다 (실제 배정 없이 완료 처리 방지).
+ */
 export function ActionLifecycle({ actionId, status, compact }: { actionId: string; status: ActionStatus; compact?: boolean }) {
-  const { setActionStatus } = useDemo()
+  const { setActionStatus, proposals, actions, role } = useDemo()
   const toast = useToast()
+  const nav = useNavigate()
+  const [hold, setHold] = useState(false)
+  const action = actions.find((a) => a.id === actionId)
+  const linked = proposals.find((p) => p.actionId === actionId && ['추천', '검토', '보류'].includes(p.status))
   const idx = FLOW.indexOf(status)
   const next = idx >= 0 && idx < FLOW.length - 1 ? FLOW[idx + 1] : null
+  const allowed = can(role, 'action.update')
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex flex-wrap items-center gap-2">
       {!compact && (
         <div className="flex items-center gap-1">
           {FLOW.map((f, i) => (
@@ -87,17 +100,33 @@ export function ActionLifecycle({ actionId, status, compact }: { actionId: strin
         </div>
       )}
       {compact && <StatusPill status={status} />}
-      {next && (
-        <Btn size="sm" onClick={() => { setActionStatus(actionId, next); toast(NEXT_TOAST[next] ?? '', next === '완료' ? 'success' : 'info') }}>
-          {NEXT_LABEL[next]}
-        </Btn>
+      {!allowed ? null : linked ? (
+        <Btn size="sm" variant="ai" onClick={() => nav(`/schedule?id=${linked.scheduleId}`)}>배정안 {linked.status === '검토' ? '승인' : '검토'}하기</Btn>
+      ) : (
+        <>
+          {next && (
+            <Btn size="sm" onClick={() => { setActionStatus(actionId, next); toast(NEXT_TOAST[next] ?? '', next === '완료' ? 'success' : 'info') }}>
+              {NEXT_LABEL[next]}
+            </Btn>
+          )}
+          {status !== '보류' && status !== '무시' && status !== '완료' && (
+            <Btn size="sm" variant="ghost" onClick={() => setHold(true)}>보류</Btn>
+          )}
+          {status === '보류' && (
+            <Btn size="sm" variant="outline" onClick={() => { setActionStatus(actionId, '확인'); toast('실행을 다시 진행합니다.', 'info') }}>다시 진행</Btn>
+          )}
+        </>
       )}
-      {status !== '보류' && status !== '무시' && status !== '완료' && (
-        <Btn size="sm" variant="ghost" onClick={() => { setActionStatus(actionId, '보류'); toast('실행을 보류했습니다.', 'warning') }}>보류</Btn>
-      )}
-      {status === '보류' && (
-        <Btn size="sm" variant="outline" onClick={() => { setActionStatus(actionId, '확인'); toast('실행을 다시 진행합니다.', 'info') }}>다시 진행</Btn>
-      )}
+      {status === '보류' && action?.holdReason && <span className="text-[0.76rem] font-semibold text-ink-faint">사유 — {action.holdReason}</span>}
+      <ReasonDialog
+        open={hold}
+        onClose={() => setHold(false)}
+        title="조치 보류"
+        desc={<>보류 사유는 변경 이력에 남고, 담당자가 <b>다시 진행</b>으로 재개할 수 있습니다.</>}
+        confirmLabel="보류"
+        presets={HOLD_PRESETS}
+        onConfirm={(r) => { setActionStatus(actionId, '보류', { reason: r }); toast('실행을 보류했습니다.', 'warning') }}
+      />
     </div>
   )
 }

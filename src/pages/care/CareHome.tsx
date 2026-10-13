@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CalendarClock, Sparkles, FileText, MessageCircle, RefreshCcw, Siren, PlusCircle, ClipboardList, ArrowRight, ChevronRight } from 'lucide-react'
+import { CalendarClock, Sparkles, FileText, MessageCircle, RefreshCcw, Siren, PlusCircle, ClipboardList, ArrowRight, ChevronRight, Radio } from 'lucide-react'
 import CareShell, { CARE_CUSTOMER_ID } from './CareShell'
 import RequestSheet, { type RequestPreset } from './RequestSheet'
 import { Card, Btn, Modal, StatusPill } from '../../components/ui'
 import { useDemo } from '../../lib/data/context'
-import { customerById } from '../../lib/demo/company'
+import { customerById, teamById, teamMemberNames } from '../../lib/demo/company'
+import { VISIT_STATS } from '../../lib/demo/intelligence'
+import { toHM, toMin } from '../../lib/ops/geo'
 import { dateWithOffset } from '../../lib/utils'
 import { PHOTO, altOf, photoOf } from '../../lib/demo/photos'
 import type { RequestType } from '../../types'
@@ -13,16 +15,30 @@ import { Photo } from '../../components/ui/Photo'
 
 /**
  * 고객 홈 — 고객이 이 화면에 오는 이유 순서대로:
- * ① 다음 방문이 언제인지  ② 요청을 보내는 것  ③ AI 제안  ④ 최근 리포트·내 요청 상태
+ * ① 오늘 · 다음 방문  ② 오늘의 서비스 진행(현장 기록 그대로)  ③ 요청 보내기  ④ AI 제안  ⑤ 계약 · 리포트 · 요청 상태
  */
 export default function CareHome() {
   const nav = useNavigate()
-  const { requests, reports } = useDemo()
+  const { requests, reports, schedules, work, issues } = useDemo()
   const customer = customerById(CARE_CUSTOMER_ID)!
   const ct = customer.contract
   const myRequests = requests.filter((r) => r.customerId === CARE_CUSTOMER_ID)
-  const openRequests = myRequests.filter((r) => r.status !== '완료')
-  const myReport = reports.find((r) => r.customerId === CARE_CUSTOMER_ID) ?? reports[0]
+  const openRequests = myRequests.filter((r) => r.status !== '완료' && r.status !== '반려')
+  const myReport = reports.find((r) => r.customerId === CARE_CUSTOMER_ID)
+  const mine = schedules.filter((x) => x.customerId === CARE_CUSTOMER_ID).sort((a, b) => a.dayOffset - b.dayOffset || a.time.localeCompare(b.time))
+  // 오늘 방문(진행 · 완료 포함)과 다음 방문
+  const todayVisit = mine.find((x) => x.dayOffset === 0)
+  const nextVisit = mine.find((x) => x.status !== '완료' && x.id !== todayVisit?.id)
+  const ws = todayVisit ? work[todayVisit.id] : undefined
+  const todayReport = todayVisit ? reports.find((r) => r.scheduleId === todayVisit.id) : undefined
+  const todayIssues = todayVisit ? issues.filter((i) => i.scheduleId === todayVisit.id && i.customerVisible) : []
+  const visits = VISIT_STATS[CARE_CUSTOMER_ID]
+  const live = !todayVisit ? null : [
+    { label: '방문 확정', at: todayVisit.teamId ? todayVisit.time : '', done: !!todayVisit.teamId, sub: todayVisit.teamId ? teamById(todayVisit.teamId)?.name.replace('Clean ', '') ?? '' : '배정 중' },
+    { label: '도착', at: ws?.checkinAt ?? '', done: !!ws?.checkinAt, sub: ws?.checkinAt ? `${ws.checkinAt} 도착` : `${todayVisit.time} 예정` },
+    { label: '작업 중', at: ws?.startedAt ?? '', done: !!ws?.startedAt, sub: ws?.startedAt ? `점검 ${Object.values(ws.checklist).filter(Boolean).length}/${Object.keys(ws.checklist).length}` : '' },
+    { label: '완료', at: todayReport?.completedAt ?? '', done: !!todayReport, sub: todayReport ? `${todayReport.completedAt} 리포트` : '' },
+  ]
   const [sheet, setSheet] = useState<RequestType | null>(null)
   const [preset, setPreset] = useState<RequestPreset | undefined>()
   const [contractOpen, setContractOpen] = useState(false)
@@ -54,15 +70,54 @@ export default function CareHome() {
             <p className="text-[0.85rem] text-white/70">안녕하세요,</p>
             <h1 className="text-[1.4rem] font-extrabold leading-snug">{customer.name} 담당자님</h1>
             <div className="mt-4 rounded-2xl bg-white/10 p-4">
-              <p className="flex items-center gap-1.5 text-[0.8rem] font-bold text-champagne"><CalendarClock size={14} /> 다음 방문</p>
-              <p className="tnum mt-1 text-[1.15rem] font-extrabold">{dateWithOffset(1)} 09:00 ~ 11:00</p>
-              <p className="mt-0.5 text-[0.84rem] text-white/75">{ct.serviceSummary} · 담당 {ct.internalManager} 팀장</p>
+              <p className="flex items-center gap-1.5 text-[0.8rem] font-bold text-champagne"><CalendarClock size={14} /> {todayVisit && todayVisit.status !== '완료' ? '오늘 방문' : '다음 방문'}</p>
+              {(() => {
+                const v = todayVisit && todayVisit.status !== '완료' ? todayVisit : nextVisit
+                if (!v) return <p className="mt-1 text-[1.05rem] font-extrabold">예정된 방문이 없습니다</p>
+                return (
+                  <>
+                    <p className="tnum mt-1 text-[1.15rem] font-extrabold">{v.dayOffset === 0 ? '오늘' : dateWithOffset(v.dayOffset)} {v.time} ~ {toHM(toMin(v.time) + v.durationMin)}</p>
+                    <p className="mt-0.5 text-[0.84rem] text-white/75">{v.service} · {teamById(v.teamId)?.name ?? '담당팀 배정 중'} · 담당 {ct.internalManager} 팀장</p>
+                  </>
+                )
+              })()}
               <Btn size="sm" variant="outline" className="mt-3 border-white/30 bg-transparent text-white hover:border-champagne hover:text-champagne" onClick={() => request('일정변경')}>
                 일정 변경 요청
               </Btn>
             </div>
           </div>
         </section>
+
+        {/* 오늘의 서비스 — 지금 어디까지 했는지 (현장 앱 기록이 그대로) */}
+        {live && (
+          <Card className="p-5" tour="care-today">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="flex items-center gap-1.5 text-[1.02rem] font-extrabold"><Radio size={16} className="text-primary" /> 오늘의 서비스</h2>
+              <span className="text-[0.78rem] font-bold text-ink-faint">{todayVisit!.service} · {todayVisit!.time}</span>
+            </div>
+            <ol className="grid grid-cols-4 gap-1.5">
+              {live.map((st, i) => {
+                const cur = !st.done && (i === 0 || live[i - 1].done)
+                return (
+                  <li key={st.label} className="min-w-0" aria-current={cur ? 'step' : undefined}>
+                    <div className={`h-1.5 rounded-full ${st.done ? 'bg-primary' : cur ? 'bg-primary/40' : 'bg-line'}`} />
+                    <p className={`mt-1.5 text-[0.78rem] font-extrabold ${st.done ? 'text-primary-strong' : cur ? 'text-ink' : 'text-ink-faint'}`}>{st.label}</p>
+                    {st.sub && <p className="mt-0.5 text-[0.72rem] leading-snug text-ink-faint break-keep">{st.sub}</p>}
+                  </li>
+                )
+              })}
+            </ol>
+            {todayVisit!.teamId && <p className="mt-3 text-[0.8rem] text-ink-soft">담당 {teamMemberNames(todayVisit!.teamId)} · {ws?.worker ? `현장 책임 ${ws.worker}` : `${ct.internalManager} 팀장 관리`}</p>}
+            {todayIssues.length > 0 && (
+              <ul className="mt-3 space-y-1.5">
+                {todayIssues.map((i) => (
+                  <li key={i.id} className="rounded-xl bg-warning-soft/60 px-3.5 py-2 text-[0.84rem]"><b>현장 특이사항 · {i.type}</b> — {i.detail} <span className="font-bold text-ink-soft">({i.status === '해결' ? '조치 완료' : '본사 조치 중'})</span></li>
+                ))}
+              </ul>
+            )}
+            {todayReport && <Btn size="sm" className="mt-3" onClick={() => nav(`/care/reports?id=${todayReport.id}`)}>오늘 리포트 보기 · 평가하기</Btn>}
+          </Card>
+        )}
 
         {/* ② 요청 — 가장 자주 하는 일을 첫 화면에 */}
         <section data-tour="care-quick" aria-labelledby="quick-title">
@@ -106,17 +161,29 @@ export default function CareHome() {
           </div>
         </Card>
 
-        {/* ④ 최근 리포트 · 내 요청 */}
-        <section className="grid gap-4 sm:grid-cols-2">
+        {/* ④ 계약 현황 · 최근 리포트 · 내 요청 */}
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Card className="p-5">
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-[0.98rem] font-extrabold">계약 현황</h3>
+              <button onClick={() => setContractOpen(true)} className="flex items-center gap-0.5 text-[0.82rem] font-bold text-primary">상세 <ArrowRight size={13} /></button>
+            </div>
+            <dl className="space-y-1.5 text-[0.86rem]">
+              <div className="flex justify-between gap-2"><dt className="text-ink-soft">서비스</dt><dd className="text-right font-bold">{ct.serviceSummary}</dd></div>
+              <div className="flex justify-between gap-2"><dt className="text-ink-soft">계약 종료</dt><dd className="tnum font-bold">{ct.endDate} <span className={ct.renewalDDay <= 45 ? 'text-warning' : 'text-ink-faint'}>(D-{ct.renewalDDay})</span></dd></div>
+              <div className="flex justify-between gap-2"><dt className="text-ink-soft">최근 90일 방문</dt><dd className="tnum font-bold">{visits.done}/{visits.planned}회 이행{visits.late ? <span className="text-ink-faint"> · 지연 {visits.late}</span> : null}</dd></div>
+            </dl>
+          </Card>
           <Card className="p-5">
             <div className="mb-2 flex items-center justify-between">
               <h3 className="text-[0.98rem] font-extrabold">최근 작업 리포트</h3>
               <button onClick={() => nav('/care/reports')} className="flex items-center gap-0.5 text-[0.82rem] font-bold text-primary">전체 <ArrowRight size={13} /></button>
             </div>
             {myReport ? (
-              <button onClick={() => nav('/care/reports')} className="w-full rounded-xl bg-ivory px-3.5 py-3 text-left hover:bg-mint/50">
-                <p className="text-[0.9rem] font-bold">{myReport.date} · 작업 {myReport.itemsDone}/{myReport.itemsTotal} 완료</p>
-                <p className="mt-0.5 text-[0.82rem] text-ink-soft">{myReport.note}</p>
+              <button onClick={() => nav(`/care/reports?id=${myReport.id}`)} className="w-full rounded-xl bg-ivory px-3.5 py-3 text-left hover:bg-mint/50">
+                <p className="text-[0.9rem] font-bold">{myReport.date} {myReport.completedAt} · 작업 {myReport.itemsDone}/{myReport.itemsTotal} 완료</p>
+                <p className="mt-0.5 line-clamp-2 text-[0.82rem] text-ink-soft">{myReport.note}</p>
+                <p className="mt-1 text-[0.76rem] font-bold text-primary">{typeof myReport.rating === 'number' ? `내 평가 ${myReport.rating}점` : '평가 남기기 →'}</p>
               </button>
             ) : <p className="text-[0.85rem] text-ink-faint">리포트가 준비 중입니다.</p>}
           </Card>

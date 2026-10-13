@@ -3,25 +3,25 @@
 // 실제 LLM API 미연결 — AI READY 상태. 향후 aiService Adapter로 교체.
 // ─────────────────────────────────────────────────────────
 import type {
-  AIInsight, ActionItem, UpsellOpportunity, CustomerHealth,
+  AIInsight, ActionItem, UpsellOpportunity,
   ProfitabilityRow, QualityIssue, EvidenceLog, CustomerRequest, ServiceReport,
 } from '../../types'
 
 export const SEED_ACTIONS: ActionItem[] = [
-  { id: 'A-01', engine: 'risk', title: '성수 B오피스 재배정 검토', target: '성수 B오피스', detail: '이전 작업 32분 지연 — 15:30 방문 지연 위험. 대체팀 재배정 또는 고객 사전 안내.', status: '추천됨', owner: '정승원', createdAt: '오늘 08:40' },
-  { id: 'A-02', engine: 'retention', title: '라온메디컬센터 담당자 사전 미팅', target: '라온메디컬센터', detail: '계약 종료 D-32. 최근 60일 일정변경 3회·품질문의 2회·만족도 하락 — 이번 주 내 사전 미팅 권장.', status: '확인', owner: '김도윤', createdAt: '오늘 08:41' },
-  { id: 'A-03', engine: 'upsell', title: '에이원교육센터 유리 집중관리 제안', target: '에이원교육센터', detail: '최근 작업기록 유리 오염 특이사항 4회 — 외부 유리 집중관리 제안 (예상 85만원/회).', status: '추천됨', owner: '오세영', createdAt: '오늘 08:42' },
-  { id: 'A-04', engine: 'risk', title: '강남 C클리닉 미완료 보고 확인', target: '강남 C클리닉', detail: '08:30 작업 완료 보고 미제출 — 체크리스트·사진 확인 필요.', status: '실행중', owner: '이준호', createdAt: '오늘 11:20' },
-  { id: 'A-05', engine: 'retention', title: '서초 E의원 품질문의 대응', target: '서초 E의원', detail: '계약 종료 D-21. 최근 문의 3회 — 품질 개선 조치 및 재계약 협의 착수.', status: '실행중', owner: '이준호', createdAt: '어제 16:05' },
-  { id: 'A-06', engine: 'profit', title: '누리컨벤션 서비스 범위 재협의', target: '누리컨벤션', detail: '실제 작업시간 평균 21% 초과·월 2회 긴급 추가방문 — 재계약 시 범위/단가 재협의 필요.', status: '보류', owner: '문성재', createdAt: '2일 전' },
-  { id: 'A-07', engine: 'upsell', title: '그랜드타워 에어컨 세척 시즌 제안', target: '그랜드타워', detail: '하절기 종료 전 공용부 에어컨 세척 패키지 제안 (예상 140만원).', status: '완료', owner: '정승원', createdAt: '5일 전', result: '9월 정기작업에 패키지 계약 추가 (DEMO)' },
-  { id: 'A-08', engine: 'dispatch', title: '강남 C클리닉 15:00 유리창 배정', target: '강남 C클리닉', detail: '미배정 일정 — AI 추천 1순위 Clean Team E (이동 18분 · 적합도 96%).', status: '추천됨', owner: '관리자', createdAt: '오늘 08:45' },
+  { id: 'A-01', engine: 'risk', title: '성수 B오피스 재배정 검토', target: '성수 B오피스', customerId: 'C02', detail: '이전 작업 32분 지연 — 15:30 방문 지연 위험. 대체팀 재배정 또는 고객 사전 안내.', status: '추천됨', owner: '최은지 운영관리자', createdAt: '오늘 14:12', due: '오늘 15:00' },
+  { id: 'A-02', engine: 'retention', title: '라온메디컬센터 담당자 사전 미팅', target: '라온메디컬센터', customerId: 'C01', due: '이번 주', detail: '계약 종료 D-32. 최근 60일 일정변경 3회·품질문의 2회·만족도 하락 — 이번 주 내 사전 미팅 권장.', status: '확인', owner: '김도윤 팀장', createdAt: '오늘 08:41' },
+  { id: 'A-03', engine: 'upsell', title: '에이원교육센터 유리 집중관리 제안', target: '에이원교육센터', customerId: 'C03', due: '이번 주', detail: '최근 작업기록 유리 오염 특이사항 4회 — 외부 유리 집중관리 제안 (예상 85만원/회).', status: '추천됨', owner: '오세영 팀장', createdAt: '오늘 08:42' },
+  { id: 'A-04', engine: 'risk', title: '강남 C클리닉 미완료 보고 확인', target: '강남 C클리닉', customerId: 'C04', due: '오늘 17:00', detail: '08:30 작업 완료 보고 미제출 — 체크리스트·사진 확인 필요.', status: '실행중', owner: '이준호 팀장', createdAt: '오늘 11:20' },
+  { id: 'A-05', engine: 'retention', title: '서초 E의원 품질문의 대응', target: '서초 E의원', customerId: 'C09', due: 'D-21 전', detail: '계약 종료 D-21. 최근 문의 3회 — 품질 개선 조치 및 재계약 협의 착수.', status: '실행중', owner: '이준호 팀장', createdAt: '어제 16:05' },
+  { id: 'A-06', engine: 'profit', title: '누리컨벤션 서비스 범위 재협의', target: '누리컨벤션', customerId: 'C11', due: '재계약 전', holdReason: '행사 시즌 종료 후 재협의', detail: '실제 작업시간 평균 21% 초과·월 2회 긴급 추가방문 — 재계약 시 범위/단가 재협의 필요.', status: '보류', owner: '문성재 팀장', createdAt: '2일 전' },
+  { id: 'A-07', engine: 'upsell', title: '그랜드타워 에어컨 세척 시즌 제안', target: '그랜드타워', customerId: 'C05', detail: '하절기 종료 전 공용부 에어컨 세척 패키지 제안 (예상 140만원).', status: '완료', owner: '정승원 팀장', createdAt: '5일 전', result: '9월 정기작업에 패키지 계약 추가 (DEMO)' },
+  { id: 'A-08', engine: 'dispatch', title: '강남 C클리닉 15:30 유리창 배정', target: '강남 C클리닉', customerId: 'C04', due: '오늘 15:00', detail: '미배정 일정 — 배정안 P-01 검토 · 승인 필요.', status: '추천됨', owner: '최은지 운영관리자', createdAt: '오늘 08:45' },
 ]
 
 export const SEED_INSIGHTS: AIInsight[] = [
   {
     id: 'I-01', engine: 'risk', severity: 'risk', title: '방문지연 위험', target: '성수 B오피스', customerId: 'C02',
-    found: '15:30 방문 예정 현장의 담당팀(Team C) 이전 작업이 32분 지연되고 있습니다. 예상 도착 15:47.',
+    found: '15:30 방문 예정 현장의 담당팀(Team C)이 그랜드타워 작업 32분 지연으로 16:10 도착 예상(40분 늦음)입니다.',
     dataViewed: ['오늘 일정', '팀별 진행상황', '작업 예상시간', '현장 간 이동시간'],
     why: '고객 사무실 마감시간(18:00) 전 작업 완료가 어려워질 수 있고, 반복 지연은 만족도 하락으로 이어집니다.',
     recommendation: '다른 팀 재배정 검토 또는 고객에게 방문시간 사전 안내',
@@ -57,9 +57,9 @@ export const SEED_INSIGHTS: AIInsight[] = [
   },
   {
     id: 'I-05', engine: 'dispatch', severity: 'info', title: 'AI 배정 추천', target: '강남 C클리닉', customerId: 'C04',
-    found: '15:00 유리창 집중청소 일정이 미배정 상태입니다. 추천 1순위: Clean Team E (강병철·서준일).',
+    found: '15:30 유리창 집중청소 일정이 미배정 상태입니다. 추천 1순위: Clean Team E (강병철·서준일).',
     dataViewed: ['현장 위치·방문시간', '서비스 종류·예상 작업시간', '직원 현재 일정·근무가능시간', '직원별 숙련서비스', '예상 이동시간', '고객 중요도'],
-    why: '유리창 전문팀이 인근 현장에서 18분 거리에 있으며 일정 충돌이 없습니다.',
+    why: '유리창 전문팀이 인근 그랜드타워 작업을 15:00에 마치고 이동해 약속 시각 전 도착할 수 있으며 일정 충돌이 없습니다.',
     recommendation: 'Clean Team E 배정 적용',
     impact: '이동 최소화 · 이후 일정 영향 없음',
     actionId: 'A-08',
@@ -82,11 +82,11 @@ export const SEED_INSIGHTS: AIInsight[] = [
     impact: '연 720만원 매출 안정화 (DEMO)',
   },
   {
-    id: 'I-08', engine: 'risk', severity: 'risk', title: '직원 결원 영향', target: 'Clean Team G',
-    found: '신우철(Team G) 결원 — 오늘 소독 일정 2건이 배정호 단독 작업으로 진행됩니다.',
+    id: 'I-08', engine: 'risk', severity: 'risk', title: '직원 결원 영향', target: '서초 E의원', customerId: 'C09',
+    found: '신우철(Team G) 결원 — 16:00 서초 E의원 소독을 배정호 단독으로 하면 18:30 해온아동병원 일정과 겹칩니다.',
     dataViewed: ['직원 근태', '팀별 오늘 일정', '작업 예상시간'],
-    why: '단독 작업 시 16:30 해온아동병원 작업시간이 30분 이상 길어질 수 있습니다.',
-    recommendation: 'Team H 오후 일정 여유 활용한 지원 배치 검토',
+    why: '1인 작업은 예상 시간이 1.4배로 늘어 다음 현장 도착이 늦어지고, 재계약 위험 고객(서초 E의원)의 품질 이슈가 재발할 수 있습니다.',
+    recommendation: '오후가 비어 있는 계약 담당팀(Team A)으로 재배정 — 배정안 P-03',
     impact: '작업 지연 예방',
   },
 ]
@@ -96,22 +96,7 @@ export const SEED_UPSELL: UpsellOpportunity[] = [
   { id: 'U-02', customerId: 'C12', currentService: '주 4회 소독·정기관리', signal: '스팟 소독 요청 3개월 연속', recommendedService: '정기 소독 패키지', expectedRevenue: 60, reason: '월 2회 스팟 요청의 정기 전환 여지', status: '제안됨' },
   { id: 'U-03', customerId: 'C05', currentService: '주 5회 공용부 관리', signal: '하절기 종료 시즌', recommendedService: '에어컨 세척', expectedRevenue: 140, reason: '공용부 에어컨 세척 시즌 패키지', status: '성사' },
   { id: 'U-04', customerId: 'C07', currentService: '주 3회 정기청소', signal: '바닥 마모 기록 2회', recommendedService: '바닥 집중관리', expectedRevenue: 95, reason: '로비 바닥 왁스 마모 — 분기 1회 집중관리 제안', status: '발견됨' },
-  { id: 'U-05', customerId: 'C06', currentService: '주 2회 공용부 관리', signal: '입주 변경 예정 문의', recommendedService: '입주·퇴거 특수청소', expectedRevenue: 120, reason: '3층 임차인 교체 예정 — 특수청소 수요', status: '협의중' },
-]
-
-export const SEED_HEALTH: CustomerHealth[] = [
-  { customerId: 'C01', score: 68, positives: ['정기방문 정상 진행', '결제 지연 없음'], watch: ['최근 품질문의 증가 (2회)', '계약 종료 D-32', '만족도 4.6 → 4.1 하락'], aiStatus: 'Retention Watch' },
-  { customerId: 'C02', score: 88, positives: ['정기방문 정상', '요청 응답시간 양호'], watch: ['금일 방문지연 위험 1건'], aiStatus: '안정' },
-  { customerId: 'C03', score: 82, positives: ['정기방문 정상', '요청 응답시간 양호', '최근 추가서비스 관심'], watch: ['유리 오염 특이사항 반복'], aiStatus: '안정' },
-  { customerId: 'C04', score: 84, positives: ['만족도 안정', '장기계약 이력'], watch: ['금일 작업보고 미제출 1건'], aiStatus: '안정' },
-  { customerId: 'C05', score: 93, positives: ['만족도 4.7', '추가서비스 성사', '장기계약'], watch: ['계약 종료 D-60 접근'], aiStatus: '안정' },
-  { customerId: 'C06', score: 86, positives: ['정기방문 정상'], watch: ['임차인 교체 예정'], aiStatus: '안정' },
-  { customerId: 'C07', score: 95, positives: ['만족도 4.8', '문의 없음', '결제 정상'], watch: [], aiStatus: '안정' },
-  { customerId: 'C08', score: 89, positives: ['정기방문 정상'], watch: [], aiStatus: '안정' },
-  { customerId: 'C09', score: 54, positives: ['장기계약 이력'], watch: ['만족도 3.9 하락', '최근 문의 3회', '계약 종료 D-21'], aiStatus: 'Risk' },
-  { customerId: 'C10', score: 90, positives: ['만족도 4.6', '정기방문 정상'], watch: [], aiStatus: '안정' },
-  { customerId: 'C11', score: 76, positives: ['대형 계약 유지'], watch: ['수익성 악화 관찰', '긴급 추가방문 반복'], aiStatus: 'Retention Watch' },
-  { customerId: 'C12', score: 96, positives: ['만족도 4.9', '추가 요청 활발'], watch: [], aiStatus: '안정' },
+  { id: 'U-05', customerId: 'C06', currentService: '주 2회 공용부 관리', signal: '고객 플랫폼 견적 요청', recommendedService: '입주·퇴거 특수청소', expectedRevenue: 120, reason: '3층 임차인 교체 예정 — 고객이 직접 견적 요청', status: '협의중', source: 'portal', requestId: 'R-02', owner: '오세영 팀장' },
 ]
 
 export const SEED_PROFITABILITY: ProfitabilityRow[] = [
@@ -139,9 +124,31 @@ export const SEED_QUALITY: QualityIssue[] = [
 ]
 
 export const SEED_REQUESTS: CustomerRequest[] = [
-  { id: 'R-01', customerId: 'C01', type: '문의', detail: '다음 주 화요일 방문시간 앞당길 수 있는지 문의', createdAt: '오늘 09:12', status: '처리중' },
-  { id: 'R-02', customerId: 'C06', type: '추가서비스', detail: '3층 공실 입주 전 특수청소 견적 요청', createdAt: '어제 15:40', status: '접수' },
-  { id: 'R-03', customerId: 'C12', type: '긴급방문', detail: '놀이방 소독 추가 요청 (감염 예방 차원)', createdAt: '어제 11:02', status: '완료' },
+  {
+    id: 'R-01', customerId: 'C01', type: '문의', detail: '다음 주 화요일 방문시간 앞당길 수 있는지 문의', createdAt: '오늘 09:12', status: '처리중', fromPortal: true,
+    assignee: '최은지 운영관리자', reply: '화요일 담당팀 일정을 확인하고 오늘 중 다시 안내드리겠습니다.',
+    history: [
+      { at: '09:12', actor: '김수연 실장', text: '요청 접수', visible: true },
+      { at: '09:30', actor: '최은지 운영관리자', text: '담당자 배정 · 확인 중', visible: true },
+    ],
+  },
+  {
+    id: 'R-02', customerId: 'C06', type: '추가서비스', detail: '3층 공실 입주 전 특수청소 견적 요청', createdAt: '어제 15:40', status: '검토중', fromPortal: true,
+    assignee: '오세영 팀장', opportunityId: 'U-05',
+    history: [
+      { at: '어제 15:40', actor: '오민재 관리인', text: '요청 접수', visible: true },
+      { at: '어제 16:20', actor: '오세영 팀장', text: '담당자 배정 · 현장 실측 후 견적 예정', visible: true },
+    ],
+  },
+  {
+    id: 'R-03', customerId: 'C12', type: '긴급방문', detail: '놀이방 소독 추가 요청 (감염 예방 차원)', createdAt: '어제 11:02', status: '완료', fromPortal: true,
+    assignee: '배정호 팀장', reply: '오늘 오전 정기관리 때 놀이방 소독을 함께 진행했습니다.',
+    history: [
+      { at: '어제 11:02', actor: '남궁철 행정실장', text: '요청 접수', visible: true },
+      { at: '어제 11:20', actor: '배정호 팀장', text: '담당자 배정 · 다음 방문에 포함', visible: true },
+      { at: '09:48', actor: '배정호 팀장', text: '작업 완료 — 리포트 발송', visible: true },
+    ],
+  },
 ]
 
 export const SEED_EVIDENCE: EvidenceLog[] = [
@@ -161,21 +168,6 @@ export const SEED_REPORTS: ServiceReport[] = [
   { id: 'RP-05', scheduleId: 'PREV-2', customerId: 'C01', date: '2일 전', team: 'Clean Team B', completedAt: '15:52', itemsDone: 6, itemsTotal: 6, note: '대기실 유리 얼룩 재청소 진행' },
 ]
 
-// AI Executive Daily Briefing (규칙 기반 종합 — DEMO)
-export const DAILY_BRIEFING = {
-  summary: [
-    '오늘 예정된 24개 현장 중 3곳에 확인이 필요합니다.',
-    '성수 B오피스는 이전 일정 지연으로 방문시간을 초과할 가능성이 있습니다.',
-    '라온메디컬센터는 계약갱신 D-32이며 최근 품질문의가 증가했습니다.',
-    '추가매출 관점에서는 에이원교육센터의 유리 집중관리 제안 가능성이 높습니다.',
-  ],
-  counters: [
-    { label: '오늘의 위험', value: 3, tone: 'danger' as const },
-    { label: '매출 기회', value: 5, tone: 'success' as const },
-    { label: '재계약 조치', value: 2, tone: 'warning' as const },
-    { label: '배정 추천', value: 4, tone: 'info' as const },
-  ],
-}
 
 // Dashboard 차트용 주간 작업 추이 (DEMO)
 export const WEEKLY_TREND = [
@@ -192,3 +184,20 @@ export const MONTH_REVENUE = {
   yoyPct: 8.2,
   contribMarginPct: 26.4,
 }
+
+// 최근 90일 방문 이행 (DEMO) — 계획 대비 완료 · 지연 · 누락. 재계약 위험 판단의 근거 데이터
+export const VISIT_STATS: Record<string, { planned: number; done: number; late: number; missed: number }> = {
+  C01: { planned: 39, done: 39, late: 3, missed: 0 },
+  C02: { planned: 26, done: 26, late: 1, missed: 0 },
+  C03: { planned: 39, done: 39, late: 0, missed: 0 },
+  C04: { planned: 26, done: 25, late: 1, missed: 1 },
+  C05: { planned: 65, done: 65, late: 1, missed: 0 },
+  C06: { planned: 26, done: 26, late: 0, missed: 0 },
+  C07: { planned: 39, done: 39, late: 0, missed: 0 },
+  C08: { planned: 26, done: 26, late: 0, missed: 0 },
+  C09: { planned: 27, done: 26, late: 2, missed: 1 },
+  C10: { planned: 39, done: 39, late: 1, missed: 0 },
+  C11: { planned: 54, done: 54, late: 2, missed: 0 },
+  C12: { planned: 52, done: 52, late: 0, missed: 0 },
+}
+

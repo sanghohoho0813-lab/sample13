@@ -36,11 +36,12 @@ describe('parseStoredState — 저장된 데모 상태 복원', () => {
     expect(s.reduceMotion).toBe(false)
   })
 
-  it('버전 필드가 없는 옛 형식(v1)도 읽고, 현재 버전으로 올린다', () => {
-    const { version: _v, ...legacy } = { ...initialState(), tutorialSeen: true }
-    const s = parseStoredState(JSON.stringify(legacy))
+  it('일정 구조가 다른 옛 버전(v1 · v2)은 업무 데이터를 새로 시작하고 화면 설정만 옮긴다', () => {
+    const { version: _v, ...legacy } = { ...initialState(), tutorialSeen: true, theme: 'navy' as const, requests: [] }
+    const s = parseStoredState(JSON.stringify({ ...legacy, version: 2 }))
     expect(s.version).toBe(SCHEMA_VERSION)
-    expect(s.tutorialSeen).toBe(true)
+    expect(s).toMatchObject({ tutorialSeen: true, theme: 'navy' })
+    expect(s.requests).toEqual(initialState().requests)
   })
 
   it('앞으로 나올 버전의 데이터는 업무 상태를 쓰지 않는다', () => {

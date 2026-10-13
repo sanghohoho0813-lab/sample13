@@ -3,7 +3,7 @@
 // 실제 회사·고객·직원 정보가 아닙니다.
 // 향후 실데이터 연결 시 이 Repository Layer만 교체합니다.
 // ─────────────────────────────────────────────────────────
-import type { Team, Employee, Customer, Site } from '../../types'
+import type { Team, Employee, Customer, Site, Role } from '../../types'
 
 export const COMPANY = {
   name: '클린웨이파트너스㈜',
@@ -132,3 +132,55 @@ export const teamMembers = (teamId: string) =>
 export const teamMemberNames = (teamId: string | null) =>
   teamId ? teamMembers(teamId).map((e) => e.name).join(' · ') : '미배정'
 export const siteByCustomer = (customerId: string) => SITES.find((s) => s.customerId === customerId)
+
+// ── 현장 특성 — 배정 판단에 쓰는 난이도 · 고객 선호 (DEMO) ──
+export interface SiteProfile {
+  /** 0~100. 감염관리 · 진료시간 제약 · 대형 면적 · 행사장 등 */
+  difficulty: number
+  difficultyNotes: string[]
+  /** 고객이 선호하는 팀 (계약 담당팀이 기본) */
+  preferTeamId?: string
+  preferNote?: string
+  /** 배정을 피해야 하는 팀과 이유 */
+  avoid?: Array<{ teamId: string; reason: string }>
+}
+
+export const SITE_PROFILE: Record<string, SiteProfile> = {
+  C01: { difficulty: 78, difficultyNotes: ['진료시간 외 작업 (13:00~15:00 휴게)', '감염관리 구역 포함'], preferTeamId: 'T-B', preferNote: '김도윤 팀장 지정 요청' },
+  C02: { difficulty: 35, difficultyNotes: ['18:00 사무실 마감 전 완료 필요'] },
+  C03: { difficulty: 40, difficultyNotes: ['수업 시간 피해 작업'] },
+  C04: { difficulty: 72, difficultyNotes: ['감염관리 구역 포함', '외부 유리 고층'] },
+  C05: { difficulty: 70, difficultyNotes: ['420평 대형 빌딩', '공용부 동시 작업'] },
+  C06: { difficulty: 30, difficultyNotes: [] },
+  C07: { difficulty: 35, difficultyNotes: [] },
+  C08: { difficulty: 30, difficultyNotes: [] },
+  C09: {
+    difficulty: 74, difficultyNotes: ['감염관리 구역 포함', '최근 품질 클레임 진행 중'],
+    avoid: [{ teamId: 'T-F', reason: '왁스 처리 후 미끄러움 클레임 — 바닥팀 배정 전 고객 확인 필요' }],
+  },
+  C10: { difficulty: 38, difficultyNotes: ['영업 중 작업'] },
+  C11: { difficulty: 68, difficultyNotes: ['380평 행사장', '행사 일정에 따라 범위 변동'] },
+  C12: { difficulty: 76, difficultyNotes: ['아동병원 — 소독 기준 강화', '감염관리 구역 포함'] },
+}
+
+export const siteProfile = (customerId: string): SiteProfile => SITE_PROFILE[customerId] ?? { difficulty: 40, difficultyNotes: [] }
+
+// ── 데모 사용자 — 역할을 바꾸면 누가 처리했는지 변경 이력에 이 이름으로 남는다 ──
+export const ACTOR_BY_ROLE: Record<Role, string> = {
+  ceo: '박정민 대표',
+  manager: '최은지 운영관리자',
+  field: '김도윤 팀장',
+  customer: '김수연 실장 (라온메디컬센터)',
+}
+
+/** 처리 담당자로 지정할 수 있는 본사 인원 */
+export const STAFF = ['최은지 운영관리자', '박정민 대표', '김도윤 팀장', '이준호 팀장', '정승원 팀장', '오세영 팀장', '문성재 팀장']
+
+export const employeeById = (id: string) => EMPLOYEES.find((e) => e.id === id)
+export const workingMembers = (teamId: string) => teamMembers(teamId).filter((e) => e.status === '근무')
+/** 현장 앱 사용자 이름 — 변경 이력 · 리포트에 '김도윤 팀장'처럼 남는다 */
+export const personaName = (employeeId: string) => {
+  const e = employeeById(employeeId)
+  return e ? `${e.name} ${e.position}` : ACTOR_BY_ROLE.field
+}
+

@@ -22,9 +22,9 @@ npm run preview    # 빌드 결과 미리보기
 |---|---|
 | `npm run typecheck` | `strict` + 미사용 변수·인자 금지, 앱 코드와 테스트·설정 코드(`tsconfig.node.json`) 모두 |
 | `npm run lint` | ESLint 9 — TypeScript · React Hooks · Fast Refresh · **jsx-a11y**(접근성) 규칙, 경고 0 |
-| `npm test` | Vitest 단위 테스트 — 상태 변경 규칙 · 저장 데이터 복원 · 폼 검증 · 검색 · 오류 경계 |
+| `npm test` | Vitest 단위 테스트 — 배정 엔진 · 재계약 판단 · 권한/상태 전이 · 상태 변경 규칙(직무 분리 · 요청 Closed Loop) · 오프라인 대기열 · 사진 화질 검사 · 폼 검증 |
 | `npm run build` | 화면 단위 코드 분할 빌드 (번들 경고 0) |
-| `npm run e2e` | Playwright — 실제 빌드를 띄워 PC(1440)·모바일(390) 두 환경에서 사용자 흐름 · 360/768/1024px 넘침 검사 · 콘솔 오류 0 |
+| `npm run e2e` | Playwright — 실제 빌드를 띄워 PC(1440)·모바일(390) 두 환경에서 **고객 요청 → 본사 처리 → 배정 승인 → 현장 수행 → 리포트 · 평가 → 매출 · 재계약** 통합 흐름 · 360/768/1024px 넘침 검사 · 콘솔 오류 0 |
 
 로컬에 Playwright 브라우저 대신 다른 Chromium 을 쓰려면 `PW_CHROMIUM=/path/to/chrome npm run e2e`.
 
@@ -36,10 +36,13 @@ src/
   pages/ax · care · field 화면 (AX 운영 · 고객 플랫폼 · 현장직원 앱)
   components/
     ui/                   Card · Modal · Field · StatTile · Photo … 공통 부품
+    ops/                  운영 통제 부품 — 사유 입력 · 단계 표시 · 변경 이력 · DispatchPanel · RenewalPanel · CaseChain
     system/               ErrorBoundary · PageFallback
     layout/ tour/ ai/ charts/ brand/
   lib/
-    data/                 state.ts(모양·저장 검증) · reducer.ts(변경 규칙) · context.ts(useDemo) · store.tsx(Provider)
+    data/                 state.ts(모양·저장 검증) · reducer.ts(변경 규칙 · 권한 · 변경 이력) · context.ts(useDemo) · store.tsx(Provider)
+    ops/                  도메인 엔진 — dispatch.ts(7요인 배정) · renewal.ts(재계약 판단) · governance.ts(권한 · 상태 전이 · 직무 분리) · insights.ts(운영센터 · 사건 체인) · geo.ts
+    field/                현장 앱 — outbox.ts(오프라인 대기열) · photoCheck.ts(사진 화질 검사)
     demo/                 가상 시드 데이터
     tone.ts status.ts search.ts photoSrcSet.ts routeTitles.ts lazyPage.ts
 e2e/                      Playwright 시나리오
@@ -66,19 +69,20 @@ scripts/optimize-photos.mjs  현장 사진 WebP 파생본 생성 (npm run photos
 
 | 영역 | 경로 | 내용 |
 |---|---|---|
-| Business AX | `/` | Executive Dashboard + AI 오늘의 운영 브리핑 |
-| | `/today` | 오늘의 AX (행동 우선순위) |
-| | `/schedule` | 일정/배정 + **AI Smart Dispatch** · `?id=SC-14`로 특정 일정 바로 열기 |
+| Business AX | `/` | **오늘의 운영센터** — 7개 판단 영역(사고 위험 · 배정 비효율 · 인력 부족 · 고객 요청 · 재계약 위험 · 저마진 · 추가서비스) + 신호가 겹친 고객의 사건 체인 |
+| | `/today` | **운영 처리함** — 배정안 · 고객 요청 · 현장 이슈 · AI 조치를 담당 · 상태 · 기한과 함께 처리 |
+| | `/schedule` | 일정/배정 + **Smart Dispatch** (7요인 점수 · 배정 불가 사유 · 추천 → 검토 → 승인 → 현장 수신 확인) · `?id=SC-14`
 | | `/sites` `/work` `/team` | 현장·작업·직원/팀 |
-| | `/customers` | 고객/계약 + Customer Health |
-| | `/renewals` `/upsell` `/profitability` | 재계약 · Upsell · 수익성(대표 전용) |
-| | `/ai` | AI Operations Center (6 Engine) · `?tab=risk` 등 탭 딥링크 |
-| | `/evidence` `/why-ax` | AX Evidence Log · 기획의도 16 Section |
+| | `/customers` | 고객/계약 + 고객 건강도 · 재계약 판단(5요인) · 사건 체인 · 고객별 변경 이력 |
+| | `/requests` | 요청 처리 — 담당 지정 · 견적/일정 확정 → 배정안 · 시간 변경안 · 회신 · 반려 · `?id=R-01` |
+| | `/renewals` `/upsell` `/profitability` | 재계약(예상 손실 · 전략) · 추가서비스(AI 발견 / 고객 요청) · 수익성(대표 전용, 재계약 전략 연결) |
+| | `/ai` | AI Operations Center — 사건 흐름(위험 → 배정 → 건강도 → 수익성 → 조치) + 엔진별 발견 |
+| | `/evidence` `/why-ax` | 실증 기록 · **변경 이력**(필터 · CSV) · 기획의도 |
 | | `/presentation` | 시연 모드 (Guided Demo 11 Step) |
-| Employee Mobile | `/field` | 현장직원 Action UX (체크인→체크리스트→사진→완료) |
+| Employee Mobile | `/field` | 현장직원 앱 — 배정 알림 수신 확인 · 다음 할 일 고정 버튼 · 사진 화질 검사 · 수행 불가 사유 · 이슈 보고 · 오프라인 대기열 |
 | Customer Portal | `/care` | Public Landing |
-| | `/care/home` | 고객 Home + Quick Action (Closed Loop) |
-| | `/care/reports` `/care/requests` | Service Report · 요청 현황 (요청 폼: 유형별 필수 입력 · 접수번호) |
+| | `/care/home` | 고객 Home — 오늘의 서비스 진행(현장 기록 그대로) · 다음 방문 · 계약 현황 · 요청 |
+| | `/care/reports` `/care/requests` | 리포트(현장 사진 · 미실시 사유 · 특이사항 · 평가) · 요청 진행(담당자 · 방문 일정 · 회신 · 진행 기록) |
 
 ## 현장 사진
 
@@ -156,3 +160,14 @@ scripts/optimize-photos.mjs  현장 사진 WebP 파생본 생성 (npm run photos
 - 오류 경계 · 화면별 탭 제목 · 본문 바로가기 · 키보드 포커스 링 · 대화상자 포커스 관리 · 테마를 따르는 차트 색
 - 상세: `docs/PROJECT_SPEC.md` Q절 · `DECISIONS.md` 74~85
 
+
+## 4차 고도화 (2026-10-13) — Service Operations Platform
+
+새 메뉴를 늘리지 않고, **고객 → 본사 운영자 → 현장직원 → 작업결과 → 고객 → 재계약/업셀**이 하나의 기록으로 이어지게 했다.
+
+- **오늘의 운영센터** — 7개 판단 영역을 상태에서 실시간 계산(`lib/ops/insights.ts`). 처리하면 항목이 사라지고, 모든 항목은 처리 화면 상세로 이어진다. 대표 화면은 사진 없이 판단만.
+- **Smart Dispatch** — 이동거리 · 직원 역량 · 현재 일정 · 현장 난이도 · 고객 선호 · 연속근무 · 예상 소요시간 7요인(가중치 합 100). 겹치는 팀은 점수와 별개로 '배정 불가'. 추천 → 검토 → 승인 · 일정 반영 → 현장 수신 확인. 재배정 · 시간 변경은 검토자 ≠ 승인자(직무 분리).
+- **현장직원 앱** — 다음 할 일 하나를 아래 고정 버튼으로. 신호가 약하거나 끊기면 기기에 쌓았다가(새로고침해도 유지) 연결되면 순서대로 전송. 사진은 밝기 · 흔들림 · 렌즈 가림 · 작업 전후 중복을 브라우저에서 검사. 못 한 항목은 사유와 함께 제외.
+- **고객 포털** — 오늘 서비스가 지금 어디까지 왔는지(현장 체크인 · 작업 · 완료), 실제 현장 사진 리포트, 요청 담당자 · 방문 일정 · 회신 · 진행 기록, 평가.
+- **재계약 · 업셀 · 수익성** — 방문 이력 · 불만/요청 · 작업 품질 · 이용 서비스 · 계약 시점으로 이탈 위험을 계산하고, 수익성과 추가서비스를 함께 보고 재계약 전략을 정한다. 요청 처리 · 평가 · 이슈 조치가 점수에 바로 반영.
+- **내부통제** — 권한표 · 상태 전이표 · 승인 정책을 `lib/ops/governance.ts` 한 곳에 두고 화면과 리듀서가 함께 쓴다. 사람이 바꾼 모든 것은 변경 이력(누가 · 언제 · 무엇을 · 전 → 후 · 사유)에 남고 CSV 로 내보낼 수 있다.

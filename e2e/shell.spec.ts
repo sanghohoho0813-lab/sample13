@@ -11,7 +11,7 @@ test.describe('앱 셸 · 접근성 · 예외 화면', () => {
   test('없는 주소는 안내 화면과 돌아갈 길을 보여준다', async ({ page, errors: _ }) => {
     await page.goto('/no-such-page')
     await expect(page.getByRole('heading', { name: '페이지를 찾을 수 없습니다' })).toBeVisible()
-    await page.getByRole('button', { name: '대시보드로' }).click()
+    await page.getByRole('button', { name: '운영센터로' }).click()
     await expect(page).toHaveURL(/\/$/)
   })
 

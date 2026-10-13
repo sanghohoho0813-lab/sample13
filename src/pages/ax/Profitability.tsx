@@ -5,10 +5,12 @@ import { WhyAIButton } from '../../components/ai'
 import { useDemo } from '../../lib/data/context'
 import { customerById } from '../../lib/demo/company'
 import { SEED_PROFITABILITY, MONTH_REVENUE } from '../../lib/demo/intelligence'
+import { assessRenewal } from '../../lib/ops/renewal'
 import { cx } from '../../lib/utils'
 
 export default function Profitability() {
-  const { role, setRole } = useDemo()
+  const st = useDemo()
+  const { role, setRole } = st
   const nav = useNavigate()
 
   if (role !== 'ceo') {
@@ -16,7 +18,7 @@ export default function Profitability() {
       <EmptyState
         title="수익성 분석은 대표 권한 전용입니다."
         desc="역할별 데이터 접근 제어(RLS) 예시입니다. 대표 역할로 바꾸면 바로 볼 수 있습니다."
-        action={<div className="flex flex-wrap justify-center gap-2"><Btn onClick={() => setRole('ceo')}>대표로 전환해서 보기</Btn><Btn variant="outline" onClick={() => nav('/')}>대시보드로</Btn></div>}
+        action={<div className="flex flex-wrap justify-center gap-2"><Btn onClick={() => setRole('ceo')}>대표로 전환해서 보기</Btn><Btn variant="outline" onClick={() => nav('/')}>운영센터로</Btn></div>}
       />
     )
   }
@@ -51,7 +53,17 @@ export default function Profitability() {
               <StatusPill status={r.grade} />
             </div>
             <p className="mt-2 rounded-xl bg-ai-soft p-3 text-[0.85rem] leading-relaxed"><b className="text-ai-strong">AI 분석</b> — {r.aiNote}</p>
-            <Btn size="sm" variant="outline" className="mt-3" onClick={() => nav(`/customers/${r.customerId}`)}>고객 상세</Btn>
+            {(() => {
+              // 수익성만 보고 단가를 올리면 이탈 위험이 커진다 — 재계약 판단과 함께 본다
+              const rn = assessRenewal(r.customerId, st)
+              if (!rn) return null
+              return (
+                <p className="mt-2 rounded-xl bg-ivory p-3 text-[0.82rem] leading-relaxed">
+                  <b>재계약 연결</b> — D-{rn.dday} · 건강도 {rn.health}({rn.status === 'Risk' ? '위험' : rn.status === '안정' ? '안정' : '주의'}) → <b>{rn.strategy.map((x) => x.title).join(' → ')}</b>
+                </p>
+              )
+            })()}
+            <Btn size="sm" variant="outline" className="mt-3" onClick={() => nav(`/customers/${r.customerId}`)}>판단 근거 · 고객 상세</Btn>
           </Card>
         ))}
       </div>

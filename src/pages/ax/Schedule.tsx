@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import {
-  AlertTriangle, MapPin, Sparkles, CheckCircle2, ArrowRight, Users, ChevronRight,
-} from 'lucide-react'
+import { AlertTriangle, MapPin, Sparkles, ArrowRight, Users, ChevronRight } from 'lucide-react'
 import { Card, PageHeader, Badge, Btn, StatusPill, StatusText, DemoBadge, EmptyState, Modal } from '../../components/ui'
-import { useToast } from '../../components/ui/toast-context'
-import { AIReadyBadge, WhyAIButton, ActionLifecycle } from '../../components/ai'
+import DispatchPanel from '../../components/ops/DispatchPanel'
 import { useDemo } from '../../lib/data/context'
-import { customerById, teamById, teamMemberNames, TEAMS } from '../../lib/demo/company'
-import { DISPATCH_CANDIDATES } from '../../lib/demo/operations'
+import { customerById, siteProfile, teamById, teamMemberNames, TEAMS } from '../../lib/demo/company'
+import { arrivalForecast } from '../../lib/ops/dispatch'
 import { cx, dateWithOffset } from '../../lib/utils'
 import { useIsWide } from '../../lib/useMedia'
 import type { Schedule as Sched } from '../../types'
 
 type View = 'today' | 'week' | 'team'
+
+const PROPOSAL_TAG: Record<string, string> = { 추천: '검토 필요', 검토: '승인 대기', 보류: '보류' }
 
 /**
  * 일정 / 배정
@@ -23,12 +22,11 @@ type View = 'today' | 'week' | 'team'
  * - 미배정·위험 일정은 목록 위 알림 줄로 끌어올려 첫 화면에서 바로 처리한다
  */
 export default function Schedule() {
-  const { schedules, assignTeam, actions } = useDemo()
+  const { schedules, proposals } = useDemo()
   const nav = useNavigate()
-  const toast = useToast()
   const wide = useIsWide()
   const [view, setView] = useState<View>('today')
-  // ?id=SC-14 로 들어오면 그 일정을 바로 선택(모바일은 시트로 연다) — 대시보드·오늘의 AX에서 한 번에 도착
+  // ?id=SC-14 로 들어오면 그 일정을 바로 선택(모바일은 시트로 연다) — 운영센터 · 처리함에서 한 번에 도착
   const [params, setParams] = useSearchParams()
   const deepId = params.get('id')
   const [selectedId, setSelectedId] = useState<string>(() => (deepId && schedules.some((s) => s.id === deepId) ? deepId : 'SC-16'))
@@ -45,8 +43,14 @@ export default function Schedule() {
   const today = useMemo(() => schedules.filter((s) => s.dayOffset === 0).sort((a, b) => a.time.localeCompare(b.time)), [schedules])
   const week = useMemo(() => schedules.filter((s) => s.dayOffset > 0).sort((a, b) => a.dayOffset - b.dayOffset || a.time.localeCompare(b.time)), [schedules])
   const selected = schedules.find((s) => s.id === selectedId)
-  const unassigned = today.filter((s) => !s.teamId)
   const riskList = today.filter((s) => s.risk)
+  // 결정 대기 배정안 — 검토 · 승인이 필요한 것만 (오늘 · 이번 주)
+  const pending = proposals
+    .filter((p) => ['추천', '검토', '보류'].includes(p.status))
+    .map((p) => ({ p, s: schedules.find((x) => x.id === p.scheduleId)! }))
+    .filter((x) => x.s)
+    .sort((a, b) => a.s.dayOffset - b.s.dayOffset || a.s.time.localeCompare(b.s.time))
+  const proposalOf = (id: string) => proposals.find((p) => p.scheduleId === id && ['추천', '검토', '보류'].includes(p.status))
 
   const open = (id: string) => {
     setSelectedId(id)
@@ -73,7 +77,8 @@ export default function Schedule() {
           </span>
           <span className="block truncate text-[0.78rem] text-ink-faint">
             {s.teamId && <StatusText status={s.status} className="min-[400px]:hidden" />}
-            {!s.teamId ? <span className="font-bold text-warning">미배정 · </span> : s.risk ? <span className="font-bold text-danger">{s.risk.type} · </span> : null}
+            {proposalOf(s.id) ? <span className="font-bold text-ai-strong">{PROPOSAL_TAG[proposalOf(s.id)!.status]} · </span>
+              : !s.teamId ? <span className="font-bold text-warning">미배정 · </span> : s.risk ? <span className="font-bold text-danger">{s.risk.type} · </span> : null}
             {`${s.service}${s.teamId ? ` · ${teamById(s.teamId)?.name}` : ''}`}
           </span>
         </span>
@@ -89,29 +94,30 @@ export default function Schedule() {
     <div className="fade-up">
       <PageHeader
         title="일정 / 배정"
-        desc="오늘 일정과 팀 배정을 한 화면에서 확인하고, 미배정 일정은 AI 추천으로 바로 배정합니다."
+        desc="이동거리 · 역량 · 현재 일정 · 난이도 · 고객 선호 · 연속근무 · 소요시간을 비교해 배정하고, 승인된 배정은 현장직원 앱에 바로 반영됩니다."
         right={<DemoBadge />}
       />
 
-      {/* 먼저 처리할 것 — 미배정 / 위험 */}
-      {(unassigned.length > 0 || riskList.length > 0) && view !== 'team' && (
+      {/* 먼저 처리할 것 — 결정 대기 배정안 / 위험 */}
+      {(pending.length > 0 || riskList.length > 0) && view !== 'team' && (
         <div className="mb-4 space-y-2">
-          {unassigned.map((s) => (
-            <button
-              key={s.id}
-              data-tour={wide ? undefined : 'dispatch'}
-              onClick={() => open(s.id)}
-              className="flex w-full items-center gap-3 rounded-2xl border border-ai/30 bg-ai-soft px-4 py-3 text-left hover:border-ai"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ai text-white"><Sparkles size={18} /></span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[0.95rem] font-extrabold text-ai-strong">미배정 일정 — AI가 배정할 팀을 추천했습니다</span>
-                <span className="block text-[0.82rem] text-ink-soft">{s.time} {customerById(s.customerId)?.name} · {s.service}</span>
-              </span>
-              <span className="hidden shrink-0 text-[0.84rem] font-bold text-ai-strong sm:inline">추천 보기</span>
-              <ChevronRight size={18} className="shrink-0 text-ai-strong" />
-            </button>
-          ))}
+          {pending.length > 0 && (
+            <div data-tour={wide ? undefined : 'dispatch'} className="rounded-2xl border border-ai/30 bg-ai-soft px-4 py-3">
+              <p className="text-[0.92rem] font-extrabold text-ai-strong"><Sparkles size={16} className="mr-1 inline -translate-y-px" />배정 결정 대기 {pending.length}건 <span className="font-semibold text-ink-soft">— AI 추천 → 검토 → 승인 후 현장 앱에 반영</span></p>
+              <div className="mt-2 grid gap-1.5 sm:grid-cols-2 2xl:grid-cols-3">
+                {pending.map(({ p, s }) => (
+                  <button key={p.id} onClick={() => open(s.id)} className="flex items-center gap-2 rounded-xl border border-ai/20 bg-card px-3 py-2 text-left hover:border-ai">
+                    <span className="tnum shrink-0 text-[0.86rem] font-extrabold text-primary">{s.dayOffset > 0 ? dateWithOffset(s.dayOffset) + ' ' : ''}{s.time}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[0.86rem] font-bold">{customerById(s.customerId)?.name}</span>
+                      <span className="block truncate text-[0.74rem] text-ink-faint">{p.kind} · {p.reason}</span>
+                    </span>
+                    <Badge tone={p.status === '검토' ? 'warning' : p.status === '보류' ? 'danger' : 'ai'}>{PROPOSAL_TAG[p.status]}</Badge>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {riskList.length > 0 && (
             <div className="flex items-center gap-2 overflow-x-auto rounded-2xl border border-danger/20 bg-danger-soft/60 px-4 py-2.5 sm:flex-wrap sm:overflow-visible">
               <span className="flex shrink-0 items-center gap-1.5 text-[0.86rem] font-extrabold text-danger"><AlertTriangle size={15} /> 위험 {riskList.length}건</span>
@@ -168,7 +174,7 @@ export default function Schedule() {
       ) : (
         <div className="grid gap-5 xl:grid-cols-[minmax(320px,380px)_1fr]">
           {/* 미배정이 모두 처리된 뒤에도 튜토리얼이 가리킬 곳이 있도록 목록을 대체 대상으로 */}
-          <div data-tour={!wide && unassigned.length === 0 ? 'dispatch' : undefined} className="space-y-1.5 xl:max-h-[calc(100vh-15rem)] xl:overflow-y-auto xl:pr-1">
+          <div data-tour={!wide && pending.length === 0 ? 'dispatch' : undefined} className="space-y-1.5 xl:max-h-[calc(100vh-15rem)] xl:overflow-y-auto xl:pr-1">
             {list.length === 0
               ? <EmptyState title="표시할 일정이 없습니다." />
               : list.map((s) => <Row key={s.id} s={s} />)}
@@ -178,7 +184,7 @@ export default function Schedule() {
           {wide && (
             <div className="space-y-4">
               {selected ? (
-                <DetailPanel s={selected} wide onAssign={(teamId) => { assignTeam(selected.id, teamId); toast(`${teamById(teamId)?.name} 배정을 적용했습니다.`) }} actions={actions} nav={nav} />
+                <DetailPanel s={selected} wide nav={nav} />
               ) : (
                 <EmptyState title="일정을 선택해주세요." desc="왼쪽 목록에서 일정을 선택하면 상세와 AI 추천이 표시됩니다." />
               )}
@@ -190,38 +196,26 @@ export default function Schedule() {
       {/* 모바일·태블릿 — 하단 시트 */}
       {!wide && selected && (
         <Modal open={sheetOpen} onClose={() => setSheetOpen(false)} title={customerById(selected.customerId)?.name ?? '일정 상세'} wide>
-          <DetailPanel
-            s={selected}
-            onAssign={(teamId) => { assignTeam(selected.id, teamId); toast(`${teamById(teamId)?.name} 배정을 적용했습니다.`) }}
-            actions={actions}
-            nav={nav}
-          />
+          <DetailPanel s={selected} nav={nav} />
         </Modal>
       )}
 
-      <p className="mt-5 text-[0.78rem] text-ink-faint">지도·실제 이동시간 API는 연동 준비 상태 — 현재 값은 규칙 기반 데모 추정치입니다.</p>
     </div>
   )
 }
 
-/** 선택한 일정의 상세 + AI 배정 추천 — PC 오른쪽 칸과 모바일 하단 시트가 같은 내용을 쓴다 */
-function DetailPanel({ s, wide, onAssign, actions, nav }: {
-  s: Sched
-  wide?: boolean
-  onAssign: (teamId: string) => void
-  actions: ReturnType<typeof useDemo>['actions']
-  nav: ReturnType<typeof useNavigate>
-}) {
+/** 선택한 일정의 상세 + Smart Dispatch — PC 오른쪽 칸과 모바일 하단 시트가 같은 내용을 쓴다 */
+function DetailPanel({ s, wide, nav }: { s: Sched; wide?: boolean; nav: ReturnType<typeof useNavigate> }) {
+  const { schedules } = useDemo()
   const c = customerById(s.customerId)
-  const candidates = DISPATCH_CANDIDATES[s.id]
-  const dispatchAction = actions.find((a) => a.id === 'A-08')
-  const riskAction = s.id === 'SC-14' ? actions.find((a) => a.id === 'A-01') : undefined
   if (!c) return null
+  const forecast = s.status === '예정' ? arrivalForecast(s, schedules) : null
+  const profile = siteProfile(s.customerId)
 
   const Wrap = wide ? Card : 'div'
   return (
     <div className="space-y-4">
-      <Wrap className={cx('space-y-4', wide && 'p-5')}>
+      <Wrap className={cx('space-y-3.5', wide && 'p-5')}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             {wide && <p className="text-[1.3rem] font-extrabold leading-tight">{c.name}</p>}
@@ -233,7 +227,7 @@ function DetailPanel({ s, wide, onAssign, actions, nav }: {
           {[
             ['방문시간', `${s.dayOffset > 0 ? dateWithOffset(s.dayOffset) + ' ' : ''}${s.time}`],
             ['서비스', s.service],
-            ['예상 작업', `${s.durationMin}분`],
+            ['계획 작업', `${s.durationMin}분`],
             ['담당팀', s.teamId ? teamById(s.teamId)?.name ?? '-' : '미배정'],
           ].map(([l, v]) => (
             <div key={l} className="min-w-0 rounded-xl bg-ivory px-3 py-2.5">
@@ -242,75 +236,32 @@ function DetailPanel({ s, wide, onAssign, actions, nav }: {
             </div>
           ))}
         </dl>
-        {s.teamId && <p className="text-[0.82rem] text-ink-soft">팀원 — {teamMemberNames(s.teamId)} · 예상 이동 {s.travelMin}분</p>}
+        <div className="space-y-1 text-[0.82rem] text-ink-soft">
+          {s.teamId && <p>팀원 — {teamMemberNames(s.teamId)}</p>}
+          {forecast && (
+            <p className={cx(forecast.lateMin >= 10 && 'font-bold text-danger')}>
+              도착 예측 {forecast.arrival} — {forecast.from}에서 {forecast.travelMin}분{forecast.lateMin > 0 ? ` · 약속보다 ${forecast.lateMin}분 늦음` : ' · 제시간 도착'}
+            </p>
+          )}
+          {profile.difficultyNotes.length > 0 && <p>현장 난이도 {profile.difficulty} — {profile.difficultyNotes.join(' · ')}</p>}
+          {s.requestId && <p className="font-bold text-ai-strong">고객 요청 {s.requestId}로 생긴 일정입니다.</p>}
+        </div>
 
         {s.risk && (
-          <div className="rounded-xl bg-danger-soft p-4">
-            <p className="flex items-center gap-1.5 text-[0.92rem] font-extrabold text-danger"><AlertTriangle size={15} /> {s.risk.type} 위험</p>
+          <div className="rounded-xl bg-danger-soft p-3.5">
+            <p className="flex items-center gap-1.5 text-[0.9rem] font-extrabold text-danger"><AlertTriangle size={15} /> {s.risk.type} 위험</p>
             <p className="mt-1 text-[0.86rem] leading-relaxed text-ink">{s.risk.detail}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {riskAction && <ActionLifecycle actionId={riskAction.id} status={riskAction.status} compact />}
-              <WhyAIButton dataViewed={['오늘 일정', '팀별 진행상황', '작업 예상시간', '현장 간 이동시간']} />
-            </div>
           </div>
         )}
 
         <div className="flex flex-wrap gap-2 border-t border-line pt-3.5">
           <Btn variant="outline" size="sm" onClick={() => nav(`/sites/${c.id}`)}>현장 상세 <ArrowRight size={13} className="inline" /></Btn>
           <Btn variant="outline" size="sm" onClick={() => nav(`/customers/${c.id}`)}>고객 상세 <ArrowRight size={13} className="inline" /></Btn>
+          {s.requestId && <Btn variant="outline" size="sm" onClick={() => nav(`/requests?id=${s.requestId}`)}>요청 {s.requestId} <ArrowRight size={13} className="inline" /></Btn>}
         </div>
       </Wrap>
 
-      {/* AI 스마트 배정 */}
-      {(!s.teamId && candidates) || (s.teamId && candidates) ? (
-        <Card tour={wide ? 'dispatch' : undefined} className="overflow-hidden">
-          <div className="flex items-center justify-between gap-2 border-b border-line bg-ai-soft px-4 py-3">
-            <p className="flex items-center gap-1.5 text-[0.95rem] font-extrabold text-ai-strong"><Sparkles size={16} /> AI 스마트 배정</p>
-            <AIReadyBadge small />
-          </div>
-          <div className="space-y-2.5 p-4">
-            {!s.teamId ? (
-              <>
-                <p className="text-[0.84rem] font-semibold text-ink-soft">이동시간 · 숙련도 · 일정 여유를 비교한 추천 순위입니다. 최종 결정은 담당자가 합니다.</p>
-                {candidates!.map((cand) => {
-                  const t = teamById(cand.teamId)
-                  const top = cand.rank === 1
-                  return (
-                    <div key={cand.teamId} className={cx('rounded-xl border p-3.5', top ? 'border-ai bg-ai-soft/50' : 'border-line')}>
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[0.95rem] font-extrabold">{cand.rank}순위 · {t?.name}</p>
-                        <span className={cx('tnum text-[0.86rem] font-extrabold', top ? 'text-ai-strong' : 'text-ink-soft')}>적합도 {cand.fitPct}%</span>
-                      </div>
-                      <p className="mt-0.5 text-[0.8rem] text-ink-faint">{teamMemberNames(cand.teamId)} · 이동 {cand.travelMin}분 · 이후 여유 {cand.slackMin}분</p>
-                      {top && (
-                        <>
-                          <ul className="mt-2 space-y-0.5">
-                            {cand.reasons.map((r) => <li key={r} className="flex gap-1.5 text-[0.82rem] text-ink-soft"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-ai" />{r}</li>)}
-                          </ul>
-                          <Btn variant="ai" className="mt-3 w-full py-2.5" onClick={() => onAssign(cand.teamId)}>
-                            <CheckCircle2 size={16} className="mr-1 inline" /> {t?.name} 배정하기
-                          </Btn>
-                        </>
-                      )}
-                      {!top && (
-                        <button onClick={() => onAssign(cand.teamId)} className="mt-2 text-[0.8rem] font-bold text-ink-soft underline-offset-2 hover:text-primary hover:underline">
-                          이 팀으로 배정
-                        </button>
-                      )}
-                    </div>
-                  )
-                })}
-              </>
-            ) : (
-              <div className="rounded-xl bg-success-soft p-3.5 text-[0.88rem] font-bold text-success">
-                <CheckCircle2 size={16} className="mr-1 inline" /> 배정 완료 — {teamById(s.teamId)?.name}
-                {dispatchAction && <div className="mt-2"><ActionLifecycle actionId="A-08" status={dispatchAction.status} compact /></div>}
-              </div>
-            )}
-            <WhyAIButton dataViewed={['현장 위치·방문시간', '서비스 종류·예상 작업시간', '직원 현재 일정', '직원별 숙련서비스', '팀 구성·예상 이동시간', '고객 중요도']} />
-          </div>
-        </Card>
-      ) : null}
+      <DispatchPanel key={s.id} s={s} tour={wide} />
     </div>
   )
 }

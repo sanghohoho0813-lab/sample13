@@ -38,7 +38,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <RotateCcw size={16} /> 다시 시도
           </button>
           <a href="/" className="flex items-center gap-1.5 rounded-xl border border-line bg-card px-4 py-2.5 text-[0.9rem] font-bold hover:border-primary">
-            <LayoutDashboard size={16} /> 대시보드로
+            <LayoutDashboard size={16} /> 운영센터로
           </a>
         </div>
       </div>

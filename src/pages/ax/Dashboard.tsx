@@ -1,60 +1,60 @@
-import { Suspense, lazy, useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  CalendarCheck, Loader2, CheckCircle2, AlertTriangle, RefreshCcw, TrendingUp,
-  Sparkles, ArrowRight, Users, Wallet, Lock, ChevronRight,
+  AlertTriangle, ArrowRight, CalendarCheck, ChevronRight, Gavel, Lock, MessageSquareWarning, Percent,
+  RefreshCcw, Shuffle, TrendingUp, UserMinus, Users, Wallet,
 } from 'lucide-react'
-import { Card, KpiCard, SectionTitle, Btn, StatusPill, StatusText, Freshness, SkeletonBlock, DemoBadge, type Tone } from '../../components/ui'
-import { toneBg } from '../../lib/tone'
-import { AIReadyBadge, WhyAIButton } from '../../components/ai'
+import { Card, KpiCard, SectionTitle, Btn, Freshness, SkeletonBlock, DemoBadge } from '../../components/ui'
+import CaseChain from '../../components/ops/CaseChain'
+import { toneText } from '../../lib/tone'
 import { useDemo } from '../../lib/data/context'
-import { customerById, teamById, TEAMS, EMPLOYEES } from '../../lib/demo/company'
-import { DAILY_BRIEFING, MONTH_REVENUE, SEED_INSIGHTS } from '../../lib/demo/intelligence'
+import { TEAMS, EMPLOYEES } from '../../lib/demo/company'
+import { MONTH_REVENUE } from '../../lib/demo/intelligence'
+import { opsLanes, topCases, type Lane, type LaneKey } from '../../lib/ops/insights'
+import { DEMO_NOW } from '../../lib/ops/geo'
+import { fmtWon, cx } from '../../lib/utils'
 
 // 차트 라이브러리는 무거워 본문을 먼저 그리고 뒤이어 받는다
 const WeeklyTrendChart = lazy(() => import('../../components/charts/WeeklyTrendChart'))
-import { fmtManwon, fmtWon, cx } from '../../lib/utils'
 
-// 오늘 진행 상황 막대 — 상태별 색 (StatusPill 의미색과 동일 계열)
-const STATUS_ORDER: Array<{ key: string; label: string; color: string }> = [
-  { key: '완료', label: '완료', color: 'var(--color-success)' },
-  { key: '진행', label: '진행중', color: 'var(--color-info)' },
-  { key: '예정', label: '예정', color: 'var(--color-neutral-mid)' },
-  { key: '확인필요', label: '확인필요', color: 'var(--color-danger)' },
-]
+const LANE_ICON: Record<LaneKey, ReactNode> = {
+  incident: <AlertTriangle size={15} />,
+  dispatch: <Shuffle size={15} />,
+  staffing: <UserMinus size={15} />,
+  voice: <MessageSquareWarning size={15} />,
+  renewal: <RefreshCcw size={15} />,
+  margin: <Percent size={15} />,
+  upsell: <TrendingUp size={15} />,
+}
+const BAR: Record<string, string> = {
+  danger: 'bg-danger', warning: 'bg-warning', success: 'bg-success', info: 'bg-info', ai: 'bg-ai', neutral: 'bg-neutral-mid', brand: 'bg-primary',
+}
 
-// 브리핑 칩 — 숫자는 AI 센터 해당 탭의 건수와 같은 원본에서 센다 (누른 뒤 숫자가 달라 보이지 않게)
-const BRIEF_CHIPS: Array<{ tab: 'risk' | 'upsell' | 'retention' | 'dispatch'; label: string; tone: Tone }> = [
-  { tab: 'risk', label: '위험', tone: 'danger' },
-  { tab: 'retention', label: '재계약', tone: 'warning' },
-  { tab: 'upsell', label: '추가매출', tone: 'success' },
-  { tab: 'dispatch', label: '배정 추천', tone: 'info' },
-]
-
-// 오늘 먼저 확인할 것 — 오늘의 AX 상위 4건 (전체는 오늘의 AX에서)
-const PRIORITIES: Array<{ tone: Tone; tag: string; title: string; desc: string; to: string }> = [
-  { tone: 'danger', tag: '방문지연 위험', title: '성수 B오피스', desc: '이전 작업 32분 지연 · 예상 도착 15:47', to: '/schedule?id=SC-14' },
-  { tone: 'warning', tag: '재계약 사전관리', title: '라온메디컬센터', desc: '계약 종료 D-32 · 품질문의 증가', to: '/customers/C01' },
-  { tone: 'success', tag: '추가서비스 제안', title: '에이원교육센터', desc: '유리 오염 특이사항 4회 → 집중관리 제안', to: '/upsell' },
-  { tone: 'info', tag: '미완료 보고', title: '강남 C클리닉', desc: '08:30 작업 보고 미제출', to: '/sites/C04' },
-]
-
+/**
+ * 오늘의 운영센터 — 대표 · 운영 책임자가 아침에 여는 판단 화면
+ * 7개 영역은 모두 상태에서 바로 계산된다(insights.ts). 처리하면 항목이 사라지고, 숫자도 함께 바뀐다.
+ * 사진 · 장식 없이 '무엇을 결정해야 하는가'만 보여주고, 항목을 누르면 처리 화면 상세로 간다.
+ */
 export default function Dashboard() {
-  const { schedules, role } = useDemo()
+  const st = useDemo()
+  const { schedules, role, proposals, requests, issues } = st
   const nav = useNavigate()
   const [loading, setLoading] = useState(true)
-  useEffect(() => { const t = setTimeout(() => setLoading(false), 350); return () => clearTimeout(t) }, [])
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 250); return () => clearTimeout(t) }, [])
 
-  const today = schedules.filter((s) => s.dayOffset === 0).sort((a, b) => a.time.localeCompare(b.time))
+  const lanes = useMemo(() => opsLanes(st), [st])
+  const cases = useMemo(() => topCases(st, 3), [st])
+  const lane = (k: LaneKey) => lanes.find((l) => l.key === k)!
+
+  const today = schedules.filter((s) => s.dayOffset === 0)
   const done = today.filter((s) => s.status === '완료').length
-  const inProgress = today.filter((s) => s.status === '작업중' || s.status === '이동중').length
-  const needCheck = today.filter((s) => !s.teamId || s.status === '확인필요').length
-  const planned = today.length - done - inProgress - needCheck
-  const risks = today.filter((s) => s.risk).length
-  const unassigned = today.filter((s) => !s.teamId).length
-  const upcoming = today.filter((s) => s.status !== '완료')
+  const active = today.filter((s) => s.status === '작업중' || s.status === '이동중').length
+  const decide = proposals.filter((p) => ['추천', '검토', '보류'].includes(p.status)).length
+  const approveWait = proposals.filter((p) => p.status === '검토').length
+  const newReq = requests.filter((r) => r.status === '접수').length
+  const openIssues = issues.filter((i) => i.status !== '해결').length
   const working = EMPLOYEES.filter((e) => e.status === '근무').length
-  const progress: Record<string, number> = { 완료: done, 진행: inProgress, 예정: Math.max(0, planned), 확인필요: needCheck }
+  const absent = EMPLOYEES.filter((e) => e.status !== '근무')
 
   if (loading) {
     return (
@@ -70,160 +70,83 @@ export default function Dashboard() {
     <div className="fade-up space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <div>
-          <h1 className="text-[1.6rem] font-extrabold tracking-tight lg:text-[1.85rem]">AX 대시보드</h1>
-          <p className="mt-0.5 text-[0.9rem] text-ink-soft">클린웨이파트너스 운영 현황판</p>
+          <h1 className="text-[1.6rem] font-extrabold tracking-tight lg:text-[1.85rem]">오늘의 운영센터</h1>
+          <p className="mt-0.5 text-[0.9rem] text-ink-soft">
+            기준 {DEMO_NOW} · 결정 대기 <b className="text-ink">{decide + newReq}건</b>
+            {approveWait > 0 && <> · 승인 대기 <b className="text-warning">{approveWait}건</b></>}
+          </p>
         </div>
         <Freshness />
       </div>
 
-      {/* 01 핵심 지표 — 숫자만 빠르게. 눌러서 해당 화면으로 */}
+      {/* 핵심 숫자 — 누르면 처리 화면으로 */}
       <div data-tour="kpi" className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-        <KpiCard icon={<CalendarCheck size={16} />} label="오늘 예정" value={today.length} unit="건" tone="brand" onClick={() => nav('/schedule')} sub="전체 현장 일정" />
-        <KpiCard icon={<Loader2 size={16} />} label="진행중" value={inProgress} unit="건" tone="info" onClick={() => nav('/work')} sub="이동중 · 작업중" />
-        <KpiCard icon={<CheckCircle2 size={16} />} label="완료" value={done} unit="건" tone="success" onClick={() => nav('/work')} sub={`완료율 ${Math.round((done / today.length) * 100)}%`} />
-        <KpiCard icon={<AlertTriangle size={16} />} label="서비스 위험" value={risks} unit="건" tone="danger" onClick={() => nav('/today')} sub={unassigned > 0 ? `미배정 ${unassigned}건 포함` : 'AI 위험 감지'} />
-        <KpiCard icon={<RefreshCcw size={16} />} label="갱신 예정" value={7} unit="계약" tone="warning" onClick={() => nav('/renewals')} sub="90일 내 · 긴급 1건" />
-        <KpiCard icon={<TrendingUp size={16} />} label="추가매출 기회" value={5} unit="건" tone="success" onClick={() => nav('/upsell')} sub={`예상 ${fmtManwon(420)}`} />
+        <KpiCard icon={<CalendarCheck size={16} />} label="오늘 일정" value={today.length} unit="건" tone="brand" onClick={() => nav('/schedule')} sub={`완료 ${done} · 진행 ${active}`} />
+        <KpiCard icon={<Gavel size={16} />} label="결정 대기" value={decide + newReq} unit="건" tone="ai" onClick={() => nav('/today')} sub={`배정 ${decide} · 신규 요청 ${newReq}`} />
+        <KpiCard icon={<AlertTriangle size={16} />} label="사고 위험" value={lane('incident').items.length} unit="건" tone="danger" onClick={() => nav('/schedule')} sub="도착 지연 · 결원 · 미배정" />
+        <KpiCard icon={<MessageSquareWarning size={16} />} label="요청 · 이슈" value={lane('voice').items.length} unit="건" tone="warning" onClick={() => nav('/requests')} sub={`현장 이슈 ${openIssues}건 포함`} />
+        <KpiCard icon={<RefreshCcw size={16} />} label="재계약 위험" value={lane('renewal').items.length} unit="곳" tone="warning" onClick={() => nav('/renewals')} sub={lane('renewal').metric} />
+        <KpiCard icon={<TrendingUp size={16} />} label="추가매출 진행" value={lane('upsell').items.length} unit="건" tone="success" onClick={() => nav('/upsell')} sub={`예상 ${lane('upsell').metric}`} />
       </div>
 
-      {/* 02 AI 브리핑 + 03 오늘 먼저 확인할 것 */}
-      <div className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
-        <Card tour="ai-briefing" className="overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-gradient-to-r from-ai-soft to-mint px-5 py-3.5">
-            <p className="flex items-center gap-2 text-[1.05rem] font-extrabold"><Sparkles size={18} className="text-ai-strong" /> AI 오늘의 운영 브리핑</p>
-            <AIReadyBadge small />
-          </div>
-          <div className="space-y-2 p-5 text-[0.95rem] leading-relaxed">
-            <p className="text-[1.02rem] font-bold">{DAILY_BRIEFING.summary[0]}</p>
-            <ul className="space-y-1.5 text-ink-soft">
-              {DAILY_BRIEFING.summary.slice(1).map((s) => (
-                <li key={s} className="flex gap-2"><span className="mt-[0.6rem] h-1.5 w-1.5 shrink-0 rounded-full bg-ai" />{s}</li>
-              ))}
-            </ul>
-            {/* AI 엔진별 발견 건수 — 누르면 AI 센터의 해당 탭으로 */}
-            <div className="flex flex-wrap gap-2 pt-2">
-              {BRIEF_CHIPS.map((c) => (
-                <button
-                  key={c.tab}
-                  onClick={() => nav(`/ai?tab=${c.tab}`)}
-                  className={cx('flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.82rem] font-bold transition-opacity hover:opacity-80', toneBg[c.tone])}
-                >
-                  {c.label} <span className="tnum text-[0.95rem] font-extrabold">{SEED_INSIGHTS.filter((i) => i.engine === c.tab).length}</span>
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-              <WhyAIButton dataViewed={['오늘 일정 24건', '팀별 진행상황', '계약 갱신일', '품질·문의 기록', '수익성 요약']} />
-              <button onClick={() => nav('/ai')} className="flex items-center gap-1 text-[0.84rem] font-bold text-ai-strong hover:underline">
-                AI 센터 열기 <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-        </Card>
+      {/* 7개 판단 영역 */}
+      <section data-tour="ai-briefing" aria-label="오늘 판단할 7개 영역">
+        <SectionTitle right={<span className="text-[0.76rem] font-bold text-ink-faint">상태에서 실시간 계산 · 처리하면 사라짐</span>}>
+          지금 판단할 것
+        </SectionTitle>
+        {/* 1행: 오늘 현장(사고 · 배정 · 인력) 3칸, 2행: 고객 · 계약 · 매출 4칸 */}
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-12">
+          {lanes.map((l, i) => <LaneCard key={l.key} lane={l} className={i < 3 ? 'xl:col-span-4' : 'xl:col-span-3'} />)}
+        </div>
+      </section>
 
+      {/* 사건 체인 — 여러 신호가 겹친 고객 */}
+      <section aria-label="오늘의 사건">
+        <SectionTitle right={<Btn variant="ghost" size="sm" onClick={() => nav('/ai')}>AI 센터 <ArrowRight size={14} className="inline" /></Btn>}>
+          신호가 겹친 고객 — 위험부터 조치까지
+        </SectionTitle>
+        <div className="space-y-3">
+          {cases.map((c) => (
+            <Card key={c.customerId} className="p-4">
+              <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                <button onClick={() => nav(`/customers/${c.customerId}`)} className="text-[1.02rem] font-extrabold hover:text-primary">{c.name}</button>
+                <span className="text-[0.8rem] font-bold text-ink-soft">{c.headline}</span>
+              </div>
+              <CaseChain chain={c} />
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* 인력 · 매출 — 맥락 */}
+      <div className="grid items-start gap-5 xl:grid-cols-[1fr_1fr_1fr]">
         <Card className="p-5">
-          <SectionTitle right={<Btn variant="ghost" size="sm" onClick={() => nav('/today')}>전체 <ArrowRight size={14} className="inline" /></Btn>}>
-            오늘 먼저 확인할 것
-          </SectionTitle>
-          <div className="divide-y divide-line">
-            {PRIORITIES.map((c) => (
-              <button key={c.title} onClick={() => nav(c.to)} className="group flex w-full items-center gap-3 py-3 text-left first:pt-1 last:pb-0">
-                <span className={cx('h-9 w-1.5 shrink-0 rounded-full', {
-                  danger: 'bg-danger', warning: 'bg-warning', success: 'bg-success', info: 'bg-info',
-                }[c.tone as 'danger'])} />
-                <span className="min-w-0 flex-1">
-                  <span className="flex flex-wrap items-baseline gap-x-2">
-                    <span className="text-[0.98rem] font-extrabold">{c.title}</span>
-                    <span className={cx('text-[0.76rem] font-bold', {
-                      danger: 'text-danger', warning: 'text-warning', success: 'text-success', info: 'text-info',
-                    }[c.tone as 'danger'])}>{c.tag}</span>
-                  </span>
-                  <span className="block text-[0.84rem] text-ink-soft">{c.desc}</span>
-                </span>
-                <ChevronRight size={18} className="shrink-0 text-ink-faint transition-transform group-hover:translate-x-0.5" />
-              </button>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      {/* 04 오늘 일정 (진행 막대 포함) + 05 팀 가동 */}
-      <div className="grid items-start gap-5 xl:grid-cols-[1.35fr_1fr]">
-        <Card className="p-5">
-          <SectionTitle right={<Btn variant="ghost" size="sm" onClick={() => nav('/schedule')}>일정 전체 <ArrowRight size={14} className="inline" /></Btn>}>
-            오늘 일정
-          </SectionTitle>
-
-          {/* 진행 상황 — 상태별 비율을 한 줄로 */}
-          <div className="flex h-2.5 overflow-hidden rounded-full bg-ivory" role="img" aria-label={`완료 ${done}, 진행 ${inProgress}, 예정 ${planned}, 확인필요 ${needCheck}`}>
-            {STATUS_ORDER.map((s) => progress[s.key] > 0 && (
-              <span key={s.key} style={{ width: `${(progress[s.key] / today.length) * 100}%`, background: s.color }} />
-            ))}
-          </div>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[0.8rem] font-semibold text-ink-soft">
-            {STATUS_ORDER.map((s) => (
-              <span key={s.key} className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />{s.label} <b className="tnum text-ink">{progress[s.key]}</b>
-              </span>
-            ))}
-          </div>
-
-          <p className="mb-2 mt-4 text-[0.8rem] font-bold text-ink-faint">남은 일정 {upcoming.length}건</p>
-          <div className="space-y-1.5">
-            {upcoming.slice(0, 6).map((s) => {
-              const c = customerById(s.customerId)
-              return (
-                <button key={s.id} onClick={() => nav(`/sites/${s.customerId}`)} className="flex w-full items-center gap-2.5 rounded-xl border border-line px-3.5 py-2.5 text-left transition-colors hover:border-primary hover:bg-mint/40">
-                  <span className="tnum w-[2.9rem] shrink-0 text-[0.95rem] font-extrabold text-primary">{s.time}</span>
-                  <span className="min-w-0 flex-1">
-                    {/* 현장명은 잘라내지 않는다 — 길면 두 줄로 */}
-                    <span className="block text-[0.92rem] font-bold leading-snug">{c?.name}</span>
-                    <span className="block truncate text-[0.78rem] text-ink-faint">
-                      <StatusText status={s.teamId ? s.status : '확인필요'} className="min-[400px]:hidden" />
-                      {s.risk ? <span className="font-bold text-danger">{s.risk.type} · </span> : null}
-                      {s.service} · {teamById(s.teamId)?.name ?? '미배정'}
-                    </span>
-                  </span>
-                  <span className="hidden shrink-0 min-[400px]:block"><StatusPill status={s.teamId ? s.status : '확인필요'} /></span>
-                </button>
-              )
-            })}
-          </div>
-          {upcoming.length > 6 && (
-            <button onClick={() => nav('/schedule')} className="mt-2 w-full rounded-xl py-2 text-[0.84rem] font-bold text-primary hover:bg-mint/40">
-              남은 일정 {upcoming.length - 6}건 더 보기
-            </button>
-          )}
-        </Card>
-
-        <Card className="p-5">
-          <SectionTitle right={<Btn variant="ghost" size="sm" onClick={() => nav('/team')}>팀 상세 <ArrowRight size={14} className="inline" /></Btn>}>직원 / 팀 가동</SectionTitle>
+          <SectionTitle right={<Btn variant="ghost" size="sm" onClick={() => nav('/team')}>팀 상세 <ArrowRight size={14} className="inline" /></Btn>}>인력 가동</SectionTitle>
           <div className="flex items-center gap-3.5">
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-mint text-primary"><Users size={21} /></span>
             <div>
               <p className="tnum text-[1.35rem] font-extrabold leading-tight">{working} / {EMPLOYEES.length}명 근무</p>
-              <p className="text-[0.8rem] text-ink-faint">{TEAMS.length}개 팀 · 휴무 1 · 결원 1</p>
+              <p className="text-[0.8rem] text-ink-faint">{TEAMS.length}개 팀 · {absent.map((e) => `${e.name} ${e.status}`).join(' · ')}</p>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-4 gap-1.5">
             {TEAMS.map((t) => {
-              const jobs = today.filter((s) => s.teamId === t.id).length
+              const jobs = today.filter((s) => s.teamId === t.id)
+              const left = jobs.filter((s) => s.status !== '완료').length
               return (
                 <div key={t.id} className="rounded-lg bg-ivory px-1.5 py-2 text-center">
                   <p className="text-[0.74rem] font-bold text-ink-faint">{t.name.replace('Clean Team ', '팀 ')}</p>
-                  <p className="tnum text-[0.98rem] font-extrabold text-primary">{jobs}건</p>
+                  <p className="tnum text-[0.98rem] font-extrabold text-primary">{left}<span className="text-[0.74rem] text-ink-faint">/{jobs.length}</span></p>
                 </div>
               )
             })}
           </div>
+          <p className="mt-2 text-[0.74rem] text-ink-faint">남은 일정 / 오늘 배정</p>
         </Card>
-      </div>
 
-      {/* 06 주간 추이 + 07 매출 요약 */}
-      <div className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
         <Card className="p-5">
           <SectionTitle right={<DemoBadge label="데모" />}>주간 작업 추이</SectionTitle>
-          <div className="h-[220px]">
+          <div className="h-[200px]">
             <Suspense fallback={<div className="skeleton h-full w-full" />}><WeeklyTrendChart /></Suspense>
           </div>
         </Card>
@@ -250,17 +173,61 @@ export default function Dashboard() {
                 <span className="text-[0.85rem] font-bold text-ink-soft">평균 운영 기여마진</span>
                 <span className="tnum text-[1.1rem] font-extrabold text-primary">{MONTH_REVENUE.contribMarginPct}%</span>
               </div>
-              <p className="flex items-center gap-1 text-[0.84rem] font-bold text-primary">수익성 분석 열기 <ArrowRight size={14} /></p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2 py-8 text-center">
               <Lock size={24} className="text-ink-faint" />
-              <p className="text-[0.9rem] font-bold text-ink-soft">매출·수익성은 대표 권한에서 확인할 수 있습니다.</p>
-              <p className="text-[0.78rem] text-ink-faint">역할별 데이터 접근 제어 (RLS)</p>
+              <p className="text-[0.9rem] font-bold text-ink-soft">매출 · 수익성은 대표 권한에서 확인할 수 있습니다.</p>
+              <p className="text-[0.78rem] text-ink-faint">역할별 데이터 접근 제어</p>
             </div>
           )}
         </Card>
       </div>
     </div>
+  )
+}
+
+/** 판단 영역 하나 — 근거 · 상위 3건 · 전체 보기. 항목은 모두 실제 상세 화면으로 이어진다 */
+function LaneCard({ lane, className }: { lane: Lane; className?: string }) {
+  const nav = useNavigate()
+  const shown = lane.items.slice(0, 3)
+  return (
+    <Card className={cx('flex flex-col p-4', className)}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className={cx('flex items-center gap-1.5 text-[0.95rem] font-extrabold', toneText[lane.tone])}>
+            {LANE_ICON[lane.key]}<span className="text-ink">{lane.title}</span>
+            <span className="tnum">{lane.items.length}</span>
+            {lane.restricted && <Lock size={12} className="text-ink-faint" aria-label="금액은 대표 권한" />}
+          </p>
+          <p className="mt-0.5 text-[0.74rem] text-ink-faint">{lane.basis}</p>
+        </div>
+        {lane.metric && <span className="tnum shrink-0 text-[0.8rem] font-extrabold text-ink-soft">{lane.metric}</span>}
+      </div>
+      {lane.items.length === 0 ? (
+        <p className="mt-3 flex-1 text-[0.84rem] font-bold text-success">처리할 항목 없음</p>
+      ) : (
+        <ul className="mt-2.5 flex-1 divide-y divide-line">
+          {shown.map((i) => (
+            <li key={i.id}>
+              <button onClick={() => nav(i.to)} className="group flex w-full items-center gap-2.5 py-2 text-left">
+                <span className={cx('h-8 w-1 shrink-0 rounded-full', BAR[i.tone])} />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-baseline gap-1.5">
+                    <span className="min-w-0 truncate text-[0.86rem] font-bold">{i.title}</span>
+                    {i.tag && <span className={cx('shrink-0 text-[0.72rem] font-extrabold', toneText[i.tone])}>{i.tag}</span>}
+                  </span>
+                  <span className="block truncate text-[0.76rem] text-ink-faint">{i.sub}</span>
+                </span>
+                <ChevronRight size={15} className="shrink-0 text-ink-faint transition-transform group-hover:translate-x-0.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button onClick={() => nav(lane.to)} className="mt-1.5 self-start text-[0.78rem] font-bold text-primary hover:underline">
+        {lane.items.length > 3 ? `외 ${lane.items.length - 3}건 · 전체 보기` : '화면 열기'} <ArrowRight size={12} className="inline" />
+      </button>
+    </Card>
   )
 }

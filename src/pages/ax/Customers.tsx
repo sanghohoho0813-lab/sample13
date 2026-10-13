@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Search, ArrowRight, Star, X } from 'lucide-react'
 import { Card, PageHeader, Badge, DemoBadge, StatusPill, EmptyState } from '../../components/ui'
 import { CUSTOMERS } from '../../lib/demo/company'
-import { SEED_HEALTH } from '../../lib/demo/intelligence'
+import { useDemo } from '../../lib/data/context'
+import { assessRenewal } from '../../lib/ops/renewal'
 import { cx } from '../../lib/utils'
 import { matchesQuery } from '../../lib/search'
 
@@ -11,6 +12,7 @@ const TYPES = ['전체', '병의원', '사무실', '학원', '상가', '빌딩',
 
 export default function Customers() {
   const nav = useNavigate()
+  const st = useDemo()
   const [q, setQ] = useState('')
   const [type, setType] = useState('전체')
   const list = CUSTOMERS.filter((c) =>
@@ -61,7 +63,9 @@ export default function Customers() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {list.map((c) => {
-            const h = SEED_HEALTH.find((x) => x.customerId === c.id)
+            // 상세 · 재계약 화면과 같은 5요인 계산 — 목록과 상세의 숫자가 다르지 않게
+            const r = assessRenewal(c.id, st)
+            const h = r && { score: r.health, aiStatus: r.status }
             return (
               <Card key={c.id} onClick={() => nav(`/customers/${c.id}`)} className="p-5">
                 <div className="flex items-start justify-between gap-2">
@@ -81,10 +85,10 @@ export default function Customers() {
                   <div className="mt-3 border-t border-line pt-2.5">
                     <div className="flex items-center justify-between text-[0.76rem] font-bold">
                       <span className="text-ink-faint">고객 건강도</span>
-                      <span className={cx('tnum', h.score >= 80 ? 'text-success' : h.score >= 65 ? 'text-warning' : 'text-danger')}>{h.score} / 100</span>
+                      <span className={cx('tnum', h.score >= 80 ? 'text-success' : h.score >= 60 ? 'text-warning' : 'text-danger')}>{h.score} / 100</span>
                     </div>
                     <div className="mt-1 h-1.5 rounded-full bg-ivory">
-                      <div className={cx('h-full rounded-full', h.score >= 80 ? 'bg-success' : h.score >= 65 ? 'bg-warning' : 'bg-danger')} style={{ width: `${h.score}%` }} />
+                      <div className={cx('h-full rounded-full', h.score >= 80 ? 'bg-success' : h.score >= 60 ? 'bg-warning' : 'bg-danger')} style={{ width: `${h.score}%` }} />
                     </div>
                   </div>
                 )}

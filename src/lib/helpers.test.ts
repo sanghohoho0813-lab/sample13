@@ -46,7 +46,7 @@ describe('사진 파생본 경로', () => {
 
 describe('탭 제목', () => {
   it('화면마다 구분되는 제목', () => {
-    expect(titleFor('/')).toBe('대시보드 · CLEANWAY PARTNERS')
+    expect(titleFor('/')).toBe('운영센터 · CLEANWAY PARTNERS')
     expect(titleFor('/customers/C01')).toBe('고객 상세 · CLEANWAY PARTNERS')
     expect(titleFor('/nope')).toContain('찾을 수 없음')
   })

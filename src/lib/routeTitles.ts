@@ -1,7 +1,7 @@
 /** 브라우저 탭 제목 — 탭을 여러 개 열어도 어느 화면인지 구분되게 */
 const TITLES: Array<[RegExp, string]> = [
-  [/^\/$/, '대시보드'],
-  [/^\/today$/, '오늘의 AX'],
+  [/^\/$/, '운영센터'],
+  [/^\/today$/, '운영 처리함'],
   [/^\/schedule$/, '일정 / 배정'],
   [/^\/sites$/, '현장관리'],
   [/^\/sites\/.+/, '현장 상세'],
@@ -15,7 +15,7 @@ const TITLES: Array<[RegExp, string]> = [
   [/^\/upsell$/, '추가서비스'],
   [/^\/profitability$/, '수익성 분석'],
   [/^\/ai$/, 'AI 센터'],
-  [/^\/evidence$/, 'AX 실증 기록'],
+  [/^\/evidence$/, '실증 기록 · 변경 이력'],
   [/^\/why-ax$/, '기획의도'],
   [/^\/settings$/, '설정'],
   [/^\/presentation$/, '시연 모드'],

@@ -6,10 +6,14 @@ import { useDemo } from '../../lib/data/context'
 import { customerById, siteByCustomer, teamById, teamMemberNames } from '../../lib/demo/company'
 import { CHECKLIST_TEMPLATE } from '../../lib/demo/operations'
 import { SEED_QUALITY } from '../../lib/demo/intelligence'
-import { beforeAfterFor, altOf, photoForSite } from '../../lib/demo/photos'
+import { beforeAfterFor, altOf } from '../../lib/demo/photos'
 import { Photo } from '../../components/ui/Photo'
+import { useToast } from '../../components/ui/toast-context'
+import { can } from '../../lib/ops/governance'
+import type { PhotoRecord } from '../../types'
 
-function WorkPhoto({ label, taken, src }: { label: string; taken: boolean; src: string }) {
+/** 작업 증빙 사진 — 현장 앱에서 찍은 실제 사진이 있으면 그것을, 없으면 대표 사진(DEMO)을 표시 */
+function WorkPhoto({ label, taken, src, shot }: { label: string; taken: boolean; src: string; shot?: PhotoRecord }) {
   if (!taken) {
     return (
       <div className="flex aspect-[4/3] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-ivory">
@@ -21,10 +25,13 @@ function WorkPhoto({ label, taken, src }: { label: string; taken: boolean; src: 
   }
   return (
     <figure className="relative aspect-[4/3] overflow-hidden rounded-xl border border-line bg-ivory">
-      <Photo src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
+      {shot?.dataUrl
+        ? <img src={shot.dataUrl} alt={`${label} 현장 촬영 사진`} className="h-full w-full object-cover" />
+        : <Photo src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />}
       <figcaption className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-ink/75 px-2 py-0.5 text-[0.72rem] font-extrabold text-white">
-        <Camera size={11} /> {label}
+        <Camera size={11} /> {label}{shot?.at && shot.at !== '-' ? ` · ${shot.at}` : ''}{!shot?.dataUrl && ' · 대표 사진'}
       </figcaption>
+      {shot?.flags?.length ? <p className="absolute inset-x-0 bottom-0 bg-warning/90 px-2 py-1 text-[0.7rem] font-bold text-white">{shot.flags[0]}</p> : null}
     </figure>
   )
 }
@@ -32,7 +39,8 @@ function WorkPhoto({ label, taken, src }: { label: string; taken: boolean; src: 
 export default function SiteDetail() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { schedules, work, reports } = useDemo()
+  const { schedules, work, reports, issues: allIssues, role, actor, updateIssue } = useDemo()
+  const toast = useToast()
   const customer = id ? customerById(id) : undefined
   const site = id ? siteByCustomer(id) : undefined
 
@@ -45,6 +53,7 @@ export default function SiteDetail() {
   const ws = mainJob ? work[mainJob.id] : undefined
   const report = reports.find((r) => r.customerId === customer.id)
   const issues = SEED_QUALITY.filter((q) => q.customerId === customer.id)
+  const fieldIssues = allIssues.filter((i) => i.customerId === customer.id)
   const checklist = ws?.checklist ?? Object.fromEntries(CHECKLIST_TEMPLATE.map((c) => [c, mainJob?.status === '완료']))
   const ba = beforeAfterFor(`${mainJob?.service ?? ''} ${site.note ?? ''} ${ws?.note ?? ''}`)
   const doneMark = mainJob?.status === '완료' ? '완료' : undefined
@@ -55,7 +64,6 @@ export default function SiteDetail() {
     ['체크아웃', ws?.checkoutAt ?? doneMark],
   ]
   const started = !!ws?.startedAt || mainJob?.status === '작업중' || mainJob?.status === '완료' || Object.values(ws?.checklist ?? {}).some(Boolean)
-  const siteHero = photoForSite(customer.type, mainJob?.service)
 
   return (
     <div className="fade-up">
@@ -65,12 +73,6 @@ export default function SiteDetail() {
         desc={`${customer.address} · ${site.areaPyeong}평 · ${customer.contract.serviceSummary}`}
         right={<><Badge tone="brand">{customer.type}</Badge><DemoBadge /></>}
       />
-
-      {mainJob && (
-        <figure className="mb-4 overflow-hidden rounded-2xl border border-line">
-          <Photo src={siteHero} alt={altOf(siteHero)} width={1448} height={1086} className="h-40 w-full object-cover object-[50%_30%] sm:h-56" />
-        </figure>
-      )}
 
       {site.note && (
         <p className="mb-4 flex items-center gap-2 rounded-xl bg-warning-soft px-4 py-2.5 text-[0.85rem] font-bold text-warning"><AlertTriangle size={15} /> {site.note}</p>
@@ -115,16 +117,16 @@ export default function SiteDetail() {
                       </p>
                       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
                         {CHECKLIST_TEMPLATE.map((item) => (
-                          <div key={item} className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[0.8rem] font-bold ${checklist[item] ? 'bg-success-soft text-success' : 'bg-ivory text-ink-faint'}`}>
-                            <CheckCircle2 size={14} className="shrink-0" /> {item}
+                          <div key={item} title={ws?.skipped?.[item]} className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[0.8rem] font-bold ${checklist[item] ? 'bg-success-soft text-success' : ws?.skipped?.[item] ? 'bg-warning-soft text-warning' : 'bg-ivory text-ink-faint'}`}>
+                            <CheckCircle2 size={14} className="shrink-0" /> <span className="min-w-0">{item}{ws?.skipped?.[item] && <span className="block text-[0.7rem]">제외 — {ws.skipped[item]}</span>}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                     {/* 작업 전 / 후 */}
                     <div className="grid grid-cols-2 gap-3">
-                      <WorkPhoto label="작업 전" taken={!!ws?.beforePhoto || mainJob.status === '완료'} src={ba.before} />
-                      <WorkPhoto label="작업 후" taken={!!ws?.afterPhoto || mainJob.status === '완료'} src={ba.after} />
+                      <WorkPhoto label="작업 전" taken={!!ws?.beforePhoto || mainJob.status === '완료'} src={ba.before} shot={ws?.photos?.before} />
+                      <WorkPhoto label="작업 후" taken={!!ws?.afterPhoto || mainJob.status === '완료'} src={ba.after} shot={ws?.photos?.after} />
                     </div>
                   </>
                 ) : (
@@ -161,6 +163,31 @@ export default function SiteDetail() {
         </div>
 
         <div className="space-y-5">
+          {/* 현장 이슈 — 현장 앱에서 보고된 것을 본사가 조치 */}
+          <Card className="p-5">
+            <SectionTitle>현장 이슈</SectionTitle>
+            {fieldIssues.length === 0 ? <p className="text-[0.85rem] text-ink-faint">보고된 현장 이슈가 없습니다.</p> : (
+              <div className="space-y-2">
+                {fieldIssues.map((i) => (
+                  <div key={i.id} className="rounded-xl border border-line p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-1.5 text-[0.86rem] font-extrabold">{i.type}<Badge tone={i.severity === '긴급' ? 'danger' : 'warning'}>{i.severity}</Badge></span>
+                      <StatusPill status={i.status} />
+                    </div>
+                    <p className="mt-1 text-[0.84rem] [overflow-wrap:anywhere]">{i.detail}</p>
+                    <p className="mt-0.5 text-[0.74rem] text-ink-faint">보고 {i.reportedBy} {i.at}{i.owner ? ` · 조치 담당 ${i.owner}` : ''} · {i.customerVisible ? '고객 리포트 공개' : '내부 처리'}</p>
+                    {i.status !== '해결' && can(role, 'issue.handle') && (
+                      <div className="mt-2 flex gap-2">
+                        {i.status === '접수' && <Btn size="sm" variant="outline" onClick={() => { updateIssue(i.id, '조치중', actor); toast('조치 담당을 맡았습니다 — 현장 앱에도 표시됩니다.') }}>내가 조치</Btn>}
+                        <Btn size="sm" variant="success" onClick={() => { updateIssue(i.id, '해결', i.owner ?? actor); toast('조치 완료 — 고객 리포트와 건강도에 반영됩니다.') }}>조치 완료</Btn>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
           {/* 고객/계약 요약 */}
           <Card className="p-5">
             <SectionTitle>고객 / 계약</SectionTitle>

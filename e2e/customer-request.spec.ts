@@ -22,20 +22,24 @@ test.describe('고객 요청 → AX 처리 → 고객 화면 반영', () => {
     await dialog.getByRole('button', { name: '요청 보내기' }).click()
     await expect(dialog.getByText(/접수번호 R-/)).toBeVisible()
 
-    // AX 요청함 — 처리 필요 → 처리중 → 완료
-    await page.goto('/requests')
-    const card = page.locator('[data-tour="requests"] > div').filter({ hasText: memo.slice(0, 14) })
-    await expect(card).toHaveCount(1)
-    await card.getByRole('button', { name: '담당자 확인' }).click()
-    await page.getByRole('tab', { name: /처리중/ }).click()
-    await page.locator('[data-tour="requests"] > div').filter({ hasText: memo.slice(0, 14) }).getByRole('button', { name: '완료 처리' }).click()
-    await page.getByRole('tab', { name: /^완료/ }).click()
-    await expect(page.locator('[data-tour="requests"] > div').filter({ hasText: memo.slice(0, 14) })).toHaveCount(1)
+    const reqId = (await dialog.getByText(/접수번호 R-/).textContent())!.match(/R-\w+/)![0]
 
-    // 고객 화면 완료 탭
+    // AX 요청함 — 담당 지정 → 회신하고 완료
+    await page.goto(`/requests?id=${reqId}`)
+    const panel = (page.viewportSize()?.width ?? 0) < 1280 ? page.getByRole('dialog') : page.locator('main')
+    await expect(panel.getByText(memo).first()).toBeVisible()
+    await panel.getByRole('button', { name: '담당 지정' }).click()
+    await panel.getByPlaceholder('고객 화면에 그대로 표시됩니다').fill('내일 오전 방문 시간 그대로 진행합니다.')
+    await panel.getByRole('button', { name: '회신하고 완료' }).click()
+    await expect(panel.getByText('회신 · 완료 — 내일 오전 방문 시간 그대로 진행합니다.')).toBeVisible()
+
+    // 고객 화면 — 완료 탭에서 회신과 진행 기록 확인
     await page.goto('/care/requests')
-    await page.getByRole('tab', { name: /^완료/ }).click()
-    await expect(page.getByText(memo.slice(0, 14))).toBeVisible()
+    await page.getByRole('tab', { name: /완료/ }).click()
+    await expect(page.getByText(memo)).toBeVisible()
+    await expect(page.getByText('내일 오전 방문 시간 그대로 진행합니다.').first()).toBeVisible()
+    await page.getByRole('button', { name: /진행 기록 \d/ }).first().click()
+    await expect(page.getByText(/담당자 배정 —/).first()).toBeVisible()
   })
 
   test('서비스 소개의 "서비스 상담"은 내용이 채워진 문의 폼을 바로 연다', async ({ page, errors: _ }) => {
