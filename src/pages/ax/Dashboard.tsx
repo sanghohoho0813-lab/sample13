@@ -70,7 +70,7 @@ export default function Dashboard() {
     <div className="fade-up space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <div>
-          <h1 className="text-[1.6rem] font-extrabold tracking-tight lg:text-[1.85rem]">오늘의 운영센터</h1>
+          <h1 className="text-[1.5rem] font-extrabold leading-tight lg:text-[1.7rem]">오늘의 운영센터</h1>
           <p className="mt-0.5 text-[0.9rem] text-ink-soft">
             기준 {DEMO_NOW} · 결정 대기 <b className="text-ink">{decide + newReq}건</b>
             {approveWait > 0 && <> · 승인 대기 <b className="text-warning">{approveWait}건</b></>}
@@ -193,17 +193,16 @@ function LaneCard({ lane, className }: { lane: Lane; className?: string }) {
   const shown = lane.items.slice(0, 3)
   return (
     <Card className={cx('flex flex-col p-4', className)}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className={cx('flex items-center gap-1.5 text-[0.95rem] font-extrabold', toneText[lane.tone])}>
-            {LANE_ICON[lane.key]}<span className="text-ink">{lane.title}</span>
-            <span className="tnum">{lane.items.length}</span>
-            {lane.restricted && <Lock size={12} className="text-ink-faint" aria-label="금액은 대표 권한" />}
-          </p>
-          <p className="mt-0.5 text-[0.74rem] text-ink-faint">{lane.basis}</p>
-        </div>
-        {lane.metric && <span className="tnum shrink-0 text-[0.8rem] font-extrabold text-ink-soft">{lane.metric}</span>}
-      </div>
+      {/* 제목은 한 줄로 — 금액 같은 요약 숫자는 근거 줄 오른쪽으로 내려 좁은 칸에서도 제목이 꺾이지 않게 */}
+      <p className={cx('flex items-center gap-1.5 whitespace-nowrap text-[0.95rem] font-extrabold', toneText[lane.tone])}>
+        {LANE_ICON[lane.key]}<span className="truncate text-ink">{lane.title}</span>
+        <span className="tnum">{lane.items.length}</span>
+        {lane.restricted && <Lock size={12} className="shrink-0 text-ink-faint" aria-label="금액은 대표 권한" />}
+      </p>
+      <p className="mt-0.5 flex flex-wrap items-baseline justify-between gap-x-2 text-[0.74rem] text-ink-faint">
+        <span>{lane.basis}</span>
+        {lane.metric && <span className="tnum font-extrabold text-ink-soft">{lane.metric}</span>}
+      </p>
       {lane.items.length === 0 ? (
         <p className="mt-3 flex-1 text-[0.84rem] font-bold text-success">처리할 항목 없음</p>
       ) : (

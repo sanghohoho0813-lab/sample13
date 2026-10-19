@@ -174,9 +174,13 @@ export default function RequestSheet({ type, onClose, preset }: { type: RequestT
             />
           </Field>
 
-          <Btn className="w-full py-3" variant={type === '긴급방문' ? 'danger' : 'primary'}>
-            {type === '긴급방문' ? '긴급 방문 요청하기' : '요청 보내기'}
-          </Btn>
+          {/* 보내기 버튼은 시트 아래에 고정 — 긴 폼을 끝까지 내리지 않아도 누를 수 있게 */}
+          <div className="sticky bottom-0 -mx-5 -mb-5 border-t border-line bg-card/95 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+            <Btn size="lg" className="w-full" variant={type === '긴급방문' ? 'danger' : 'primary'}>
+              {type === '긴급방문' ? '긴급 방문 요청하기' : '요청 보내기'}
+            </Btn>
+            <p className="mt-1.5 text-center text-[0.72rem] text-ink-faint">{REPLY[type]}</p>
+          </div>
         </form>
       )}
     </Modal>

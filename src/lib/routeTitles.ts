@@ -27,6 +27,11 @@ const TITLES: Array<[RegExp, string]> = [
 ]
 export const APP_NAME = 'CLEANWAY PARTNERS'
 
+/** 화면 이름만 (헤더 위치 표시용) */
+export function pageName(pathname: string): string {
+  return TITLES.find(([re]) => re.test(pathname))?.[1].split(' · ')[0] ?? ''
+}
+
 export function titleFor(pathname: string): string {
   const hit = TITLES.find(([re]) => re.test(pathname))
   return hit ? `${hit[1]} · ${APP_NAME}` : `페이지를 찾을 수 없음 · ${APP_NAME}`

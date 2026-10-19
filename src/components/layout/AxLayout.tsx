@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../lib/data/context'
 import { ROLE_LABEL, type Role } from '../../types'
-import { Badge, Backdrop, ConfirmDialog } from '../ui'
+import { Backdrop, ConfirmDialog } from '../ui'
 import { useToast } from '../ui/toast-context'
 import { cx, nowClock, nowDateLong, nowDateCompact } from '../../lib/utils'
 import DevicePreview from './DevicePreview'
@@ -17,6 +17,7 @@ import { MiraeCredit } from '../brand/MiraeLogo'
 import { SampleBridgeCTA, SampleBridgeMini } from '../brand/SampleBridgeCTA'
 import { ROADMAP, STAGE_NOTE, type RoadmapStage } from '../../lib/demo/roadmap'
 import { useHideHistoryNav } from '../../lib/historyNav'
+import { pageName } from '../../lib/routeTitles'
 
 /* ═══════════════════════════════════════════════════════════════════
    Navigation 정보구조 (IA)
@@ -197,6 +198,23 @@ function NextRoadmap({ dense }: { dense?: boolean }) {
   )
 }
 
+/** 헤더 위치 표시 — 상위 그룹 › 화면 (상세 화면은 목록 메뉴의 그룹을 따른다) */
+function useCrumb() {
+  const { pathname } = useLocation()
+  const group = NAV.find((e) => e.items?.some((i) => pathname === i.to || pathname.startsWith(i.to + '/')))
+  return { group: group?.label, page: pageName(pathname) }
+}
+
+function HeaderCrumb() {
+  const { group, page } = useCrumb()
+  return (
+    <nav aria-label="현재 위치" className="min-w-0 leading-tight">
+      {group && <p className="truncate text-[0.72rem] font-semibold text-ink-faint">{group}</p>}
+      <p className={cx('truncate font-extrabold text-ink', group ? 'text-[0.95rem]' : 'text-[1rem]')}>{page}</p>
+    </nav>
+  )
+}
+
 /* ─── 실시간 날짜 + 시각 ─────────────────────────────────────────── */
 function LiveClock() {
   const [clock, setClock] = useState(nowClock())
@@ -205,17 +223,17 @@ function LiveClock() {
     return () => clearInterval(id)
   }, [])
   return (
-    <div className="leading-tight min-w-0">
+    <div className="min-w-0 text-right leading-tight">
       {/* Desktop: 전체 날짜 / Mobile: 압축 날짜 — 삭제하지 않고 압축 */}
-      <p className="hidden text-[0.76rem] font-semibold text-ink-soft whitespace-nowrap sm:block">{nowDateLong()}</p>
-      <p className="text-[0.72rem] font-bold text-ink-soft whitespace-nowrap sm:hidden">{nowDateCompact()}</p>
-      <p className="tnum text-[0.95rem] font-extrabold tracking-wide text-primary whitespace-nowrap">{clock}</p>
+      <p className="hidden whitespace-nowrap text-[0.72rem] font-semibold text-ink-faint xl:block">{nowDateLong()}</p>
+      <p className="whitespace-nowrap text-[0.7rem] font-semibold text-ink-faint xl:hidden">{nowDateCompact()}</p>
+      <p className="tnum whitespace-nowrap text-[0.9rem] font-extrabold tracking-wide text-primary">{clock}</p>
     </div>
   )
 }
 
 /* ─── 역할 전환 ──────────────────────────────────────────────────── */
-function RoleSwitcher({ compact }: { compact?: boolean }) {
+function RoleSwitcher({ compact, dark }: { compact?: boolean; dark?: boolean }) {
   const { role, setRole } = useDemo()
   const nav = useNavigate()
   const [open, setOpen] = useState(false)
@@ -231,13 +249,14 @@ function RoleSwitcher({ compact }: { compact?: boolean }) {
       <button
         onClick={() => setOpen((o) => !o)}
         className={cx(
-          'flex min-h-[2.25rem] shrink-0 items-center gap-1 whitespace-nowrap rounded-xl border border-line bg-card font-bold hover:border-primary',
+          'flex min-h-[2.25rem] shrink-0 items-center gap-1 whitespace-nowrap rounded-xl border font-bold',
+          dark ? 'border-white/20 bg-white/10 text-white hover:border-white/50' : 'border-line bg-card hover:border-primary',
           compact ? 'px-2.5 py-1.5 text-[0.78rem]' : 'px-3 py-1.5 text-[0.84rem]',
         )}
       >
-        <Users size={14} className="text-primary" />
+        <Users size={14} className={dark ? 'text-champagne' : 'text-primary'} />
         {ROLE_LABEL[role]}
-        <ChevronDown size={13} className="text-ink-faint" />
+        <ChevronDown size={13} className={dark ? 'text-white/60' : 'text-ink-faint'} />
       </button>
       {open && (
         <>
@@ -282,8 +301,9 @@ function CustomerPlatformButton({ variant }: { variant: 'header' | 'drawer' | 't
     <button
       onClick={() => nav('/care')}
       className={cx(
-        'flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-primary font-bold text-white hover:bg-primary-strong',
-        variant === 'toolbar' ? 'min-h-[2.25rem] px-3 py-1.5 text-[0.78rem]' : 'px-3 py-1.5 text-[0.82rem]',
+        'flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl font-bold',
+        // 모바일 데모 툴바(어두운 줄) 위에서는 샴페인, PC 헤더에서는 브랜드 색
+        variant === 'toolbar' ? 'min-h-[2.25rem] bg-champagne px-3 py-1.5 text-[0.78rem] text-shell hover:opacity-90' : 'min-h-[2.25rem] bg-primary px-3 py-1.5 text-[0.82rem] text-white hover:bg-primary-strong',
       )}
     >
       <Store size={15} /> 고객 플랫폼 보기
@@ -318,7 +338,9 @@ function SidebarContent({ onNavigate, collapsible }: { onNavigate?: () => void; 
   const linkCls = (isActive: boolean, sub?: boolean) => cx(
     'flex items-center gap-2.5 rounded-lg px-2.5 text-left font-bold transition-colors',
     dense ? 'py-1 text-[0.88rem]' : sub ? 'py-1.5 text-[0.88rem]' : 'py-2 text-[0.92rem]',
-    isActive ? 'bg-white/12 text-white' : 'text-white/75 hover:bg-white/8 hover:text-white',
+    isActive
+      ? 'relative bg-white/12 text-white before:absolute before:-left-3.5 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-champagne'
+      : 'text-white/72 hover:bg-white/8 hover:text-white',
   )
   const iconSize = dense ? 15 : 18
 
@@ -560,34 +582,37 @@ export default function AxLayout({ children }: { children?: ReactNode }) {
 
       <div className="lg:pl-[280px]">
         <header className="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
-          {/* 모바일 데모 툴바 — 역할·미리보기·플랫폼 전환. 메인 헤더와 역할을 나눈다 */}
-          <div className="flex items-center justify-between gap-2 border-b border-line/70 bg-ivory px-3 py-1.5 lg:hidden">
+          {/* 모바일 데모 툴바 — 역할 · 미리보기 · 플랫폼 전환. 실제 업무 헤더와 구분되는 어두운 한 줄 */}
+          <div className="flex items-center justify-between gap-2 bg-shell px-3 py-1.5 lg:hidden">
             <div className="flex min-w-0 items-center gap-1.5">
-              <span className="hidden shrink-0 min-[420px]:inline"><Badge tone="warning" className="text-[0.72rem]">DEMO</Badge></span>
-              <RoleSwitcher compact />
+              <span className="hidden shrink-0 rounded border border-white/30 px-1.5 py-px text-[0.68rem] font-bold tracking-[0.12em] text-white/85 min-[420px]:inline">DEMO</span>
+              <RoleSwitcher compact dark />
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
-              <DevicePreview compact />
+              <DevicePreview compact dark />
               {role !== 'customer' && <CustomerPlatformButton variant="toolbar" />}
             </div>
           </div>
 
-          <div className="mx-auto flex max-w-[1720px] items-center justify-between gap-2 px-3 py-2 sm:px-4 lg:px-8 lg:py-2.5">
-            <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+          <div className="mx-auto flex h-14 max-w-[1720px] items-center justify-between gap-3 px-3 sm:px-4 lg:h-[3.6rem] lg:px-8">
+            <div className="flex min-w-0 items-center gap-1.5">
               <button
                 onClick={() => setDrawer(true)}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-soft hover:bg-neutral-soft lg:hidden"
+                className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-soft hover:bg-neutral-soft lg:hidden"
                 aria-label="전체 메뉴"
               >
-                <Menu size={23} />
+                <Menu size={22} />
               </button>
-              <LiveClock />
+              <HeaderCrumb />
             </div>
-            {/* Desktop 액션 — 모바일에서는 위 툴바로 이동 */}
-            <div className="hidden shrink-0 items-center gap-2 lg:flex">
-              <DevicePreview compact />
-              {role !== 'customer' && <CustomerPlatformButton variant="header" />}
-              <RoleSwitcher compact />
+            <div className="flex shrink-0 items-center gap-2">
+              <LiveClock />
+              {/* Desktop 액션 — 모바일에서는 위 툴바로 이동 */}
+              <div className="hidden items-center gap-2 border-l border-line pl-3 lg:flex">
+                <DevicePreview compact />
+                {role !== 'customer' && <CustomerPlatformButton variant="header" />}
+                <RoleSwitcher compact />
+              </div>
             </div>
           </div>
         </header>

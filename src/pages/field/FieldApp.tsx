@@ -270,8 +270,8 @@ export default function FieldApp() {
             ['me', '내 정보', <User key="i" size={21} />],
           ] as Array<[Tab, string, ReactNode]>).map(([id, label, icon]) => (
             <button key={id} onClick={() => setTab(id)} aria-current={tab === id ? 'page' : undefined}
-              className={cx('relative flex min-h-[3.4rem] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[0.72rem] font-bold', tab === id ? 'text-primary' : 'text-ink-faint')}>
-              {icon}{label}
+              className={cx('relative flex min-h-[3.4rem] flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[0.72rem] font-bold', tab === id ? 'text-primary-strong' : 'text-ink-faint')}>
+              <span className={cx('flex h-7 w-12 items-center justify-center rounded-full transition-colors', tab === id && 'bg-mint')}>{icon}</span>{label}
               {id === 'alerts' && unacked.length > 0 && <span className="tnum absolute right-[calc(50%-1.3rem)] top-1.5 min-w-[1.1rem] rounded-full bg-danger px-1 text-[0.66rem] font-extrabold text-white">{unacked.length}</span>}
             </button>
           ))}

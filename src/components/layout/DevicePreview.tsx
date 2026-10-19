@@ -122,7 +122,7 @@ function PreviewModal({ kind, url, onClose }: { kind: PreviewKind; url: string; 
   )
 }
 
-export default function DevicePreview({ compact }: { compact?: boolean }) {
+export default function DevicePreview({ compact, dark }: { compact?: boolean; dark?: boolean }) {
   const loc = useLocation()
   const isDesktop = useIsDesktop()
   const [open, setOpen] = useState<PreviewKind | null>(null)
@@ -142,7 +142,8 @@ export default function DevicePreview({ compact }: { compact?: boolean }) {
         title={`${label} — 현재 화면을 ${isDesktop ? '모바일' : 'PC'} 크기로 미리보기`}
         aria-label={label}
         className={cx(
-          'flex items-center gap-1.5 rounded-xl border border-line bg-card font-bold text-ink-soft hover:border-primary hover:text-primary',
+          'flex items-center gap-1.5 rounded-xl border font-bold',
+          dark ? 'border-white/20 bg-white/5 text-white/85 hover:border-white/50 hover:text-white' : 'border-line bg-card text-ink-soft hover:border-primary hover:text-primary',
           compact ? 'px-2.5 py-1.5 text-[0.75rem]' : 'px-3 py-1.5 text-[0.8rem]',
         )}
       >

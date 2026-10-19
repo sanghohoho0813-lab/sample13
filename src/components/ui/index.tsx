@@ -68,16 +68,17 @@ export function KpiCard({ icon, label, value, unit, sub, tone = 'brand', onClick
   icon: ReactNode; label: string; value: string | number; unit?: string; sub?: ReactNode; tone?: Tone; onClick?: () => void
 }) {
   return (
-    <Card onClick={onClick} className="flex min-w-0 flex-col gap-2 p-3.5 sm:p-4">
-      <div className="flex items-center gap-2">
+    <Card onClick={onClick} className="flex min-w-0 flex-col p-3.5 sm:p-4">
+      {/* 업무 KPI — 이름은 위 · 아이콘은 오른쪽 작게, 숫자가 가장 먼저 읽히게 */}
+      <div className="flex items-start justify-between gap-2">
+        <span className="min-w-0 text-[0.8rem] font-bold leading-snug text-ink-soft break-keep">{label}</span>
         <span className={cx('flex h-7 w-7 shrink-0 items-center justify-center rounded-lg', toneBg[tone])}>{icon}</span>
-        <span className="min-w-0 text-[0.82rem] font-bold leading-snug text-ink-soft break-keep">{label}</span>
       </div>
-      <div className="flex flex-wrap items-baseline gap-x-1">
-        <span className="tnum whitespace-nowrap text-[1.7rem] font-extrabold leading-none tracking-tight">{value}</span>
-        {unit && <span className="whitespace-nowrap text-[0.88rem] font-semibold text-ink-faint">{unit}</span>}
+      <div className="mt-1.5 flex flex-wrap items-baseline gap-x-1">
+        <span className="tnum whitespace-nowrap text-[1.75rem] font-extrabold leading-none tracking-tight">{value}</span>
+        {unit && <span className="whitespace-nowrap text-[0.86rem] font-semibold text-ink-faint">{unit}</span>}
       </div>
-      {sub && <div className="truncate text-[0.78rem] leading-snug text-ink-faint">{sub}</div>}
+      {sub && <div className="mt-2 truncate border-t border-line/70 pt-2 text-[0.76rem] leading-snug text-ink-faint">{sub}</div>}
     </Card>
   )
 }
@@ -96,8 +97,8 @@ export function PageHeader({ title, desc, right }: { title: string; desc?: strin
   return (
     <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
       <div>
-        <h1 className="text-[1.7rem] lg:text-[1.85rem] font-extrabold tracking-tight">{title}</h1>
-        {desc && <p className="mt-1 text-[0.92rem] text-ink-soft max-w-2xl leading-relaxed">{desc}</p>}
+        <h1 className="text-[1.5rem] font-extrabold leading-tight lg:text-[1.7rem]">{title}</h1>
+        {desc && <p className="mt-1.5 max-w-2xl text-[0.9rem] leading-relaxed text-ink-soft">{desc}</p>}
       </div>
       {right && <div className="flex items-center gap-2 flex-wrap">{right}</div>}
     </div>
@@ -111,23 +112,23 @@ export function Btn({ children, onClick, variant = 'primary', size = 'md', class
   size?: 'sm' | 'md' | 'lg'; className?: string; disabled?: boolean
 }) {
   const v = {
-    primary: 'bg-primary text-white hover:bg-primary-strong',
-    outline: 'border border-line bg-card text-ink hover:border-primary hover:text-primary',
+    primary: 'bg-primary text-white shadow-[0_1px_2px_rgba(8,52,58,0.18)] hover:bg-primary-strong',
+    outline: 'border border-line bg-card text-ink hover:border-primary/60 hover:text-primary',
     ghost: 'text-ink-soft hover:bg-neutral-soft',
     ai: 'bg-ai text-white hover:bg-ai-strong',
     danger: 'bg-danger text-white hover:opacity-90',
     success: 'bg-success text-white hover:opacity-90',
   }[variant]
   const s = {
-    sm: 'px-3 py-1.5 text-[0.8rem] rounded-lg',
-    md: 'px-4 py-2 text-[0.88rem] rounded-xl',
-    lg: 'px-5 py-3 text-[0.95rem] rounded-xl',
+    sm: 'min-h-[2.1rem] px-3 py-1.5 text-[0.8rem] rounded-lg',
+    md: 'min-h-[2.5rem] px-4 py-2 text-[0.88rem] rounded-xl',
+    lg: 'min-h-[3rem] px-5 py-3 text-[0.95rem] rounded-xl',
   }[size]
   return (
     <button
       disabled={disabled}
       onClick={onClick}
-      className={cx('font-bold transition-colors whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed', v, s, className)}
+      className={cx('inline-flex items-center justify-center gap-1 font-bold transition-[background-color,border-color,color,box-shadow,transform] whitespace-nowrap active:scale-[0.985] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100', v, s, className)}
     >
       {children}
     </button>
@@ -189,11 +190,13 @@ export function Modal({ open, onClose, title, children, wide }: {
         aria-modal="true"
         aria-labelledby={titleId}
         className={cx(
-          'pop-in relative w-full bg-card outline-none sm:rounded-2xl rounded-t-2xl shadow-pop max-h-[88vh] overflow-y-auto overscroll-contain',
+          'sheet-in relative w-full bg-card outline-none rounded-t-3xl sm:rounded-2xl shadow-pop max-h-[90vh] overflow-y-auto overscroll-contain',
           wide ? 'sm:max-w-2xl' : 'sm:max-w-lg',
         )}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-card px-5 py-4">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-card px-5 pb-3.5 pt-5 sm:py-4">
+          {/* 폰 시트 손잡이 — 아래에서 올라온 면이라는 단서 */}
+          <span className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-line sm:hidden" aria-hidden="true" />
           <h3 id={titleId} className="text-[1.08rem] font-bold">{title}</h3>
           <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-faint hover:bg-neutral-soft" aria-label="닫기">
             <X size={20} />

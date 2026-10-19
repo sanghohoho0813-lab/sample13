@@ -236,7 +236,7 @@ export default function JobFlow({ job, view, send, meta, net }: {
 
       {/* 다음 할 일 — 아래 고정 */}
       {cta && (
-        <div className="fixed bottom-[calc(3.6rem+env(safe-area-inset-bottom))] left-1/2 z-30 w-full max-w-md -translate-x-1/2 px-4 pb-2">
+        <div className="fixed bottom-[calc(3.6rem+env(safe-area-inset-bottom))] left-1/2 z-30 w-full max-w-md -translate-x-1/2 bg-gradient-to-t from-ivory via-ivory/90 to-transparent px-4 pb-2 pt-4">
           <button
             onClick={cta.run}
             className={cx(
