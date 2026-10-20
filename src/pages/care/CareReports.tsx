@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { AlertTriangle, Camera, CheckCircle2, Clock, MapPin, Sparkles, Star, User } from 'lucide-react'
+import { AlertTriangle, Camera, CheckCircle2, ChevronsLeftRight, Clock, MapPin, Sparkles, Star, User } from 'lucide-react'
 import CareShell, { CARE_CUSTOMER_ID } from './CareShell'
 import { Btn, EmptyState, TextArea } from '../../components/ui'
 import { useToast } from '../../components/ui/toast-context'
@@ -9,6 +9,7 @@ import { SEED_REPORTS } from '../../lib/demo/intelligence'
 import { CHECKLIST_TEMPLATE } from '../../lib/demo/operations'
 import { beforeAfterFor, altOf } from '../../lib/demo/photos'
 import { Photo } from '../../components/ui/Photo'
+import PhotoViewer, { type Shot, type ViewerMode } from './PhotoViewer'
 import { cx } from '../../lib/utils'
 import type { ServiceReport } from '../../types'
 
@@ -67,27 +68,43 @@ function ReportCard({ r, focused, issues }: { r: ServiceReport; focused: boolean
   const real = !!(r.photos?.before?.dataUrl || r.photos?.after?.dataUrl)
   const skipped = Object.entries(r.skipped ?? {})
   const pct = Math.round((r.itemsDone / Math.max(1, r.itemsTotal)) * 100)
+  const [viewer, setViewer] = useState<ViewerMode | null>(null)
+  const closeViewer = useCallback(() => setViewer(null), [])
+  const shotOf = (k: 'before' | 'after'): Shot => {
+    const shot = r.photos?.[k]
+    const src = k === 'before' ? ba.before : ba.after
+    return { src, dataUrl: shot?.dataUrl, alt: shot?.dataUrl ? `${k === 'before' ? '작업 전' : '작업 후'} 현장 사진` : altOf(src), at: shot?.at && shot.at !== '-' ? shot.at : undefined }
+  }
   return (
     <div ref={ref} className="scroll-mt-24">
       <article className={cx('overflow-hidden rounded-3xl bg-card shadow-soft ring-1', focused ? 'ring-2 ring-primary' : 'ring-line/60')}>
-        {/* 작업 전 / 후 — 화면을 이끄는 건 사진 */}
-        <div className="grid grid-cols-2 gap-0.5 bg-line/60">
+        {/* 작업 전 / 후 — 화면을 이끄는 건 사진. 누르면 크게 · 겹쳐 비교 */}
+        <div className="relative grid grid-cols-2 gap-0.5 bg-line/60">
           {(['before', 'after'] as const).map((k) => {
             const tag = k === 'before' ? '작업 전' : '작업 후'
-            const shot = r.photos?.[k]
-            const src = k === 'before' ? ba.before : ba.after
+            const shot = shotOf(k)
             return (
               <figure key={k} className="relative aspect-[4/3] overflow-hidden bg-ivory">
-                {shot?.dataUrl
-                  ? <img src={shot.dataUrl} alt={`${tag} 현장 사진`} className="h-full w-full object-cover" />
-                  : <Photo src={src} alt={altOf(src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />}
-                <figcaption className={cx('absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-[0.72rem] font-extrabold tracking-wide text-white backdrop-blur-sm', k === 'before' ? 'bg-ink/65' : 'bg-primary/90')}>
-                  {tag}{shot?.at && shot.at !== '-' ? ` · ${shot.at}` : ''}
+                <button onClick={() => setViewer(k)} aria-label={`${tag} 사진 크게 보기`} className="group block h-full w-full">
+                  {shot.dataUrl
+                    ? <img src={shot.dataUrl} alt={shot.alt} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+                    : <Photo src={shot.src} alt={shot.alt} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />}
+                </button>
+                <figcaption className={cx('pointer-events-none absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-[0.72rem] font-extrabold tracking-wide text-white backdrop-blur-sm', k === 'before' ? 'bg-ink/65' : 'bg-primary/90')}>
+                  {tag}{shot.at ? ` · ${shot.at}` : ''}
                 </figcaption>
               </figure>
             )
           })}
+          <button
+            onClick={() => setViewer('compare')}
+            className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full bg-white/95 px-3.5 py-1.5 text-[0.78rem] font-extrabold text-ink shadow-float ring-1 ring-black/5 transition-transform hover:scale-[1.03] active:scale-95"
+          >
+            <ChevronsLeftRight size={14} className="text-primary" /> 전 · 후 겹쳐 보기
+          </button>
         </div>
+        {/* 열 때마다 새로 그린다 — 누른 사진(전 · 후 · 비교)으로 바로 시작 */}
+        {viewer && <PhotoViewer open demo={!real} initial={viewer} onClose={closeViewer} before={shotOf('before')} after={shotOf('after')} title={`${r.date} · ${r.service ?? '정기관리'}`} />}
         <p className="flex items-center justify-center gap-1 px-5 py-2 text-center text-[0.72rem] font-semibold text-ink-faint">
           <Camera size={12} /> {real ? '현장에서 촬영한 사진 (화질 자동 검사 통과)' : '대표 사진 (DEMO) — 실서비스에서는 현장 촬영 사진이 표시됩니다'}
         </p>

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { X, CheckCircle2, AlertTriangle, Info } from 'lucide-react'
+import { X, CheckCircle2, AlertTriangle, Info, Inbox } from 'lucide-react'
 import { cx } from '../../lib/utils'
 import { useHideHistoryNav } from '../../lib/historyNav'
+import { trapTab } from '../../lib/focusTrap'
 import { toneBg, toneText, type Tone } from '../../lib/tone'
 import { statusLabel, statusTone } from '../../lib/status'
 import { ToastContext } from './toast-context'
@@ -93,14 +94,41 @@ export function SectionTitle({ children, right, className }: { children: ReactNo
   )
 }
 
+/**
+ * 화면 머리 — 제목과 상태 배지는 한 줄, 설명은 그 아래.
+ * 폰에서는 설명을 두 줄로 줄여 첫 화면에 실제 업무 내용이 더 많이 보이게 한다(탭하면 펼침).
+ */
 export function PageHeader({ title, desc, right }: { title: string; desc?: string; right?: ReactNode }) {
+  const [more, setMore] = useState(false)
+  const [clamped, setClamped] = useState(false)
+  const descRef = useRef<HTMLParagraphElement>(null)
+  // 실제로 잘렸을 때만 '더보기'를 보여준다 (짧은 설명에 버튼이 붙지 않게)
+  useEffect(() => {
+    const el = descRef.current
+    if (!el) return
+    const check = () => setClamped(el.scrollHeight > el.clientHeight + 1)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [desc])
   return (
-    <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h1 className="text-[1.5rem] font-extrabold leading-tight lg:text-[1.7rem]">{title}</h1>
-        {desc && <p className="mt-1.5 max-w-2xl text-[0.9rem] leading-relaxed text-ink-soft">{desc}</p>}
+    <div className="mb-5 lg:mb-6">
+      <div className="flex items-start justify-between gap-3">
+        <h1 className="min-w-0 text-[1.35rem] font-extrabold leading-tight sm:text-[1.5rem] lg:text-[1.7rem]">{title}</h1>
+        {right && <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 pt-1">{right}</div>}
       </div>
-      {right && <div className="flex items-center gap-2 flex-wrap">{right}</div>}
+      {desc && (
+        <>
+          <p ref={descRef} className={cx('mt-1.5 max-w-2xl text-[0.88rem] leading-relaxed text-ink-soft sm:line-clamp-none', !more && 'line-clamp-2')}>
+            {desc}
+          </p>
+          {(clamped || more) && (
+            <button onClick={() => setMore((v) => !v)} className="mt-0.5 text-[0.78rem] font-bold text-primary sm:hidden">
+              {more ? '접기' : '설명 더보기'}
+            </button>
+          )}
+        </>
+      )}
     </div>
   )
 }
@@ -160,18 +188,9 @@ export function Modal({ open, onClose, title, children, wide }: {
   // ESC 닫기 · Tab 이 대화상자 밖으로 빠져나가지 않게 · 배경 스크롤 잠금 (닫힐 때 반드시 원복)
   useEffect(() => {
     if (!open) return
-    const trapTab = (e: KeyboardEvent) => {
-      const box = boxRef.current
-      if (!box) return
-      const f = [...box.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')]
-      if (!f.length) return
-      const first = f[0], last = f[f.length - 1]
-      if (e.shiftKey && (document.activeElement === first || document.activeElement === box)) { e.preventDefault(); last.focus() }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
-    }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
-      else if (e.key === 'Tab') trapTab(e)
+      else if (e.key === 'Tab') trapTab(boxRef.current, e)
     }
     window.addEventListener('keydown', onKey)
     const prev = document.body.style.overflow
@@ -226,11 +245,14 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, desc, confirmLa
 }
 
 // ─── States ──────────────────────────────────────────────
-export function EmptyState({ title, desc, action }: { title: string; desc?: string; action?: ReactNode }) {
+export function EmptyState({ title, desc, action, icon }: { title: string; desc?: string; action?: ReactNode; icon?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-card/60 px-6 py-12 text-center">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-card/60 px-6 py-11 text-center">
+      <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-ivory text-ink-faint" aria-hidden="true">
+        {icon ?? <Inbox size={22} />}
+      </span>
       <p className="text-[0.98rem] font-bold text-ink-soft">{title}</p>
-      {desc && <p className="mt-1 text-[0.85rem] text-ink-faint">{desc}</p>}
+      {desc && <p className="mt-1 max-w-sm text-[0.85rem] leading-relaxed text-ink-faint">{desc}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   )
@@ -260,10 +282,16 @@ export function Freshness({ source = '데모 데이터' }: { source?: string }) 
 
 // ─── Toast ───────────────────────────────────────────────
 const TOAST_ICON: Partial<Record<Tone, ReactNode>> = {
-  success: <CheckCircle2 size={17} />,
-  warning: <AlertTriangle size={17} />,
-  danger: <AlertTriangle size={17} />,
-  info: <Info size={17} />,
+  success: <CheckCircle2 size={15} />,
+  warning: <AlertTriangle size={14} />,
+  danger: <AlertTriangle size={14} />,
+  info: <Info size={14} />,
+}
+const TOAST_DOT: Partial<Record<Tone, string>> = {
+  success: 'bg-success text-white',
+  warning: 'bg-warning text-white',
+  danger: 'bg-danger text-white',
+  info: 'bg-info text-white',
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -279,11 +307,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={push}>
       {children}
       {/* 스크린리더가 알림 내용을 읽도록 live region 으로 둔다 */}
-      <div role="status" aria-live="polite" className="pointer-events-none fixed bottom-20 left-1/2 z-[60] flex w-full max-w-md -translate-x-1/2 flex-col items-center gap-2 px-4 lg:bottom-6">
+      {/* 어두운 알림 — 밝은 카드 위에서도 한눈에 구분되고, 의미색은 아이콘에만.
+          폰에서는 화면 위쪽 — 아래의 주요 버튼(현장 단계 버튼 · 하단 메뉴)을 가리지 않는다 */}
+      <div role="status" aria-live="polite" className="pointer-events-none fixed left-1/2 top-[max(0.75rem,env(safe-area-inset-top))] z-[60] flex w-full max-w-md -translate-x-1/2 flex-col-reverse items-center gap-2 px-4 lg:bottom-6 lg:top-auto lg:flex-col">
         {toasts.map((t) => (
-          <div key={t.id} className="pop-in flex items-center gap-2 rounded-xl border border-line bg-card px-4 py-2.5 text-[0.86rem] font-bold text-ink shadow-pop">
-            <span className={cx('shrink-0', toneText[t.tone])}>{TOAST_ICON[t.tone] ?? <Info size={17} />}</span>
-            {t.msg}
+          <div key={t.id} className="toast-in flex max-w-full items-center gap-2.5 rounded-2xl bg-ink/95 py-2.5 pl-3 pr-4 text-[0.86rem] font-semibold leading-snug text-white shadow-pop backdrop-blur">
+            <span className={cx('flex h-6 w-6 shrink-0 items-center justify-center rounded-full', TOAST_DOT[t.tone] ?? 'bg-white/15 text-white')}>{TOAST_ICON[t.tone] ?? <Info size={14} />}</span>
+            <span className="min-w-0">{t.msg}</span>
           </div>
         ))}
       </div>

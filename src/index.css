@@ -178,6 +178,17 @@ body {
   to { opacity: 1; transform: scale(1); }
 }
 .pop-in { animation: popIn 0.22s ease both; }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toastDown {
+  from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+/* 폰은 위에서 내려오고(화면 위쪽 알림), PC 는 아래에서 올라온다 */
+.toast-in { animation: toastDown 0.26s cubic-bezier(0.32, 0.72, 0, 1) both; }
+@media (min-width: 1024px) { .toast-in { animation-name: toastIn; } }
 /* 대화상자 — 폰에서는 아래에서 올라오는 시트, 큰 화면에서는 가운데 팝업 */
 .sheet-in { animation: slideUp 0.28s cubic-bezier(0.32, 0.72, 0, 1) both; }
 @media (min-width: 640px) { .sheet-in { animation: popIn 0.22s ease both; } }
@@ -304,3 +315,5 @@ input:focus-visible, textarea:focus-visible { outline-offset: 0; }
 
 /* 본문 바로가기로 포커스가 옮겨진 본문 영역 자체에는 링을 그리지 않는다 */
 main:focus-visible { outline: none; }
+/* 전역 검색 입력 — 열리자마자 포커스가 가는 유일한 입력이라 링 대신 입력 줄 자체가 강조된다 */
+.palette-input:focus-visible { outline: none; }

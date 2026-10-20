@@ -7,6 +7,7 @@ import { Check, History, Lock } from 'lucide-react'
 import { Btn, Modal, TextArea } from '../ui'
 import { cx } from '../../lib/utils'
 import { toneText, type Tone } from '../../lib/tone'
+import { DEMO_NOW } from '../../lib/ops/geo'
 import type { AuditEntry } from '../../types'
 import { ROLE_LABEL } from '../../types'
 
@@ -137,5 +138,15 @@ export function Restricted({ children }: { children: ReactNode }) {
     <p className="flex items-center gap-1.5 rounded-xl bg-neutral-soft px-3 py-2 text-[0.8rem] font-bold text-ink-soft">
       <Lock size={13} className="shrink-0" /> {children}
     </p>
+  )
+}
+
+/** 오늘 타임라인의 현재 시각 줄 — 데모 기준 시각(DEMO_NOW). 일정 / 배정 · 작업현황 목록이 같은 모양을 쓴다 */
+export function NowLine() {
+  return (
+    <div data-now className="flex items-center gap-2 py-1 pl-0.5" role="separator" aria-label={`현재 시각 ${DEMO_NOW}`}>
+      <span className="tnum shrink-0 rounded-full bg-primary px-2.5 py-0.5 text-[0.72rem] font-extrabold text-white shadow-soft">지금 {DEMO_NOW}</span>
+      <span className="h-[2px] flex-1 rounded-full bg-primary/40" />
+    </div>
   )
 }

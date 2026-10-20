@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle2, Siren, Clock } from 'lucide-react'
+import { Check, CheckCircle2, Siren } from 'lucide-react'
 import { Modal, Btn, Field, TextArea, ChoiceGroup } from '../../components/ui'
 import { useDemo } from '../../lib/data/context'
 import { UPSELL_SERVICES } from '../../lib/demo/operations'
-import { dateWithOffset } from '../../lib/utils'
+import { cx, dateWithOffset } from '../../lib/utils'
 import type { RequestType } from '../../types'
 import { CARE_CUSTOMER_ID } from './CareShell'
 import { TOPIC, composeRequestDetail, hasErrors, validateRequest, type RequestFields, type Topic } from './requestForm'
@@ -27,6 +27,20 @@ const REPLY: Record<RequestType, string> = {
   긴급방문: '가장 빠른 팀을 확인해 30분 이내에 연락드립니다.',
   문의: '담당자가 영업시간 내 1시간 이내에 회신드립니다.',
 }
+// 접수 뒤 이어지는 단계 — 요청 상태(접수 → 검토중 → 처리중 → 완료)와 같은 순서. 요청 현황 화면도 이 순서로 보여준다
+const NEXT_STEP: Record<RequestType, string> = {
+  추가서비스: '견적 · 방문 일정을 확정하고 현장팀을 배정합니다',
+  일정변경: '변경된 일정을 확정해 현장팀 앱에 반영합니다',
+  긴급방문: '가장 가까운 팀이 출동합니다',
+  문의: '담당자가 내용을 확인해 답변을 준비합니다',
+}
+const LAST_STEP: Record<RequestType, string> = {
+  추가서비스: '작업이 끝나면 사진 리포트가 이 앱에 도착합니다',
+  일정변경: '확정된 방문 일정이 홈 화면에 표시됩니다',
+  긴급방문: '조치 후 사진 리포트가 이 앱에 도착합니다',
+  문의: '회신 내용이 요청 현황에 표시됩니다',
+}
+
 const WHEN = ['다음 정기방문 때', '이번 주 안에', '다음 주 이후'] as const
 const SLOTS = [
   { value: '오전', label: '오전', desc: '09:00 ~ 12:00' },
@@ -65,6 +79,7 @@ export default function RequestSheet({ type, onClose, preset }: { type: RequestT
   const [memo, setMemo] = useState('')
   const [tried, setTried] = useState(false)
   const [doneId, setDoneId] = useState<string | null>(null)
+  const [sent, setSent] = useState('')
 
   // 시트를 열 때마다 깨끗한 상태로 (프리셋은 반영)
   useEffect(() => {
@@ -87,21 +102,49 @@ export default function RequestSheet({ type, onClose, preset }: { type: RequestT
       window.setTimeout(() => document.querySelector('[role="dialog"] [role="alert"], .pop-in [role="alert"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 30)
       return
     }
-    setDoneId(addRequest(CARE_CUSTOMER_ID, type, composeRequestDetail(type, fields)))
+    const detail = composeRequestDetail(type, fields)
+    setSent(detail)
+    setDoneId(addRequest(CARE_CUSTOMER_ID, type, detail))
   }
 
   return (
     <Modal open={!!type} onClose={onClose} title={doneId ? '요청이 접수되었습니다' : TITLE[type]}>
       {doneId ? (
-        <div className="space-y-4 text-center">
-          <CheckCircle2 size={44} className="mx-auto text-success" />
-          <div>
-            <p className="text-[1.05rem] font-extrabold">{TITLE[type]} 접수 완료</p>
-            <p className="tnum mt-1 text-[0.86rem] font-bold text-ink-faint">접수번호 {doneId}</p>
+        <div className="space-y-4">
+          <div className="text-center">
+            <span className="pop-in mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success-soft ring-8 ring-success-soft/45">
+              <CheckCircle2 size={34} className="text-success" />
+            </span>
+            <p className="mt-3 text-[1.08rem] font-extrabold">{TITLE[type]} 접수 완료</p>
+            <p className="tnum mt-0.5 text-[0.86rem] font-bold text-ink-faint">접수번호 {doneId}</p>
           </div>
-          <p className="flex items-start justify-center gap-1.5 rounded-xl bg-ivory px-4 py-3 text-left text-[0.88rem] leading-relaxed text-ink-soft">
-            <Clock size={16} className="mt-0.5 shrink-0 text-primary" /> {REPLY[type]}
-          </p>
+
+          {/* 보낸 내용 — 무엇을 요청했는지 다시 확인 */}
+          <div className="rounded-2xl border border-line px-4 py-3">
+            <p className="text-[0.74rem] font-bold text-ink-faint">보낸 내용</p>
+            <p className="mt-0.5 text-[0.88rem] font-semibold leading-relaxed [overflow-wrap:anywhere]">{sent}</p>
+          </div>
+
+          {/* 다음 단계 — 지금 어디까지 왔고, 다음에 무엇이 오는지 */}
+          <ol aria-label="처리 단계" className="rounded-2xl bg-ivory px-4 py-3.5">
+            {[
+              { t: '접수 완료', d: '본사 요청함에 도착했습니다' },
+              { t: '담당자 확인', d: REPLY[type] },
+              { t: '처리', d: NEXT_STEP[type] },
+              { t: '완료', d: LAST_STEP[type] },
+            ].map((step, i, all) => (
+              <li key={step.t} className="relative flex gap-3 pb-3 last:pb-0">
+                {i < all.length - 1 && <span aria-hidden="true" className={cx('absolute left-[0.6875rem] top-6 h-[calc(100%-1.25rem)] w-0.5', i === 0 ? 'bg-success/50' : 'bg-line')} />}
+                <span className={cx('relative z-10 flex h-[1.375rem] w-[1.375rem] shrink-0 items-center justify-center rounded-full', i === 0 ? 'bg-success text-white' : 'border-2 border-line bg-card')}>
+                  {i === 0 && <Check size={13} strokeWidth={3} />}
+                </span>
+                <span className="min-w-0 pt-px">
+                  <span className={cx('block text-[0.86rem] font-extrabold', i === 0 ? 'text-success' : 'text-ink')}>{step.t}{i === 1 && <span className="ml-1.5 rounded-full bg-primary/10 px-1.5 py-px text-[0.68rem] font-bold text-primary">다음</span>}</span>
+                  <span className="block text-[0.8rem] leading-relaxed text-ink-soft">{step.d}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
           <div className="grid grid-cols-2 gap-2">
             <Btn variant="outline" onClick={onClose}>닫기</Btn>
             <Btn onClick={() => { onClose(); nav('/care/requests') }}>요청 현황 보기</Btn>

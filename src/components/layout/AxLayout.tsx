@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { cloneElement, isValidElement, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Zap, CalendarClock, MapPin, ClipboardList, Users, Building2,
@@ -18,6 +18,8 @@ import { SampleBridgeCTA, SampleBridgeMini } from '../brand/SampleBridgeCTA'
 import { ROADMAP, STAGE_NOTE, type RoadmapStage } from '../../lib/demo/roadmap'
 import { useHideHistoryNav } from '../../lib/historyNav'
 import { pageName } from '../../lib/routeTitles'
+import CommandPalette, { SearchTrigger, type PageLink } from './CommandPalette'
+import { useCommandHotkey } from '../../lib/hotkeys'
 
 /* ═══════════════════════════════════════════════════════════════════
    Navigation 정보구조 (IA)
@@ -546,12 +548,22 @@ export default function AxLayout({ children }: { children?: ReactNode }) {
   const [drawer, setDrawer] = useState(false)
   const [more, setMore] = useState(false)
   const [askReset, setAskReset] = useState(false)
+  const [search, setSearch] = useState(false)
   useHideHistoryNav(drawer)
   const loc = useLocation()
   const { tutorialSeen, markTutorialSeen, role, resetDemo } = useDemo()
   const toast = useToast()
+  const entries = useNav(role)
+  // 검색 대상 화면 — 역할로 거른 메뉴 그대로 (권한 없는 화면은 검색에도 나오지 않는다)
+  const pages = useMemo<PageLink[]>(
+    () => entries.flatMap((e) => (e.items ? e.items.map((i) => ({ to: i.to, label: i.label, group: e.label })) : e.to ? [{ to: e.to, label: e.label }] : [])),
+    [entries],
+  )
+  const openSearch = useCallback(() => setSearch(true), [])
+  const closeSearch = useCallback(() => setSearch(false), [])
+  useCommandHotkey(openSearch)
 
-  useEffect(() => { setDrawer(false); setMore(false) }, [loc.pathname])
+  useEffect(() => { setDrawer(false); setMore(false); setSearch(false) }, [loc.pathname])
   useEffect(() => {
     if (!drawer) return
     const prev = document.body.style.overflow
@@ -605,8 +617,12 @@ export default function AxLayout({ children }: { children?: ReactNode }) {
               </button>
               <HeaderCrumb />
             </div>
+            <div className="hidden min-w-0 flex-1 justify-center px-4 lg:flex">
+              <SearchTrigger onOpen={openSearch} />
+            </div>
             <div className="flex shrink-0 items-center gap-2">
               <LiveClock />
+              <div className="lg:hidden"><SearchTrigger onOpen={openSearch} compact /></div>
               {/* Desktop 액션 — 모바일에서는 위 툴바로 이동 */}
               <div className="hidden items-center gap-2 border-l border-line pl-3 lg:flex">
                 <DevicePreview compact />
@@ -626,6 +642,7 @@ export default function AxLayout({ children }: { children?: ReactNode }) {
 
       <AxBottomNav onMore={() => setMore(true)} />
       <MoreSheet open={more} onClose={() => setMore(false)} onReset={() => setAskReset(true)} />
+      <CommandPalette open={search} onClose={closeSearch} pages={pages} />
       <ConfirmDialog
         open={askReset}
         onClose={() => setAskReset(false)}

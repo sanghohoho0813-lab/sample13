@@ -48,3 +48,9 @@ export const toHM = (min: number) => {
 
 /** 데모 기준 시각 — 시드 데이터의 진행 상태(완료 · 작업중 · 예정)가 이 시각을 기준으로 맞춰져 있다 */
 export const DEMO_NOW = '14:20'
+
+/** 시각순 목록에서 '지금' 줄이 들어갈 자리 — 지금 이후 시작하는 첫 항목 앞 (모두 지났으면 목록 끝) */
+export function nowIndex(times: string[]) {
+  const i = times.findIndex((t) => t > DEMO_NOW)
+  return i === -1 ? times.length : i
+}

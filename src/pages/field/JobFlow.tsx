@@ -156,10 +156,15 @@ export default function JobFlow({ job, view, send, meta, net }: {
       {/* 체크리스트 */}
       <div ref={listRef}>
         <Card className={cx('p-4', !started && !isDone && 'opacity-60')}>
-          <p className="mb-2 flex items-center justify-between text-[0.9rem] font-extrabold">
+          <p className="flex items-center justify-between text-[0.9rem] font-extrabold">
             <span><ClipboardCheck size={15} className="mr-1 inline text-primary" /> 체크리스트</span>
             <span className="tnum text-primary">{done + skippedN} / {CHECKLIST_TEMPLATE.length}{skippedN > 0 && <span className="text-[0.74rem] text-warning"> (제외 {skippedN})</span>}</span>
           </p>
+          {/* 진행 막대 — 수행(초록) · 제외(노랑) · 남음 */}
+          <div className="mb-2.5 mt-1.5 flex h-1.5 overflow-hidden rounded-full bg-ivory" aria-hidden="true">
+            <span className="h-full bg-success transition-[width] duration-300" style={{ width: `${(done / CHECKLIST_TEMPLATE.length) * 100}%` }} />
+            <span className="h-full bg-warning transition-[width] duration-300" style={{ width: `${(skippedN / CHECKLIST_TEMPLATE.length) * 100}%` }} />
+          </div>
           <ul className="space-y-1.5">
             {CHECKLIST_TEMPLATE.map((item) => {
               const on = checklist[item]
@@ -172,7 +177,13 @@ export default function JobFlow({ job, view, send, meta, net }: {
                     onClick={() => send({ type: 'toggleChecklist', scheduleId: job.id, item, meta: meta() })}
                     className={cx('flex min-h-[3.1rem] flex-1 items-center gap-2.5 px-3.5 py-2.5 text-left text-[0.92rem] font-bold disabled:cursor-not-allowed', on ? 'text-success' : 'text-ink')}
                   >
-                    <CheckCircle2 size={20} className={cx('shrink-0', !on && 'text-ink-faint/40')} />
+                    {/* 큰 원형 체크 — 장갑 낀 손으로도 상태가 한눈에 */}
+                    <span className={cx(
+                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors',
+                      on ? 'bg-success text-white' : skip ? 'bg-warning/90 text-white' : 'border-2 border-ink-faint/30 bg-card',
+                    )}>
+                      {on ? <Check size={16} strokeWidth={3} /> : skip ? <span className="text-[0.9rem] font-black leading-none">–</span> : null}
+                    </span>
                     <span className="min-w-0">
                       {item}
                       {skip && <span className="block text-[0.74rem] font-bold text-warning">수행 불가 — {skip}</span>}

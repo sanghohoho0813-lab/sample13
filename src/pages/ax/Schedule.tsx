@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, MapPin, Sparkles, ArrowRight, Users, ChevronRight } from 'lucide-react'
+import { AlertTriangle, MapPin, Sparkles, ArrowRight, Users, ChevronRight, Check } from 'lucide-react'
 import { Card, PageHeader, Badge, Btn, StatusPill, StatusText, DemoBadge, EmptyState, Modal } from '../../components/ui'
 import DispatchPanel from '../../components/ops/DispatchPanel'
+import { NowLine } from '../../components/ops'
 import { useDemo } from '../../lib/data/context'
 import { customerById, siteProfile, teamById, teamMemberNames, TEAMS } from '../../lib/demo/company'
 import { arrivalForecast } from '../../lib/ops/dispatch'
+import { nowIndex } from '../../lib/ops/geo'
 import { cx, dateWithOffset } from '../../lib/utils'
 import { useIsWide } from '../../lib/useMedia'
 import type { Schedule as Sched } from '../../types'
@@ -20,6 +22,9 @@ const PROPOSAL_TAG: Record<string, string> = { 추천: '검토 필요', 검토: 
  * - 모바일·태블릿: 목록만 보이고, 항목을 누르면 상세가 하단 시트로 열린다
  *   (예전에는 상세가 목록 24건 아래에 그려져 눌러도 반응이 없는 것처럼 보였다)
  * - 미배정·위험 일정은 목록 위 알림 줄로 끌어올려 첫 화면에서 바로 처리한다
+ * - 오늘 목록은 타임라인 — '지금' 구분선 위는 지나간 일정(완료는 흐리게), 아래는 남은 일정.
+ *   PC 에서는 목록이 화면에 붙어(sticky) 있고, 열면 '지금' 위치로 스크롤된다
+ * - 이번 주 목록은 날짜별 머리로 묶는다
  */
 export default function Schedule() {
   const { schedules, proposals } = useDemo()
@@ -60,19 +65,23 @@ export default function Schedule() {
   const Row = ({ s }: { s: Sched }) => {
     const c = customerById(s.customerId)
     const active = wide && selectedId === s.id
+    // 끝난 일정 — 목록에 남기되 한 단계 물러나 보이게 (선택하면 다시 또렷하게)
+    const done = s.status === '완료' && !active
     return (
       <button
         onClick={() => open(s.id)}
         aria-current={active ? 'true' : undefined}
         className={cx(
-          'flex w-full items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition-colors',
-          active ? 'border-primary bg-mint/60' : 'border-line bg-card hover:border-primary/60',
+          'flex w-full items-center gap-2.5 rounded-xl border px-3.5 text-left transition-colors',
+          done ? 'py-2' : 'py-2.5',
+          active ? 'border-primary bg-mint/60' : done ? 'border-line/70 bg-card/60 hover:border-primary/50' : 'border-line bg-card hover:border-primary/60',
         )}
       >
-        <span className="tnum w-[2.9rem] shrink-0 text-[0.95rem] font-extrabold text-primary">{s.time}</span>
-        <span className="min-w-0 flex-1">
+        <span className={cx('tnum w-[2.9rem] shrink-0 text-[0.95rem] font-extrabold', done ? 'text-ink-faint' : 'text-primary')}>{s.time}</span>
+        <span className={cx('min-w-0 flex-1', done && 'opacity-75')}>
           <span className="block text-[0.93rem] font-bold leading-snug">
-            {s.dayOffset > 0 && <span className="mr-1.5 text-[0.78rem] font-bold text-ink-faint">{dateWithOffset(s.dayOffset)}</span>}
+            {s.dayOffset > 0 && view !== 'week' && <span className="mr-1.5 text-[0.78rem] font-bold text-ink-faint">{dateWithOffset(s.dayOffset)}</span>}
+            {done && <Check size={14} className="mr-1 inline -translate-y-px text-success" aria-hidden="true" />}
             {c?.name}
           </span>
           <span className="block truncate text-[0.78rem] text-ink-faint">
@@ -89,6 +98,21 @@ export default function Schedule() {
   }
 
   const list = view === 'today' ? today : week
+  // '지금' 구분선 — 지금 이후 시작하는 첫 일정 바로 위
+  const nowIdx = view === 'today' ? nowIndex(list.map((s) => s.time)) : -1
+  const doneCount = today.filter((s) => s.status === '완료').length
+
+  // PC — 오늘 보기를 열면 목록을 '지금' 근처로 스크롤 (선택한 일정이 가려지면 그 일정이 보이게)
+  const listRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const box = listRef.current
+    if (!box || !wide || view !== 'today' || box.scrollHeight <= box.clientHeight) return
+    const marker = box.querySelector<HTMLElement>('[data-now]')
+    if (marker) box.scrollTop = Math.max(0, marker.offsetTop - Math.min(box.clientHeight / 3, 150))
+    const sel = box.querySelector<HTMLElement>('[aria-current="true"]')
+    if (sel && (sel.offsetTop < box.scrollTop || sel.offsetTop + sel.offsetHeight > box.scrollTop + box.clientHeight)) box.scrollTop = Math.max(0, sel.offsetTop - 12)
+    // 보기를 바꾸거나 화면 폭이 바뀔 때만 — 선택할 때마다 목록이 튀지 않게
+  }, [wide, view])
 
   return (
     <div className="fade-up">
@@ -174,10 +198,35 @@ export default function Schedule() {
       ) : (
         <div className="grid gap-5 xl:grid-cols-[minmax(320px,380px)_1fr]">
           {/* 미배정이 모두 처리된 뒤에도 튜토리얼이 가리킬 곳이 있도록 목록을 대체 대상으로 */}
-          <div data-tour={!wide && pending.length === 0 ? 'dispatch' : undefined} className="space-y-1.5 xl:max-h-[calc(100vh-15rem)] xl:overflow-y-auto xl:pr-1">
+          <div
+            ref={listRef}
+            data-tour={!wide && pending.length === 0 ? 'dispatch' : undefined}
+            className="relative space-y-1.5 xl:sticky xl:top-[4.6rem] xl:max-h-[calc(100vh-5.6rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-1"
+          >
             {list.length === 0
               ? <EmptyState title="표시할 일정이 없습니다." />
-              : list.map((s) => <Row key={s.id} s={s} />)}
+              : view === 'today' ? (
+                <>
+                  {doneCount > 0 && <p className="px-1 pb-0.5 text-[0.74rem] font-bold text-ink-faint">완료 {doneCount}건 · 남은 일정 {list.length - nowIdx}건</p>}
+                  {list.map((s, i) => (
+                    <Fragment key={s.id}>
+                      {i === nowIdx && <NowLine />}
+                      <Row s={s} />
+                    </Fragment>
+                  ))}
+                  {nowIdx === list.length && <NowLine />}
+                </>
+              ) : list.map((s, i) => (
+                <Fragment key={s.id}>
+                  {(i === 0 || list[i - 1].dayOffset !== s.dayOffset) && (
+                    <p className={cx('sticky top-0 z-10 -mx-0.5 flex items-baseline gap-2 bg-ivory/95 px-1.5 pb-1 text-[0.82rem] font-extrabold backdrop-blur', i === 0 ? 'pt-0' : 'pt-3')}>
+                      {dateWithOffset(s.dayOffset)}
+                      <span className="tnum text-[0.74rem] font-bold text-ink-faint">{list.filter((x) => x.dayOffset === s.dayOffset).length}건</span>
+                    </p>
+                  )}
+                  <Row s={s} />
+                </Fragment>
+              ))}
           </div>
 
           {/* PC — 오른쪽 상세 */}
