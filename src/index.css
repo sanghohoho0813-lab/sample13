@@ -11,23 +11,24 @@
   --color-mint: #DDEDEA;         /* Soft */
   --color-champagne: #D7BC86;    /* Accent — Wordmark */
   --color-champagne-soft: #EFE3C6;
+  --color-champagne-deep: #80632B; /* 흰 바탕 위 작은 금색 글자용 (워드마크 금색은 어두운 바탕 전용) */
   --color-ivory: #F7F5F0;        /* Canvas */
 
   /* ── Neutral — 항상 고정, Theme와 분리 (가독성 보장) ── */
   --color-ink: #1B2430;
   --color-ink-soft: #47525F;
-  --color-ink-faint: #6B7684;
+  --color-ink-faint: #5D6875;    /* 옅은 글자도 밝은 바탕 · 민트 위에서 4.5:1 이상 (WCAG AA) */
   --color-line: #E4E4DC;
   --color-card: #FFFFFF;
   --color-neutral-soft: #EFF1F0; /* 중립 배지 · 버튼 hover */
   --color-neutral-mid: #B8C2CC;  /* 예정 · 대기 같은 중립 상태 막대 */
 
   /* ── 의미색 고정 ── */
-  --color-success: #1E8A5E;
+  --color-success: #18764F;      /* 의미색 글자 — 연한 의미색 바탕 위에서도 4.5:1 이상 */
   --color-success-soft: #E3F3EB;
-  --color-warning: #B97E14;
+  --color-warning: #946510;
   --color-warning-soft: #FBF1DC;
-  --color-danger: #C24A3F;
+  --color-danger: #B8443A;
   --color-danger-soft: #FBE9E6;
   --color-info: #2563AE;
   --color-info-soft: #E7F0FB;
@@ -145,7 +146,10 @@ body {
   word-break: keep-all;
   overflow-wrap: anywhere;
   -webkit-font-smoothing: antialiased;
+  /* hidden 은 body 를 스크롤 상자로 만들어 모든 sticky(앱 헤더 · 오른쪽 칸 · 섹션 바로가기)를 무력화한다.
+     clip 은 가로 넘침만 자르고 스크롤 상자를 만들지 않는다 — 지원하지 않는 옛 브라우저는 hidden 으로 */
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* base 레이어에 두어야 min-w-[…] 유틸리티가 이 규칙을 이길 수 있다 */

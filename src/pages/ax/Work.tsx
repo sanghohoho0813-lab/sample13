@@ -85,7 +85,7 @@ export default function Work() {
                 )}
               >
                 <span className={cx('tnum w-[2.9rem] shrink-0 text-[0.95rem] font-extrabold', done ? 'text-ink-faint' : 'text-primary')}>{s.time}</span>
-                <span className={cx('min-w-0 flex-1', done && 'opacity-75')}>
+                <span className={cx('min-w-0 flex-1', done && '[&>span:first-child]:text-ink-soft')}>
                   <span className="block text-[0.93rem] font-bold leading-snug">{done && <Check size={14} className="mr-1 inline -translate-y-px text-success" aria-hidden="true" />}{customerById(s.customerId)?.name}</span>
                   <span className="block truncate text-[0.78rem] text-ink-faint">
                     <StatusText status={s.status} className="min-[400px]:hidden" />

@@ -78,7 +78,7 @@ export default function Schedule() {
         )}
       >
         <span className={cx('tnum w-[2.9rem] shrink-0 text-[0.95rem] font-extrabold', done ? 'text-ink-faint' : 'text-primary')}>{s.time}</span>
-        <span className={cx('min-w-0 flex-1', done && 'opacity-75')}>
+        <span className={cx('min-w-0 flex-1', done && '[&>span:first-child]:text-ink-soft')}>
           <span className="block text-[0.93rem] font-bold leading-snug">
             {s.dayOffset > 0 && view !== 'week' && <span className="mr-1.5 text-[0.78rem] font-bold text-ink-faint">{dateWithOffset(s.dayOffset)}</span>}
             {done && <Check size={14} className="mr-1 inline -translate-y-px text-success" aria-hidden="true" />}

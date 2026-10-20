@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronRight, Inbox, Store } from 'lucide-react'
+import { ChevronRight, Clock, Inbox, Store } from 'lucide-react'
 import { Badge, Card, DemoBadge, EmptyState, Modal, PageHeader, StatusPill, Btn } from '../../components/ui'
 import { useDemo } from '../../lib/data/context'
 import { customerById } from '../../lib/demo/company'
+import { REPLY_TARGET } from '../../lib/ops/requestSla'
 import { useIsWide } from '../../lib/useMedia'
 import { cx } from '../../lib/utils'
 import type { CustomerRequest } from '../../types'
@@ -18,6 +19,7 @@ const MATCH: Record<Filter, (r: CustomerRequest) => boolean> = {
   반려: (r) => r.status === '반려',
   전체: () => true,
 }
+const filterOf = (r: CustomerRequest) => (Object.keys(MATCH) as Filter[]).find((f) => f !== '전체' && MATCH[f](r)) ?? '전체'
 // 처리 필요 → 진행 중 → 완료 · 반려, 같은 단계에서는 긴급 방문을 맨 위로
 const rank = (r: CustomerRequest) => ({ 접수: 0, 검토중: 1, 처리중: 2, 완료: 3, 반려: 4 }[r.status]) * 10 + (r.type === '긴급방문' ? 0 : 1)
 
@@ -30,16 +32,20 @@ export default function Requests() {
   const wide = useIsWide()
   const [params, setParams] = useSearchParams()
   const deepId = params.get('id')
+  // 첫 탭 — 주소로 연 요청이 있으면 그 요청의 탭, 아니면 비어 있지 않은 첫 탭(처리 필요 → 진행 중 → 전체)
   const [filter, setFilter] = useState<Filter>(() => {
     const r = deepId ? requests.find((x) => x.id === deepId) : undefined
-    return r ? (Object.keys(MATCH) as Filter[]).find((f) => f !== '전체' && MATCH[f](r)) ?? '전체' : '처리 필요'
+    if (r) return filterOf(r)
+    return (['처리 필요', '진행 중'] as Filter[]).find((f) => requests.some(MATCH[f])) ?? '전체'
   })
   const list = requests.filter(MATCH[filter]).sort((a, b) => rank(a) - rank(b))
   const [selectedId, setSelectedId] = useState<string | null>(() => deepId ?? null)
   const [sheet, setSheet] = useState(() => !!deepId && !wide)
   useEffect(() => {
     if (!deepId) return
-    if (requests.some((r) => r.id === deepId)) { setSelectedId(deepId); if (!wide) setSheet(true) }
+    const r = requests.find((x) => x.id === deepId)
+    // 이미 요청함에 있을 때(전역 검색 등) 열어도 목록과 선택이 어긋나지 않게 탭도 맞춘다
+    if (r) { setSelectedId(deepId); setFilter((f) => (MATCH[f](r) ? f : filterOf(r))); if (!wide) setSheet(true) }
     setParams({}, { replace: true })
   }, [deepId, requests, wide, setParams])
 
@@ -71,7 +77,8 @@ export default function Requests() {
         </div>
       </div>
 
-      <div className="grid items-start gap-5 xl:grid-cols-[minmax(320px,400px)_1fr]">
+      {/* 오른쪽 처리 칸 — 처리 중인 요청이 있거나 목록이 있을 때만 (둘 다 없으면 빈 칸 두 개가 되지 않게) */}
+      <div className={cx('grid items-start gap-5', (list.length > 0 || (wide && selected)) && 'xl:grid-cols-[minmax(320px,400px)_1fr]')}>
         <div data-tour="requests" className="space-y-2">
           {list.length === 0 ? (
             <EmptyState
@@ -92,6 +99,12 @@ export default function Requests() {
                   </span>
                   <span className="mt-1 block truncate text-[0.84rem] text-ink-soft">{r.detail}</span>
                   <span className="tnum mt-0.5 block text-[0.74rem] text-ink-faint">{r.createdAt} · 담당 {r.assignee ?? <span className="font-bold text-warning">미지정</span>}</span>
+                  {/* 아직 고객에게 답하지 않은 요청 — 고객에게 약속한 회신 시간 */}
+                  {(r.status === '접수' || (r.status === '검토중' && !r.reply)) && (
+                    <span className={cx('mt-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.72rem] font-bold', r.type === '긴급방문' ? 'bg-danger-soft text-danger' : 'bg-ivory text-ink-soft')}>
+                      <Clock size={11} /> 회신 약속 {REPLY_TARGET[r.type]} 이내
+                    </span>
+                  )}
                 </span>
                 <span className="flex shrink-0 items-center gap-1"><StatusPill status={r.status} />{!wide && <ChevronRight size={15} className="text-ink-faint" />}</span>
               </button>
@@ -99,7 +112,7 @@ export default function Requests() {
           })}
         </div>
 
-        {wide && (selected
+        {wide && (list.length > 0 || selected) && (selected
           ? <Card className="p-5"><RequestPanel key={selected.id} r={selected} /></Card>
           : <EmptyState title="요청을 선택해주세요." />)}
       </div>

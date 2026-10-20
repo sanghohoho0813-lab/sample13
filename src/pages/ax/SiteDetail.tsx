@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { MapPin, ArrowLeft, Camera, CheckCircle2, FileText, AlertTriangle, ArrowRight, ImageOff } from 'lucide-react'
 import { Card, PageHeader, Badge, Btn, StatusPill, DemoBadge, SectionTitle, EmptyState } from '../../components/ui'
+import SectionNav from '../../components/ui/SectionNav'
 import { WhyAIButton, AIReadyBadge } from '../../components/ai'
 import { useDemo } from '../../lib/data/context'
 import { customerById, siteByCustomer, teamById, teamMemberNames } from '../../lib/demo/company'
@@ -78,10 +79,22 @@ export default function SiteDetail() {
         <p className="mb-4 flex items-center gap-2 rounded-xl bg-warning-soft px-4 py-2.5 text-[0.85rem] font-bold text-warning"><AlertTriangle size={15} /> {site.note}</p>
       )}
 
+      {/* 폰 · 태블릿 — 섹션 바로가기 (PC 는 두 칸이라 한눈에 보인다) */}
+      <SectionNav
+        className="xl:hidden"
+        links={[
+          { id: 'site-today', label: '오늘 작업' },
+          { id: 'site-report', label: '최근 리포트' },
+          { id: 'site-issues', label: `현장 이슈${fieldIssues.length ? ` ${fieldIssues.length}` : ''}` },
+          { id: 'site-contract', label: '고객 · 계약' },
+          { id: 'site-quality', label: '품질 이력' },
+        ]}
+      />
+
       <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
         <div className="space-y-5">
           {/* 오늘 작업 */}
-          <Card className="p-5">
+          <Card id="site-today" className="p-5 outline-none">
             <SectionTitle>오늘 작업</SectionTitle>
             {mainJob ? (
               <div className="space-y-4">
@@ -144,7 +157,7 @@ export default function SiteDetail() {
           </Card>
 
           {/* 작업 리포트 */}
-          <Card className="p-5">
+          <Card id="site-report" className="p-5 outline-none">
             <SectionTitle right={<Btn variant="ghost" size="sm" onClick={() => nav('/work')}>작업현황 <ArrowRight size={13} className="inline" /></Btn>}>최근 작업 리포트</SectionTitle>
             {report ? (
               <div className="rounded-xl border border-line p-4">
@@ -164,7 +177,7 @@ export default function SiteDetail() {
 
         <div className="space-y-5">
           {/* 현장 이슈 — 현장 앱에서 보고된 것을 본사가 조치 */}
-          <Card className="p-5">
+          <Card id="site-issues" className="p-5 outline-none">
             <SectionTitle>현장 이슈</SectionTitle>
             {fieldIssues.length === 0 ? <p className="text-[0.85rem] text-ink-faint">보고된 현장 이슈가 없습니다.</p> : (
               <div className="space-y-2">
@@ -189,7 +202,7 @@ export default function SiteDetail() {
           </Card>
 
           {/* 고객/계약 요약 */}
-          <Card className="p-5">
+          <Card id="site-contract" className="p-5 outline-none">
             <SectionTitle>고객 / 계약</SectionTitle>
             <div className="space-y-2 text-[0.88rem]">
               {[
@@ -210,7 +223,7 @@ export default function SiteDetail() {
           </Card>
 
           {/* 품질 이력 */}
-          <Card className="p-5">
+          <Card id="site-quality" className="p-5 outline-none">
             <SectionTitle right={<AIReadyBadge small />}>품질 / 특이사항 이력</SectionTitle>
             {issues.length === 0 ? (
               <p className="text-[0.85rem] text-ink-faint">최근 품질 이슈가 없습니다.</p>

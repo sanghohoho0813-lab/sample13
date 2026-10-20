@@ -28,9 +28,10 @@ export function DemoBadge({ label = '데모 데이터' }: { label?: string }) {
 }
 
 // ─── Card ────────────────────────────────────────────────
-export function Card({ children, className, onClick, hover, tour }: { children: ReactNode; className?: string; onClick?: () => void; hover?: boolean; tour?: string }) {
+export function Card({ children, className, onClick, hover, tour, id }: { children: ReactNode; className?: string; onClick?: () => void; hover?: boolean; tour?: string; id?: string }) {
   return (
     <div
+      id={id}
       data-tour={tour}
       onClick={onClick}
       // 눌러서 이동하는 카드는 키보드(Tab · Enter · Space)로도 열 수 있어야 한다

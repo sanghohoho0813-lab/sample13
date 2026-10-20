@@ -136,7 +136,9 @@ export default function SettingsPage() {
             ))}
           </div>
 
-          <div className="overflow-x-auto">
+          {/* 폰에서는 가로로 넘기는 표 — 키보드 사용자도 스크롤할 수 있게 영역에 포커스를 준다 (WCAG 2.1.1) */}
+          {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 스크롤 영역은 포커스 가능해야 한다 */}
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="권한표 (가로로 스크롤)">
             <table className="w-full min-w-[340px] text-[0.82rem]">
               <thead>
                 <tr className="border-b border-line bg-ivory text-[0.72rem] text-ink-faint">

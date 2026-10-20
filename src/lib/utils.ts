@@ -45,3 +45,16 @@ export const dateWithOffset = (offset: number) => {
 
 export const cx = (...parts: Array<string | false | undefined | null>) =>
   parts.filter(Boolean).join(' ')
+
+/**
+ * 지난 날짜 표기 — 저장 데이터의 'TODAY' · 'D-1' · 'D-5' 를 사람이 읽는 말로.
+ * (미래의 D-n 은 '남은 날', 지난 날을 같은 D-n 으로 쓰면 헷갈린다 — 표시만 바꾸고 저장 형식은 그대로)
+ */
+export const pastDayLabel = (day: string) => {
+  if (day === 'TODAY' || day === '오늘') return '오늘'
+  const m = /^D-(\d+)$/.exec(day)
+  if (!m) return day
+  const n = Number(m[1])
+  return n === 1 ? '어제' : `${n}일 전`
+}
+

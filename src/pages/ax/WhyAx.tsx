@@ -15,7 +15,7 @@ import { Photo } from '../../components/ui/Photo'
 function Section({ no, title, children, tour }: { no: string; title: string; children: ReactNode; tour?: string }) {
   return (
     <Card tour={tour} className="p-6 sm:p-7">
-      <p className="tnum text-[0.78rem] font-extrabold tracking-[0.22em] text-champagne">{no}</p>
+      <p className="tnum text-[0.78rem] font-extrabold tracking-[0.22em] text-champagne-deep">{no}</p>
       <h2 className="mt-1.5 text-[1.3rem] font-extrabold leading-snug tracking-tight sm:text-[1.45rem]">{title}</h2>
       <div className="mt-3.5 space-y-3.5 text-[0.95rem] leading-relaxed text-ink">{children}</div>
     </Card>

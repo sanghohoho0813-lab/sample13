@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, CheckCircle2, ClipboardList, Inbox, ShieldCheck, Shuffle, Sparkles, Wrench } from 'lucide-react'
-import { Badge, Btn, Card, DemoBadge, EmptyState, PageHeader, SectionTitle, StatusPill } from '../../components/ui'
+import { Btn, Card, DemoBadge, EmptyState, PageHeader, SectionTitle, StatusPill } from '../../components/ui'
 import { useToast } from '../../components/ui/toast-context'
 import { ActionLifecycle } from '../../components/ai'
 import { AuditTrail } from '../../components/ops'
@@ -9,7 +9,7 @@ import { useDemo } from '../../lib/data/context'
 import { STAFF, customerById, teamById } from '../../lib/demo/company'
 import { can, needsSecondApprover } from '../../lib/ops/governance'
 import { cx } from '../../lib/utils'
-import type { Tone } from '../../lib/tone'
+import { toneBg, type Tone } from '../../lib/tone'
 
 type Kind = '배정' | '요청' | '이슈' | '조치'
 interface Item {
@@ -27,10 +27,18 @@ interface Item {
 }
 
 const KIND_ICON: Record<Kind, ReactNode> = {
-  배정: <Shuffle size={13} />, 요청: <Inbox size={13} />, 이슈: <Wrench size={13} />, 조치: <Sparkles size={13} />,
+  배정: <Shuffle size={16} />, 요청: <Inbox size={16} />, 이슈: <Wrench size={16} />, 조치: <Sparkles size={16} />,
 }
 const KIND_TONE: Record<Kind, Tone> = { 배정: 'ai', 요청: 'warning', 이슈: 'danger', 조치: 'info' }
 const FILTERS: Array<'전체' | Kind> = ['전체', '배정', '요청', '이슈', '조치']
+const KIND_LABEL: Record<Kind, string> = { 배정: '배정', 요청: '고객 요청', 이슈: '현장 이슈', 조치: 'AI 조치' }
+
+// 급한 정도로 묶는다 — rank 0~1 지금 결정 · 2~5 오늘 처리 · 6~ 이후 · 보류
+const GROUPS: Array<{ key: string; label: string; hint: string; test: (rank: number) => boolean }> = [
+  { key: 'now', label: '지금 결정', hint: '승인 대기 · 신규 접수 · 긴급', test: (r) => r <= 1 },
+  { key: 'today', label: '오늘 처리', hint: '진행 중 · 오늘 기한', test: (r) => r >= 2 && r <= 5 },
+  { key: 'later', label: '이후 · 보류', hint: '이번 주 · 다시 진행할 항목', test: (r) => r >= 6 },
+]
 const name = (customerId: string) => customerById(customerId)?.name ?? customerId
 
 /**
@@ -146,18 +154,34 @@ export default function TodayAx() {
 
       <div className="grid items-start gap-5 xl:grid-cols-[1fr_340px]">
         <div className="min-w-0 space-y-3">
+          {/* 폰 · 태블릿 — 오른쪽 칸의 처리 현황을 목록 위 한 줄로 */}
+          <dl className="grid grid-cols-4 gap-1.5 xl:hidden">
+            {[
+              ['남은', items.length, 'text-ink'],
+              ['승인 대기', items.filter((i) => i.status === '승인 대기').length, 'text-warning'],
+              ['미지정', items.filter((i) => !i.owner).length, 'text-danger'],
+              ['오늘 처리', handledToday.length, 'text-success'],
+            ].map(([l, v, c]) => (
+              <div key={l as string} className="rounded-xl border border-line bg-card px-2.5 py-1.5 text-center">
+                <dt className="truncate text-[0.7rem] font-bold text-ink-faint">{l}</dt>
+                <dd className={cx('tnum text-[1.05rem] font-extrabold leading-tight', c as string)}>{v}</dd>
+              </div>
+            ))}
+          </dl>
           <div className="flex flex-wrap items-center gap-2">
-            <div role="tablist" aria-label="처리 항목 종류" className="flex flex-wrap gap-1 rounded-xl border border-line bg-card p-1">
+            <div role="tablist" aria-label="처리 항목 종류" className="scroll-row -mx-4 flex max-w-[calc(100%+2rem)] gap-1 overflow-x-auto px-4 sm:mx-0 sm:max-w-full sm:flex-wrap sm:overflow-visible sm:px-0">
+              <div className="flex shrink-0 gap-1 rounded-xl border border-line bg-card p-1">
               {FILTERS.map((f) => {
                 const n = f === '전체' ? items.length : items.filter((i) => i.kind === f).length
                 return (
                   <button key={f} role="tab" aria-selected={filter === f} onClick={() => setFilter(f)}
-                    className={cx('flex items-center gap-1 rounded-lg px-3 py-1.5 text-[0.84rem] font-bold', filter === f ? 'bg-primary text-white' : 'text-ink-soft hover:text-primary')}>
-                    {f === '전체' ? '전체' : f === '요청' ? '고객 요청' : f === '이슈' ? '현장 이슈' : f === '조치' ? 'AI 조치' : '배정'}
+                    className={cx('flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-3 py-1.5 text-[0.84rem] font-bold', filter === f ? 'bg-primary text-white' : 'text-ink-soft hover:text-primary')}>
+                    {f === '전체' ? '전체' : KIND_LABEL[f]}
                     <span className={cx('tnum text-[0.74rem]', filter === f ? 'text-white/80' : 'text-ink-faint')}>{n}</span>
                   </button>
                 )
               })}
+              </div>
             </div>
             <label className="flex cursor-pointer items-center gap-1.5 text-[0.84rem] font-bold text-ink-soft">
               <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} className="h-4 w-4 accent-[var(--color-primary)]" />
@@ -168,33 +192,58 @@ export default function TodayAx() {
           {shown.length === 0 ? (
             <EmptyState title="처리할 항목이 없습니다." desc="새 배정안 · 고객 요청 · 현장 이슈가 생기면 이곳에 바로 쌓입니다." />
           ) : (
-            <ul className="space-y-2">
-              {shown.map((i) => (
-                <li key={`${i.kind}-${i.id}`}>
-                  <Card className="p-3.5 sm:p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <Badge tone={KIND_TONE[i.kind]}>{KIND_ICON[i.kind]} {i.kind}</Badge>
-                          <StatusPill status={i.status} />
-                          {i.due && <span className={cx('text-[0.76rem] font-bold', i.due === '즉시' ? 'text-danger' : 'text-ink-faint')}>기한 {i.due}</span>}
-                          <span className="text-[0.72rem] font-semibold text-ink-faint">{i.id}</span>
-                        </div>
-                        <p className="mt-1.5 text-[0.95rem] font-extrabold leading-snug">{i.title}</p>
-                        <p className="mt-0.5 text-[0.84rem] leading-relaxed text-ink-soft [overflow-wrap:anywhere]">{i.sub}</p>
-                      </div>
-                      <span className="shrink-0 text-[0.78rem] font-bold text-ink-faint">담당 {i.owner ?? <span className="text-warning">미지정</span>}</span>
-                    </div>
-                    {i.controls && <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-line pt-2.5">{i.controls}</div>}
-                  </Card>
-                </li>
-              ))}
-            </ul>
+            <div className="space-y-4">
+              {GROUPS.map((g) => {
+                const rows = shown.filter((i) => g.test(i.rank))
+                if (rows.length === 0) return null
+                return (
+                  <section key={g.key} aria-label={`${g.label} ${rows.length}건`}>
+                    <p className="mb-1.5 flex items-baseline gap-2 px-1">
+                      <span className={cx('text-[0.86rem] font-extrabold', g.key === 'now' ? 'text-danger' : 'text-ink')}>{g.label}</span>
+                      <span className="tnum text-[0.78rem] font-bold text-ink-faint">{rows.length}</span>
+                      <span className="hidden text-[0.74rem] text-ink-faint sm:inline">— {g.hint}</span>
+                    </p>
+                    {/* 받은편지함 행 — 한 카드 안에 줄로. 메타와 결정 버튼을 한 줄에 두어 높이를 줄인다 */}
+                    <ul className="divide-y divide-line/80 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+                      {rows.map((i) => {
+                        const urgent = i.due === '즉시' || i.status === '승인 대기'
+                        // AI 조치는 오른쪽 결정 영역에 상태와 담당 선택이 이미 있다 — 같은 정보를 두 번 쓰지 않는다
+                        const selfManaged = i.kind === '조치' && can(role, 'action.update')
+                        return (
+                          <li key={`${i.kind}-${i.id}`} className={cx('relative flex gap-3 px-3.5 py-3 sm:px-4', urgent && 'before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-danger/70')}>
+                            <span className={cx('mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', toneBg[KIND_TONE[i.kind]])} title={KIND_LABEL[i.kind]}>
+                              {KIND_ICON[i.kind]}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-3">
+                                <p className="min-w-0 text-[0.95rem] font-extrabold leading-snug">
+                                  <span className="sr-only">{KIND_LABEL[i.kind]} · </span>{i.title}
+                                </p>
+                                {!selfManaged && <span className="shrink-0 pt-0.5 text-[0.76rem] font-bold text-ink-faint">담당 {i.owner ?? <span className="text-warning">미지정</span>}</span>}
+                              </div>
+                              <p className="mt-0.5 line-clamp-2 text-[0.84rem] leading-relaxed text-ink-soft [overflow-wrap:anywhere]">{i.sub}</p>
+                              <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  {i.kind !== '조치' && <StatusPill status={i.status} />}
+                                  {i.due && <span className={cx('text-[0.76rem] font-bold', i.due === '즉시' ? 'text-danger' : 'text-ink-faint')}>기한 {i.due}</span>}
+                                  <span className="tnum text-[0.72rem] font-semibold text-ink-faint">{i.id}</span>
+                                </div>
+                                {i.controls && <div className="flex flex-wrap items-center gap-2">{i.controls}</div>}
+                              </div>
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </section>
+                )
+              })}
+            </div>
           )}
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-20">
-          <Card className="p-4">
+          <Card className="hidden p-4 xl:block">
             <p className="flex items-center gap-1.5 text-[0.92rem] font-extrabold"><ClipboardList size={16} className="text-primary" /> 오늘 처리 현황</p>
             <dl className="mt-3 grid grid-cols-2 gap-2">
               {[

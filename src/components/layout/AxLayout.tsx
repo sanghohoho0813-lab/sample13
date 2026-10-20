@@ -593,18 +593,19 @@ export default function AxLayout({ children }: { children?: ReactNode }) {
       )}
 
       <div className="lg:pl-[280px]">
-        <header className="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
-          {/* 모바일 데모 툴바 — 역할 · 미리보기 · 플랫폼 전환. 실제 업무 헤더와 구분되는 어두운 한 줄 */}
-          <div className="flex items-center justify-between gap-2 bg-shell px-3 py-1.5 lg:hidden">
-            <div className="flex min-w-0 items-center gap-1.5">
-              <span className="hidden shrink-0 rounded border border-white/30 px-1.5 py-px text-[0.68rem] font-bold tracking-[0.12em] text-white/85 min-[420px]:inline">DEMO</span>
-              <RoleSwitcher compact dark />
-            </div>
-            <div className="flex shrink-0 items-center gap-1.5">
-              <DevicePreview compact dark />
-              {role !== 'customer' && <CustomerPlatformButton variant="toolbar" />}
-            </div>
+        {/* 모바일 데모 툴바 — 역할 · 미리보기 · 플랫폼 전환. 실제 업무 헤더와 구분되는 어두운 한 줄.
+            업무 헤더와 달리 화면에 붙지 않고 스크롤하면 올라간다 (작은 화면에서 본문 자리를 먼저) */}
+        <div className="flex items-center justify-between gap-2 bg-shell px-3 py-1.5 lg:hidden">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="hidden shrink-0 rounded border border-white/30 px-1.5 py-px text-[0.68rem] font-bold tracking-[0.12em] text-white/85 min-[420px]:inline">DEMO</span>
+            <RoleSwitcher compact dark />
           </div>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <DevicePreview compact dark />
+            {role !== 'customer' && <CustomerPlatformButton variant="toolbar" />}
+          </div>
+        </div>
+        <header className="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
 
           <div className="mx-auto flex h-14 max-w-[1720px] items-center justify-between gap-3 px-3 sm:px-4 lg:h-[3.6rem] lg:px-8">
             <div className="flex min-w-0 items-center gap-1.5">

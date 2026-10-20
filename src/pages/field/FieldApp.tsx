@@ -58,6 +58,9 @@ export default function FieldApp() {
     const el = strip.current?.querySelector<HTMLElement>(`[data-job="${job?.id}"]`)
     if (el && strip.current) strip.current.scrollLeft = Math.max(0, el.offsetLeft - 16 - strip.current.offsetLeft)
   }, [job?.id, tab])
+  // 완료 화면의 '다음 현장' — 이 현장 이후 시각의 남은 일 (없으면 남은 아무 일)
+  const remaining = myJobs.filter((j) => j.status !== '완료' && j.id !== job?.id)
+  const nextAfter = remaining.find((j) => !job || j.time >= job.time) ?? remaining[0]
   const myNotices = view.notices.filter((n) => n.teamId === myTeam)
   const unacked = myNotices.filter((n) => !n.ackAt)
   const myReports = view.reports.filter((r) => r.team === teamById(myTeam)?.name)
@@ -148,9 +151,9 @@ export default function FieldApp() {
                     const on = j.id === job?.id
                     return (
                       <button key={j.id} data-job={j.id} onClick={() => setSelected(j.id)} aria-pressed={on}
-                        className={cx('w-[9.5rem] shrink-0 rounded-xl border px-3 py-2 text-left', on ? 'border-primary bg-mint/60' : 'border-line bg-card', j.status === '완료' && !on && 'opacity-60')}>
+                        className={cx('w-[9.5rem] shrink-0 rounded-xl border px-3 py-2 text-left', on ? 'border-primary bg-mint/60' : j.status === '완료' ? 'border-line/70 bg-card/60' : 'border-line bg-card')}>
                         <span className="flex items-center justify-between gap-1">
-                          <span className="tnum text-[0.9rem] font-extrabold text-primary">{j.time}</span>
+                          <span className={cx('tnum text-[0.9rem] font-extrabold', j.status === '완료' && !on ? 'text-ink-faint' : 'text-primary')}>{j.time}</span>
                           {j.status === '완료' ? <CheckCircle2 size={14} className="text-success" /> : j.id === nextJob?.id ? <Badge tone="brand">다음</Badge> : null}
                         </span>
                         <span className="mt-0.5 block truncate text-[0.82rem] font-bold">{customerById(j.customerId)?.name}</span>
@@ -163,7 +166,12 @@ export default function FieldApp() {
               </section>
 
               {job ? (
-                <JobFlow key={job.id} job={job} view={view} send={send} meta={meta} net={net} />
+                <JobFlow
+                  key={job.id} job={job} view={view} send={send} meta={meta} net={net}
+                  next={nextAfter}
+                  onNext={() => { if (nextAfter) { setSelected(nextAfter.id); window.scrollTo({ top: 0, behavior: 'smooth' }) } }}
+                  onCompleted={() => setSelected(job.id)}
+                />
               ) : myJobs.length > 0 && (
                 <Card className="p-6 text-center">
                   <CheckCircle2 size={30} className="mx-auto text-success" />

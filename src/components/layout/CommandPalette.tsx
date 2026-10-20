@@ -6,7 +6,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { Building2, CalendarClock, CornerDownLeft, Inbox, LayoutGrid, MapPin, Search, Users, X } from 'lucide-react'
+import { Building2, CalendarClock, CornerDownLeft, History, Inbox, LayoutGrid, MapPin, Search, Users, X } from 'lucide-react'
 import { Backdrop } from '../ui'
 import { useDemo } from '../../lib/data/context'
 import { CUSTOMERS, SITES, TEAMS, customerById, teamById, teamMemberNames } from '../../lib/demo/company'
@@ -20,8 +20,30 @@ export interface PageLink { to: string; label: string; group?: string }
 interface Hit { key: string; group: string; title: string; sub: string; to: string; icon: ReactNode }
 
 const GROUP_ORDER = ['화면', '오늘 일정', '고객 요청', '고객', '현장', '팀']
-// 검색어가 없을 때는 '지금 볼 것'(진행 중 일정 · 처리 중 요청)을 먼저, 화면 바로가기는 그 아래
-const IDLE_ORDER = ['오늘 일정', '고객 요청', '화면']
+// 검색어가 없을 때는 최근 이동 → '지금 볼 것'(진행 중 일정 · 처리 중 요청) → 화면 바로가기
+const IDLE_ORDER = ['최근 이동', '오늘 일정', '고객 요청', '화면']
+const GROUP_ICON: Record<string, ReactNode> = {
+  화면: <LayoutGrid size={16} />, '오늘 일정': <CalendarClock size={16} />, '고객 요청': <Inbox size={16} />,
+  고객: <Building2 size={16} />, 현장: <MapPin size={16} />, 팀: <Users size={16} />,
+}
+
+// 최근 이동 — 이 브라우저에만 기억하는 편의 기록(최대 5개). 저장이 막혀 있으면 그냥 비어 있다
+interface Recent { to: string; title: string; group: string }
+const RECENT_KEY = 'cleanway.recentSearch'
+const readRecent = (): Recent[] => {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]')
+    return Array.isArray(v)
+      ? v.filter((x): x is Recent => !!x && typeof x.to === 'string' && typeof x.title === 'string' && typeof x.group === 'string' && x.to.startsWith('/')).slice(0, 5)
+      : []
+  } catch { return [] }
+}
+const saveRecent = (h: Hit) => {
+  try {
+    const list = [{ to: h.to, title: h.title, group: h.group === '최근 이동' ? (readRecent().find((r) => r.to === h.to)?.group ?? '화면') : h.group }, ...readRecent().filter((r) => r.to !== h.to)].slice(0, 5)
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list))
+  } catch { /* 저장이 막혀도 이동은 된다 */ }
+}
 
 /** 헤더의 검색 단추 — PC 는 입력창 모양, 폰은 아이콘 */
 export function SearchTrigger({ onOpen, compact }: { onOpen: () => void; compact?: boolean }) {
@@ -49,6 +71,7 @@ export default function CommandPalette({ open, onClose, pages }: { open: boolean
   const nav = useNavigate()
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
+  const [recent, setRecent] = useState<Recent[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const listId = useId()
@@ -67,7 +90,7 @@ export default function CommandPalette({ open, onClose, pages }: { open: boolean
 
   useEffect(() => {
     if (!open) return
-    setQ(''); setActive(0)
+    setQ(''); setActive(0); setRecent(readRecent())
     const prevFocus = document.activeElement as HTMLElement | null
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -79,6 +102,13 @@ export default function CommandPalette({ open, onClose, pages }: { open: boolean
     const query = q.trim()
     const out: Hit[] = []
     const take = (list: Hit[], n: number) => out.push(...list.slice(0, n))
+
+    if (!query) {
+      // 권한이 없어진 화면(역할 전환)은 최근 기록에서도 빼고 보여준다
+      take(recent.filter((r) => r.group !== '화면' || pages.some((p) => p.to === r.to)).map((r) => ({
+        key: `recent-${r.to}`, group: '최근 이동', title: r.title, sub: r.group, to: r.to, icon: GROUP_ICON[r.group] ?? <History size={16} />,
+      })), 5)
+    }
 
     take(pages.filter((p) => matchesQuery([p.label, p.group], query)).map((p) => ({
       key: `page-${p.to}`, group: '화면', title: p.label, sub: p.group ?? '운영', to: p.to, icon: <LayoutGrid size={16} />,
@@ -107,8 +137,12 @@ export default function CommandPalette({ open, onClose, pages }: { open: boolean
       })), 3)
     }
     const order = query ? GROUP_ORDER : IDLE_ORDER
-    return out.sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group))
-  }, [q, pages, schedules, requests])
+    // 같은 곳으로 가는 항목은 한 번만 (최근 이동이 우선)
+    const seen = new Set<string>()
+    return out
+      .sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group))
+      .filter((h) => (seen.has(h.to) ? false : (seen.add(h.to), true)))
+  }, [q, pages, schedules, requests, recent])
 
   useEffect(() => { setActive(0) }, [q])
   useEffect(() => {
@@ -116,7 +150,7 @@ export default function CommandPalette({ open, onClose, pages }: { open: boolean
   }, [active])
 
   if (!open) return null
-  const go = (h: Hit) => { onClose(); nav(h.to) }
+  const go = (h: Hit) => { saveRecent(h); onClose(); nav(h.to) }
   const onKeyDown = (e: ReactKeyboardEvent) => {
     if (e.key === 'ArrowDown') { e.preventDefault(); setActive((i) => Math.min(hits.length - 1, i + 1)) }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((i) => Math.max(0, i - 1)) }
@@ -159,7 +193,7 @@ export default function CommandPalette({ open, onClose, pages }: { open: boolean
             lastGroup = h.group
             return (
               <div key={h.key}>
-                {head && <p className="px-2.5 pb-1 pt-2.5 text-[0.7rem] font-extrabold tracking-wide text-ink-faint first:pt-1">{!q && h.group === '화면' ? '화면 바로가기' : h.group}{!q && h.group !== '화면' ? ' · 지금 볼 것' : ''}</p>}
+                {head && <p className="px-2.5 pb-1 pt-2.5 text-[0.7rem] font-extrabold tracking-wide text-ink-faint first:pt-1">{!q && h.group === '화면' ? '화면 바로가기' : h.group}{!q && (h.group === '오늘 일정' || h.group === '고객 요청') ? ' · 지금 볼 것' : ''}</p>}
                 <div
                   id={optionId(i)}
                   data-index={i}

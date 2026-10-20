@@ -73,14 +73,13 @@ export default function CareLanding() {
               <button
                 key={s}
                 onClick={() => nav(`/care/requests?new=문의&topic=${encodeURIComponent('기타')}&memo=${encodeURIComponent(`${s} 상담을 원합니다. `)}`)}
-                aria-label={`${s} 상담 요청`}
                 className="group relative overflow-hidden rounded-2xl bg-shell text-left shadow-soft transition-transform hover:-translate-y-0.5"
               >
                 <div className="aspect-[4/5] overflow-hidden bg-ivory">
                   <Photo
                     sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
                     src={src}
-                    alt={altOf(src)}
+                    alt=""
                     width={1448}
                     height={1086}
                     loading="lazy"
@@ -140,7 +139,7 @@ export default function CareLanding() {
                 <Photo src={c.src} alt={altOf(c.src)} width={1448} height={1086} loading="lazy" className="h-full w-full object-cover" />
               </div>
               <div className="p-5">
-                <p className="tnum text-[0.78rem] font-extrabold text-champagne">0{i + 1}</p>
+                <p className="tnum text-[0.78rem] font-extrabold text-champagne-deep">0{i + 1}</p>
                 <p className="mt-0.5 text-[1rem] font-extrabold">{c.t}</p>
                 <p className="mt-1 text-[0.84rem] leading-relaxed text-ink-soft">{c.d}</p>
               </div>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  AlertTriangle, Camera, Check, CheckCircle2, ClipboardCheck, Clock, MapPin, MessageSquareText, Navigation, Play, Sparkles, Undo2, Wrench,
+  AlertTriangle, ArrowRight, Camera, Check, CheckCircle2, ClipboardCheck, Clock, MapPin, MessageSquareText, Navigation, Play, Sparkles, Undo2, Wrench,
 } from 'lucide-react'
 import { Badge, Btn, Card, Modal, StatusPill, TextArea } from '../../components/ui'
 import { useToast } from '../../components/ui/toast-context'
@@ -24,12 +24,24 @@ const MEMO_MAX = 1000
  * 한 현장의 작업 — 도착 → 작업 시작 → 작업 전 사진 → 체크리스트 → 작업 후 사진 → 완료
  * 다음에 할 일은 화면 아래 고정 버튼 하나로 안내한다(한 손 · 장갑 사용 기준 큰 버튼).
  */
-export default function JobFlow({ job, view, send, meta, net }: {
+const minutesBetween = (from?: string, to?: string) => {
+  if (!from || !to || !/^\d{1,2}:\d{2}$/.test(from) || !/^\d{1,2}:\d{2}$/.test(to)) return null
+  const [fh, fm] = from.split(':').map(Number), [th, tm] = to.split(':').map(Number)
+  const d = th * 60 + tm - (fh * 60 + fm)
+  return d >= 0 ? d : null
+}
+
+export default function JobFlow({ job, view, send, meta, net, next, onNext, onCompleted }: {
   job: Schedule
   view: DemoState
   send: (a: DemoAction) => void
   meta: () => Meta
   net: Net
+  /** 완료 화면에서 이어 갈 다음 현장 */
+  next?: Schedule
+  onNext?: () => void
+  /** 완료 보고 직후 — 완료 화면에 머물게 한다 */
+  onCompleted?: () => void
 }) {
   const toast = useToast()
   const ws = view.work[job.id]
@@ -77,8 +89,45 @@ export default function JobFlow({ job, view, send, meta, net }: {
   const started = !!ws?.startedAt
   const step = !ws?.checkinAt ? 0 : !started ? 1 : gaps.length ? 2 : 3
 
+  const spent = minutesBetween(ws?.checkinAt, ws?.completedAt)
+  const nextName = next ? customerById(next.customerId)?.name : undefined
+
   return (
     <div className="space-y-3.5 pb-20">
+      {/* 완료 화면 — 무엇을 보냈는지 확인하고 다음 현장으로 바로 */}
+      {isDone && (
+        <section aria-label="작업 완료 요약" className="pop-in rounded-2xl border border-success/30 bg-success-soft/70 p-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-success text-white"><Check size={22} strokeWidth={3} /></span>
+            <div className="min-w-0">
+              <p className="text-[1rem] font-extrabold text-success">작업 완료 · 고객 리포트 발송</p>
+              <p className="tnum text-[0.8rem] font-semibold text-ink-soft">
+                체크인 {ws?.checkinAt ?? '-'} → 완료 {ws?.completedAt ?? '-'}{spent ? ` · ${spent}분` : ''}
+              </p>
+            </div>
+          </div>
+          <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
+            {[
+              ['체크리스트', `${done}/${CHECKLIST_TEMPLATE.length}${skippedN ? ` (제외 ${skippedN})` : ''}`],
+              ['사진', `${[ws?.beforePhoto, ws?.afterPhoto].filter(Boolean).length}/2`],
+              ['이슈 보고', issues.length ? `${issues.length}건` : '없음'],
+            ].map(([k, v]) => (
+              <div key={k} className="rounded-xl bg-card/80 px-2 py-2">
+                <dt className="text-[0.7rem] font-bold text-ink-faint">{k}</dt>
+                <dd className="tnum text-[0.9rem] font-extrabold">{v}</dd>
+              </div>
+            ))}
+          </dl>
+          {next && onNext ? (
+            <button onClick={onNext} className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3.5 text-[1rem] font-extrabold text-white shadow-pop active:scale-[0.99]">
+              다음 현장 — <span className="tnum">{next.time}</span> {nextName} <ArrowRight size={18} />
+            </button>
+          ) : (
+            <p className="mt-3 rounded-xl bg-card/80 px-3 py-2.5 text-center text-[0.86rem] font-bold text-ink-soft">오늘 남은 현장이 없습니다. 수고하셨습니다!</p>
+          )}
+        </section>
+      )}
+
       {/* 현장 정보 */}
       <Card tour="field-next" className="overflow-hidden">
         <div className="bg-primary px-4 py-3 text-white">
@@ -87,7 +136,7 @@ export default function JobFlow({ job, view, send, meta, net }: {
             {job.requestId && <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[0.68rem] font-bold">고객 요청 작업</span>}
           </div>
           <p className="mt-0.5 text-[1.2rem] font-extrabold leading-tight">{c.name}</p>
-          <p className="tnum mt-0.5 text-[0.95rem] font-bold text-champagne">{job.time} · {job.service} · {job.durationMin}분</p>
+          <p className="tnum mt-0.5 text-[0.95rem] font-bold text-champagne-soft">{job.time} · {job.service} · {job.durationMin}분</p>
         </div>
         <div className="space-y-3 p-4">
           <ol className="flex items-center gap-1.5" aria-label="작업 진행 단계">
@@ -129,7 +178,7 @@ export default function JobFlow({ job, view, send, meta, net }: {
 
       {/* 사진 */}
       <div ref={photosRef}>
-        <Card className={cx('p-4', !started && !isDone && 'opacity-60')}>
+        <Card className={cx('p-4', !started && !isDone && 'bg-card/70')}>
           <p className="mb-2.5 flex items-center justify-between text-[0.9rem] font-extrabold">
             <span><Camera size={15} className="mr-1 inline text-primary" /> 작업 전 · 후 사진</span>
             {!started && !isDone && <span className="text-[0.74rem] font-bold text-ink-faint">작업 시작 후</span>}
@@ -155,7 +204,7 @@ export default function JobFlow({ job, view, send, meta, net }: {
 
       {/* 체크리스트 */}
       <div ref={listRef}>
-        <Card className={cx('p-4', !started && !isDone && 'opacity-60')}>
+        <Card className={cx('p-4', !started && !isDone && 'bg-card/70')}>
           <p className="flex items-center justify-between text-[0.9rem] font-extrabold">
             <span><ClipboardCheck size={15} className="mr-1 inline text-primary" /> 체크리스트</span>
             <span className="tnum text-primary">{done + skippedN} / {CHECKLIST_TEMPLATE.length}{skippedN > 0 && <span className="text-[0.74rem] text-warning"> (제외 {skippedN})</span>}</span>
@@ -175,7 +224,7 @@ export default function JobFlow({ job, view, send, meta, net }: {
                     disabled={!started || isDone}
                     aria-pressed={on}
                     onClick={() => send({ type: 'toggleChecklist', scheduleId: job.id, item, meta: meta() })}
-                    className={cx('flex min-h-[3.1rem] flex-1 items-center gap-2.5 px-3.5 py-2.5 text-left text-[0.92rem] font-bold disabled:cursor-not-allowed', on ? 'text-success' : 'text-ink')}
+                    className={cx('flex min-h-[3.1rem] flex-1 items-center gap-2.5 px-3.5 py-2.5 text-left text-[0.92rem] font-bold disabled:cursor-not-allowed', on ? 'text-success' : !started && !isDone ? 'text-ink-faint' : 'text-ink')}
                   >
                     {/* 큰 원형 체크 — 장갑 낀 손으로도 상태가 한눈에 */}
                     <span className={cx(
@@ -257,7 +306,7 @@ export default function JobFlow({ job, view, send, meta, net }: {
           >
             {cta.tone === 'success' ? <CheckCircle2 size={19} /> : !ws?.checkinAt ? <MapPin size={19} /> : !started ? <Play size={19} /> : <Clock size={18} />}
             {cta.label}
-            {cta.sub && <span className="text-[0.74rem] font-bold opacity-70">· {cta.sub}</span>}
+            {cta.sub && <span className="text-[0.74rem] font-bold">· {cta.sub}</span>}
           </button>
         </div>
       )}
@@ -293,6 +342,7 @@ export default function JobFlow({ job, view, send, meta, net }: {
             if (memoState === 'typing') send({ type: 'setNote', scheduleId: job.id, note: memo })
             send({ type: 'completeWork', scheduleId: job.id, meta: meta() })
             setConfirm(false)
+            onCompleted?.()
             toast(`작업 완료 — 고객 리포트가 생성되었습니다${offlineNote}`)
           }}>완료 보고</Btn>
         </div>

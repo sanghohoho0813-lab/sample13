@@ -5,7 +5,7 @@ import { Badge, Btn, Card, DemoBadge, EmptyState, PageHeader } from '../../compo
 import { AuditTrail } from '../../components/ops'
 import { useDemo } from '../../lib/data/context'
 import { ENGINE_LABEL, ROLE_LABEL, type AuditEntity, type AuditEntry } from '../../types'
-import { cx, nowDateShort } from '../../lib/utils'
+import { cx, nowDateShort, pastDayLabel } from '../../lib/utils'
 
 type Tab = 'evidence' | 'audit'
 const ENTITIES: Array<'전체' | AuditEntity> = ['전체', '배정', '요청', '조치', '현장 작업', '현장 이슈', '매출 기회', '고객 평가']
@@ -59,12 +59,21 @@ export default function Evidence() {
       {tab === 'evidence' ? (
         evidence.length === 0 ? <EmptyState title="기록된 실증 기록이 없습니다." /> : (
           <Card tour="evidence" className="p-5">
+            {/* 날짜별로 묶는다 — 오늘 · 어제 · n일 전 */}
+            <div className="space-y-6">
+            {[...new Set(evidence.map((e) => e.date))].map((day) => (
+              <section key={day} aria-label={pastDayLabel(day)}>
+            <p className="mb-3 flex items-baseline gap-2 text-[0.86rem] font-extrabold">
+              {pastDayLabel(day)}
+              {day === 'TODAY' && <span className="text-[0.76rem] font-bold text-ink-faint">{nowDateShort()}</span>}
+              <span className="tnum text-[0.74rem] font-bold text-ink-faint">{evidence.filter((e) => e.date === day).length}건</span>
+            </p>
             <ol className="relative ml-2 space-y-5 border-l-2 border-line pl-6">
-              {evidence.map((e) => (
+              {evidence.filter((e) => e.date === day).map((e) => (
                 <li key={e.id} className="relative">
                   <span className={`absolute -left-[31px] top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card ${e.result ? 'bg-success' : 'bg-aqua'}`} />
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="tnum text-[0.8rem] font-extrabold text-primary">{e.date === 'TODAY' ? nowDateShort() : e.date} {e.time}</span>
+                    <span className="tnum text-[0.8rem] font-extrabold text-primary">{e.time}</span>
                     <Badge tone="ai">{ENGINE_LABEL[e.engine]}</Badge>
                   </div>
                   <p className="mt-1 text-[0.92rem] font-semibold leading-relaxed">{e.text}</p>
@@ -76,6 +85,9 @@ export default function Evidence() {
                 </li>
               ))}
             </ol>
+              </section>
+            ))}
+            </div>
           </Card>
         )
       ) : (

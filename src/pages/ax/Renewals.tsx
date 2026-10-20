@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, RefreshCcw } from 'lucide-react'
+import { ArrowRight, ChevronRight, RefreshCcw } from 'lucide-react'
 import { Badge, Btn, Card, DemoBadge, PageHeader, StatTile, StatusPill } from '../../components/ui'
 import { ActionLifecycle } from '../../components/ai'
 import { HealthGauge } from '../../components/ops/RenewalPanel'
@@ -49,14 +49,40 @@ export default function Renewals() {
             <h2 className={cx('mb-3 flex items-center gap-2 text-[1.05rem] font-extrabold', stage === '위험' ? 'text-danger' : stage.startsWith('재계약') ? 'text-warning' : 'text-ink')}>
               <RefreshCcw size={17} /> {stage} <span className="text-[0.8rem] font-bold text-ink-faint">{list.length}곳</span>
             </h2>
-            <div data-tour={stage === groups[0].stage ? 'renewal' : undefined} className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
+            {stage === '안정' && stage !== groups[0].stage ? (
+              // 안정 고객 — 판단할 것이 적으니 카드 대신 한 줄씩 (점수 · 기간 · 전략)
+              <ul className="divide-y divide-line/80 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+                {list.map((a) => {
+                  const c = customerById(a.customerId)!
+                  const strategy = a.strategy.find((s2) => role === 'ceo' || s2.title !== '범위 · 단가 재협의')
+                  return (
+                    <li key={a.customerId}>
+                      <button onClick={() => nav(`/customers/${a.customerId}`)} className="grid w-full grid-cols-[2.6rem_minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-mint/40 md:grid-cols-[2.6rem_minmax(0,1.2fr)_minmax(0,1fr)_auto_1rem]">
+                        <span className="tnum flex h-9 w-9 items-center justify-center rounded-full border-[3px] border-success/70 text-[0.8rem] font-extrabold text-success" aria-label={`건강도 ${a.health}`}>{a.health}</span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-[0.92rem] font-extrabold">{c.name}</span>
+                          <span className="block truncate text-[0.74rem] text-ink-faint">{c.contract.serviceSummary} · 연 {a.annualValue.toLocaleString()}만원</span>
+                        </span>
+                        <span className="hidden min-w-0 truncate text-[0.8rem] text-ink-soft md:block">{strategy ? <><b className="text-ink">전략</b> — {strategy.title}</> : null}</span>
+                        <Badge tone="neutral">D-{a.dday}</Badge>
+                        <ChevronRight size={16} className="hidden text-ink-faint md:block" />
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : (
+            <div data-tour={stage === groups[0].stage ? 'renewal' : undefined} className={cx('grid gap-3.5', list.length === 1 ? '' : 'md:grid-cols-2 xl:grid-cols-3')}>
               {list.map((a) => {
+                // 한 곳뿐인 단계(대개 '위험')는 넓게 — 판단 근거와 전략 · 조치를 나란히
+                const spotlight = list.length === 1
                 const c = customerById(a.customerId)!
                 const top = [...a.factors].sort((x, y) => y.risk * y.weight - x.risk * x.weight).slice(0, 2)
                 const act = actions.find((x) => x.customerId === a.customerId && x.engine === 'retention' && !['완료', '무시'].includes(x.status))
                 const strategy = a.strategy.find((s) => role === 'ceo' || s.title !== '범위 · 단가 재협의')
                 return (
-                  <Card key={a.customerId} className="flex flex-col p-5">
+                  <Card key={a.customerId} className={cx('flex flex-col p-5', spotlight && 'lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-x-6', spotlight && stage === '위험' && 'border-danger/30')}>
+                    <div className="min-w-0">
                     <div className="flex items-start gap-3">
                       <HealthGauge score={a.health} size="sm" />
                       <div className="min-w-0 flex-1">
@@ -73,8 +99,10 @@ export default function Renewals() {
                         <li key={f.key} className="text-[0.78rem] text-ink-soft"><b className={f.risk >= 60 ? 'text-danger' : f.risk >= 30 ? 'text-warning' : 'text-ink'}>{f.label} {f.risk}</b> — {f.detail}</li>
                       ))}
                     </ul>
+                    </div>
+                    <div className={cx('flex min-w-0 flex-1 flex-col', spotlight && 'lg:border-l lg:border-line lg:pl-6')}>
                     {strategy && (
-                      <p className="mt-2.5 rounded-lg bg-ivory px-3 py-2 text-[0.8rem]"><b>전략</b> — {strategy.title}{a.expectedLoss > 0 && a.status !== '안정' && <span className="text-ink-faint"> · 예상 손실 {a.expectedLoss.toLocaleString()}만원</span>}</p>
+                      <p className={cx('mt-2.5 rounded-lg bg-ivory px-3 py-2 text-[0.8rem]', spotlight && 'lg:mt-0')}><b>전략</b> — {strategy.title}{a.expectedLoss > 0 && a.status !== '안정' && <span className="text-ink-faint"> · 예상 손실 {a.expectedLoss.toLocaleString()}만원</span>}</p>
                     )}
                     <div className="mt-auto space-y-2 border-t border-line pt-3 [&:not(:first-child)]:mt-3">
                       {act && (
@@ -85,10 +113,12 @@ export default function Renewals() {
                       )}
                       <Btn size="sm" variant="outline" onClick={() => nav(`/customers/${a.customerId}`)}>판단 근거 · 고객 상세 <ArrowRight size={12} className="inline" /></Btn>
                     </div>
+                    </div>
                   </Card>
                 )
               })}
             </div>
+            )}
           </section>
         ))}
       </div>

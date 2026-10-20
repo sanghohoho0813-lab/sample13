@@ -93,7 +93,6 @@ function TodayPill() {
     <button
       onClick={() => nav('/care/home')}
       className="flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-card py-1 pl-2 pr-2.5 text-[0.76rem] font-bold text-ink hover:border-primary/60"
-      aria-label={`오늘 ${today.time} 방문 — ${status}`}
     >
       <span className="relative flex h-2 w-2">
         {live && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/50" />}

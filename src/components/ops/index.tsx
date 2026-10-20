@@ -5,7 +5,7 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
 import { Check, History, Lock } from 'lucide-react'
 import { Btn, Modal, TextArea } from '../ui'
-import { cx } from '../../lib/utils'
+import { cx, pastDayLabel } from '../../lib/utils'
 import { toneText, type Tone } from '../../lib/tone'
 import { DEMO_NOW } from '../../lib/ops/geo'
 import type { AuditEntry } from '../../types'
@@ -110,7 +110,7 @@ export function AuditTrail({ entries, empty = '아직 변경 이력이 없습니
           <li key={e.id} className="relative">
             <span className={cx('absolute -left-[1.32rem] top-1.5 h-2 w-2 rounded-full ring-2 ring-card', e.role === 'system' ? 'bg-ai' : 'bg-primary')} />
             <p className="text-[0.84rem] leading-snug">
-              <span className="tnum font-bold text-ink-faint">{e.day === 'TODAY' ? '' : `${e.day} `}{e.at}</span>
+              <span className="tnum font-bold text-ink-faint">{e.day === 'TODAY' ? '' : `${pastDayLabel(e.day)} `}{e.at}</span>
               <b className="ml-1.5">{e.action}</b>
               {(e.from || e.to) && (
                 <span className="text-ink-soft"> · {e.from && <span className="line-through decoration-ink-faint/60">{e.from}</span>}{e.from && e.to && ' → '}{e.to && <b className="text-ink">{e.to}</b>}</span>

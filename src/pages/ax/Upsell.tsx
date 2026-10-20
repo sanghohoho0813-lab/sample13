@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { TrendingUp, ArrowRight, Send, Store, Sparkles, RefreshCcw } from 'lucide-react'
+import { TrendingUp, ArrowRight, Send, Store, Sparkles, RefreshCcw, ChevronRight } from 'lucide-react'
 import { Card, PageHeader, Badge, Btn, DemoBadge, StatusPill, StatTile } from '../../components/ui'
 import { useToast } from '../../components/ui/toast-context'
 import { WhyAIButton } from '../../components/ai'
@@ -8,10 +9,12 @@ import { useDemo } from '../../lib/data/context'
 import { customerById } from '../../lib/demo/company'
 import { can } from '../../lib/ops/governance'
 import { assessRenewal } from '../../lib/ops/renewal'
-import { fmtManwon } from '../../lib/utils'
+import { cx, fmtManwon } from '../../lib/utils'
 import type { UpsellOpportunity } from '../../types'
 
 const ORDER: Record<UpsellOpportunity['status'], number> = { 발견됨: 1, 제안됨: 2, 협의중: 0, 성사: 3, 보류: 4 }
+// 영업 단계 — 왼쪽에서 오른쪽으로 진행. 보류는 흐름 밖에 따로
+const STAGES: Array<UpsellOpportunity['status']> = ['발견됨', '제안됨', '협의중', '성사']
 
 /**
  * 추가서비스 — 현장 기록(AI 발견)과 고객 직접 요청(포털)에서 온 매출 기회
@@ -26,7 +29,8 @@ export default function Upsell() {
   const totalExpected = upsell.filter((u) => u.status !== '성사' && u.status !== '보류').reduce((a, u) => a + u.expectedRevenue, 0)
   const closed = upsell.filter((u) => u.status === '성사').reduce((a, u) => a + u.expectedRevenue, 0)
   const fromPortal = upsell.filter((u) => u.source === 'portal' && u.status !== '성사' && u.status !== '보류').length
-  const list = [...upsell].sort((a, b) => ORDER[a.status] - ORDER[b.status] || Number(b.source === 'portal') - Number(a.source === 'portal') || b.expectedRevenue - a.expectedRevenue)
+  const [stage, setStage] = useState<UpsellOpportunity['status'] | '전체'>('전체')
+  const list = [...upsell].filter((u) => stage === '전체' || u.status === stage).sort((a, b) => ORDER[a.status] - ORDER[b.status] || Number(b.source === 'portal') - Number(a.source === 'portal') || b.expectedRevenue - a.expectedRevenue)
 
   return (
     <div className="fade-up">
@@ -41,6 +45,48 @@ export default function Upsell() {
         <StatTile label="성사" value={fmtManwon(closed)} tone="success" />
         <StatTile label="고객 직접 요청" value={`${fromPortal}건`} tone="ai" className="col-span-2 lg:col-span-1" />
       </div>
+
+      {/* 영업 단계 — 단계별 건수 · 금액. 누르면 그 단계만 */}
+      <div className="mb-4 overflow-x-auto pb-1">
+        <div role="group" aria-label="영업 단계로 보기" className="flex min-w-max items-stretch gap-1">
+          <button
+            onClick={() => setStage('전체')}
+            aria-pressed={stage === '전체'}
+            className={cx('rounded-xl border px-3.5 py-2 text-left', stage === '전체' ? 'border-primary bg-primary text-white' : 'border-line bg-card hover:border-primary/50')}
+          >
+            <span className={cx('block text-[0.74rem] font-bold', stage === '전체' ? 'text-white/90' : 'text-ink-faint')}>전체</span>
+            <span className="tnum block text-[0.95rem] font-extrabold">{upsell.length}건</span>
+          </button>
+          {[...STAGES, '보류' as const].map((sg, i) => {
+            const items = upsell.filter((u) => u.status === sg)
+            const sum = items.reduce((a, u) => a + u.expectedRevenue, 0)
+            const on = stage === sg
+            return (
+              <div key={sg} className="flex items-center">
+                {i > 0 && i < STAGES.length && <ChevronRight size={14} className="mx-0.5 shrink-0 text-ink-faint/60" aria-hidden="true" />}
+                {i === STAGES.length && <span className="mx-1.5 h-8 w-px bg-line" aria-hidden="true" />}
+                <button
+                  onClick={() => setStage(on ? '전체' : sg)}
+                  aria-pressed={on}
+                  className={cx(
+                    'min-w-[6.5rem] rounded-xl border px-3.5 py-2 text-left transition-colors',
+                    on ? 'border-primary bg-primary text-white' : sg === '성사' ? 'border-success/30 bg-success-soft/60 hover:border-success' : 'border-line bg-card hover:border-primary/50',
+                  )}
+                >
+                  <span className={cx('block text-[0.74rem] font-bold', on ? 'text-white/85' : 'text-ink-faint')}>{sg}</span>
+                  <span className="tnum block text-[0.95rem] font-extrabold">{items.length}건 <span className={cx('text-[0.76rem] font-bold', on ? 'text-white/85' : sg === '성사' ? 'text-success' : 'text-ink-soft')}>{sum ? `${sum}만원` : ''}</span></span>
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {list.length === 0 && (
+        <p className="mb-4 rounded-2xl border border-dashed border-line bg-card/60 px-5 py-8 text-center text-[0.9rem] font-bold text-ink-soft">
+          '{stage}' 단계의 기회가 없습니다. <button onClick={() => setStage('전체')} className="ml-1 text-primary hover:underline">전체 보기</button>
+        </p>
+      )}
 
       <div data-tour="upsell" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {list.map((u) => {

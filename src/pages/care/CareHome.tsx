@@ -139,7 +139,7 @@ export default function CareHome() {
           </div>
 
           {/* ── 오른쪽: 기록 · 계약 ── */}
-          <aside className="min-w-0 space-y-4 lg:sticky lg:top-24">
+          <aside className="min-w-0 space-y-4 lg:sticky lg:top-24 lg:self-start">
             <RailCard title="최근 작업 리포트" action={myReport ? { label: '전체', run: () => nav('/care/reports') } : undefined}>
               {myReport ? (() => {
                 const ba = beforeAfterFor(myReport.note + (myReport.service ?? ''))

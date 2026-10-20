@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Star, ArrowRight, TrendingUp, ShieldCheck, Eye } from 'lucide-react'
 import { Card, PageHeader, Badge, Btn, DemoBadge, SectionTitle, StatusPill, EmptyState } from '../../components/ui'
+import SectionNav from '../../components/ui/SectionNav'
 import { InsightCard } from '../../components/ai'
 import { AuditTrail } from '../../components/ops'
 import CaseChain from '../../components/ops/CaseChain'
@@ -11,11 +12,13 @@ import { SEED_INSIGHTS, SEED_PROFITABILITY, SEED_QUALITY } from '../../lib/demo/
 import { buildCase } from '../../lib/ops/insights'
 import { assessRenewal } from '../../lib/ops/renewal'
 import { cx } from '../../lib/utils'
+import { useIsWide } from '../../lib/useMedia'
 
 export default function CustomerDetail() {
   const { id } = useParams()
   const nav = useNavigate()
   const store = useDemo()
+  const wide = useIsWide()
   const { upsell, requests, reports, role } = store
   const customer = id ? customerById(id) : undefined
   if (!customer) {
@@ -32,6 +35,37 @@ export default function CustomerDetail() {
   const issueList = SEED_QUALITY.filter((q) => q.customerId === customer.id)
   const myReports = reports.filter((r) => r.customerId === customer.id)
 
+  // 계약 정보 카드 — 폰(건강도 바로 아래)과 PC(오른쪽 칸 맨 위)에서 위치만 다르다. 한 곳에만 그린다
+  const contractCard = (
+    <Card id="sec-contract" className="p-5 outline-none">
+      <SectionTitle>계약 정보</SectionTitle>
+      <div className="space-y-2 text-[0.86rem]">
+        {[
+          ['서비스', customer.contract.serviceSummary],
+          ['방문 주기', `주 ${customer.contract.visitsPerWeek}회`],
+          ['월 계약금액', `${customer.contract.monthlyFee}만원 (DEMO)`],
+          ['계약 종료', `${customer.contract.endDate} (D-${customer.contract.renewalDDay})`],
+          ['고객 담당자', customer.contract.customerManager],
+          ['내부 담당자', customer.contract.internalManager],
+          ['최근 방문', customer.lastVisit],
+        ].map(([l, v]) => (
+          <div key={l} className="flex justify-between gap-3 border-b border-line/60 pb-1.5">
+            <span className="font-semibold text-ink-faint whitespace-nowrap">{l}</span>
+            <span className="text-right font-bold">{v}</span>
+          </div>
+        ))}
+        <div className="flex justify-between gap-3 pt-1">
+          <span className="font-semibold text-ink-faint">만족도</span>
+          <span className="flex items-center gap-1 font-extrabold text-warning"><Star size={14} fill="currentColor" /> {customer.satisfaction.toFixed(1)} / 5</span>
+        </div>
+      </div>
+      <div className="mt-3.5 flex gap-2">
+        <Btn variant="outline" size="sm" className="flex-1" onClick={() => nav('/renewals')}>재계약 관리</Btn>
+        <Btn variant="outline" size="sm" className="flex-1" onClick={() => nav(`/sites/${customer.id}`)}>현장 상세</Btn>
+      </div>
+    </Card>
+  )
+
   return (
     <div className="fade-up">
       <button onClick={() => nav('/customers')} className="mb-3 flex items-center gap-1 text-[0.85rem] font-bold text-ink-soft hover:text-primary"><ArrowLeft size={15} /> 고객 / 계약</button>
@@ -39,6 +73,20 @@ export default function CustomerDetail() {
         title={customer.name}
         desc={`${customer.address} · ${customer.type}`}
         right={<><StatusPill status={renewal.status} /><DemoBadge /></>}
+      />
+
+      {/* 폰 · 태블릿 — 한 줄로 이어진 긴 화면이라 섹션 바로가기를 붙인다 (PC 는 두 칸이라 한눈에 보인다) */}
+      <SectionNav
+        className="xl:hidden"
+        links={[
+          { id: 'sec-health', label: '건강도 · 재계약' },
+          { id: 'sec-contract', label: '계약' },
+          { id: 'sec-profit', label: '수익성' },
+          { id: 'sec-upsell', label: '추가매출' },
+          { id: 'sec-quality', label: '요청 · 품질' },
+          ...(myReports.length > 0 ? [{ id: 'sec-reports', label: '리포트' }] : []),
+          { id: 'sec-history', label: '변경 이력' },
+        ]}
       />
 
       {/* 이 고객의 사건 흐름 — 위험 → 배정 → 건강도 → 수익성 → 조치 */}
@@ -49,13 +97,18 @@ export default function CustomerDetail() {
 
       <div className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
         <div className="space-y-5">
-          <RenewalPanel a={renewal} showMoney={role === 'ceo'} tour="customer-health" />
+          <div id="sec-health" className="scroll-mt-32 space-y-5 outline-none">
+            <RenewalPanel a={renewal} showMoney={role === 'ceo'} tour="customer-health" />
 
-          {/* AI Insights */}
-          {insights.map((i) => <InsightCard key={i.id} insight={i} />)}
+            {/* AI Insights */}
+            {insights.map((i) => <InsightCard key={i.id} insight={i} />)}
+          </div>
+
+          {/* 계약 정보 — 폰에서는 건강도 바로 아래 (PC 는 오른쪽 칸 맨 위) */}
+          {!wide && contractCard}
 
           {/* 수익성 (대표 전용) */}
-          <Card className="p-5">
+          <Card id="sec-profit" className="p-5 outline-none">
             <SectionTitle right={role !== 'ceo' ? <Badge tone="neutral"><Eye size={11} /> 대표 전용</Badge> : undefined}>실제 운영 수익성</SectionTitle>
             {role === 'ceo' && profit ? (
               <div className="space-y-3">
@@ -85,36 +138,10 @@ export default function CustomerDetail() {
 
         <div className="space-y-5">
           {/* 계약 정보 */}
-          <Card className="p-5">
-            <SectionTitle>계약 정보</SectionTitle>
-            <div className="space-y-2 text-[0.86rem]">
-              {[
-                ['서비스', customer.contract.serviceSummary],
-                ['방문 주기', `주 ${customer.contract.visitsPerWeek}회`],
-                ['월 계약금액', `${customer.contract.monthlyFee}만원 (DEMO)`],
-                ['계약 종료', `${customer.contract.endDate} (D-${customer.contract.renewalDDay})`],
-                ['고객 담당자', customer.contract.customerManager],
-                ['내부 담당자', customer.contract.internalManager],
-                ['최근 방문', customer.lastVisit],
-              ].map(([l, v]) => (
-                <div key={l} className="flex justify-between gap-3 border-b border-line/60 pb-1.5">
-                  <span className="font-semibold text-ink-faint whitespace-nowrap">{l}</span>
-                  <span className="text-right font-bold">{v}</span>
-                </div>
-              ))}
-              <div className="flex justify-between gap-3 pt-1">
-                <span className="font-semibold text-ink-faint">만족도</span>
-                <span className="flex items-center gap-1 font-extrabold text-warning"><Star size={14} fill="currentColor" /> {customer.satisfaction.toFixed(1)} / 5</span>
-              </div>
-            </div>
-            <div className="mt-3.5 flex gap-2">
-              <Btn variant="outline" size="sm" className="flex-1" onClick={() => nav('/renewals')}>재계약 관리</Btn>
-              <Btn variant="outline" size="sm" className="flex-1" onClick={() => nav(`/sites/${customer.id}`)}>현장 상세</Btn>
-            </div>
-          </Card>
+          {wide && contractCard}
 
           {/* Upsell */}
-          <Card className="p-5">
+          <Card id="sec-upsell" className="p-5 outline-none">
             <SectionTitle right={<TrendingUp size={16} className="text-success" />}>추가매출 기회</SectionTitle>
             {ups.length === 0 ? <p className="text-[0.84rem] text-ink-faint">발견된 기회가 없습니다.</p> : (
               <div className="space-y-2">
@@ -133,7 +160,7 @@ export default function CustomerDetail() {
           </Card>
 
           {/* 요청 / 품질 */}
-          <Card className="p-5">
+          <Card id="sec-quality" className="p-5 outline-none">
             <SectionTitle right={<ShieldCheck size={16} className="text-info" />}>최근 요청 / 품질</SectionTitle>
             <div className="space-y-2">
               {reqs.map((r) => (
@@ -170,7 +197,7 @@ export default function CustomerDetail() {
 
           {/* 최근 리포트 */}
           {myReports.length > 0 && (
-            <Card className="p-5">
+            <Card id="sec-reports" className="p-5 outline-none">
               <SectionTitle>최근 작업 리포트</SectionTitle>
               <div className="space-y-2">
                 {myReports.slice(0, 3).map((r) => (
@@ -184,7 +211,7 @@ export default function CustomerDetail() {
           )}
 
           {/* 변경 이력 — 이 고객에 대해 누가 무엇을 바꿨는지 */}
-          <Card className="p-5">
+          <Card id="sec-history" className="p-5 outline-none">
             <SectionTitle>이 고객의 변경 이력</SectionTitle>
             <AuditTrail entries={history} limit={5} empty="아직 이 고객에 대한 변경 이력이 없습니다." />
           </Card>

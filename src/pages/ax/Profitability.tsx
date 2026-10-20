@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PieChart as PieIcon, Lock } from 'lucide-react'
+import { PieChart as PieIcon, Lock, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
 import { Card, PageHeader, DemoBadge, StatusPill, EmptyState, Btn, StatTile } from '../../components/ui'
 import { WhyAIButton } from '../../components/ai'
 import { useDemo } from '../../lib/data/context'
@@ -7,11 +8,31 @@ import { customerById } from '../../lib/demo/company'
 import { SEED_PROFITABILITY, MONTH_REVENUE } from '../../lib/demo/intelligence'
 import { assessRenewal } from '../../lib/ops/renewal'
 import { cx } from '../../lib/utils'
+import type { ProfitabilityRow } from '../../types'
+
+// 표 정렬 — 숫자 열은 눌러서 오름/내림 전환. 기본은 기여마진 낮은 순(먼저 볼 현장이 위)
+type SortKey = 'name' | 'contractAmt' | 'visitsPerMonth' | 'avgCrew' | 'workOver' | 'avgTravelMin' | 'urgentVisits' | 'surfaceMarginPct' | 'contributionMarginPct'
+const COLS: Array<{ key: SortKey; label: string; num?: boolean }> = [
+  { key: 'name', label: '고객' },
+  { key: 'contractAmt', label: '월 계약', num: true },
+  { key: 'visitsPerMonth', label: '월 방문', num: true },
+  { key: 'avgCrew', label: '평균 인원', num: true },
+  { key: 'workOver', label: '실제/예정 작업', num: true },
+  { key: 'avgTravelMin', label: '이동', num: true },
+  { key: 'urgentVisits', label: '긴급방문', num: true },
+  { key: 'surfaceMarginPct', label: '표면 마진', num: true },
+  { key: 'contributionMarginPct', label: '기여마진', num: true },
+]
+const valueOf = (r: ProfitabilityRow, k: SortKey): number | string =>
+  k === 'name' ? customerById(r.customerId)?.name ?? '' : k === 'workOver' ? r.avgWorkMin / r.plannedMin : r[k]
+const marginTone = (pct: number) => (pct < 20 ? 'text-danger' : pct >= 28 ? 'text-success' : 'text-ink')
+const marginBar = (pct: number) => (pct < 20 ? 'bg-danger' : pct >= 28 ? 'bg-success' : 'bg-primary/60')
 
 export default function Profitability() {
   const st = useDemo()
   const { role, setRole } = st
   const nav = useNavigate()
+  const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' }>({ key: 'contributionMarginPct', dir: 'asc' })
 
   if (role !== 'ceo') {
     return (
@@ -23,7 +44,12 @@ export default function Profitability() {
     )
   }
 
-  const rows = [...SEED_PROFITABILITY].sort((a, b) => a.contributionMarginPct - b.contributionMarginPct)
+  const rows = [...SEED_PROFITABILITY].sort((a, b) => {
+    const va = valueOf(a, sort.key), vb = valueOf(b, sort.key)
+    const d = typeof va === 'string' ? va.localeCompare(vb as string, 'ko') : va - (vb as number)
+    return sort.dir === 'asc' ? d : -d
+  })
+  const toggleSort = (key: SortKey) => setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: key === 'name' ? 'asc' : 'desc' }))
 
   return (
     <div className="fade-up">
@@ -73,7 +99,23 @@ export default function Profitability() {
           <WhyAIButton dataViewed={['계약금액', '투입인원·실제 작업시간', '예상 작업시간', '이동시간·교통비', '소모품', '추가 작업·재방문', '클레임 대응시간']} />
         </div>
         {/* 모바일 — 핵심 지표(기여마진·분류)가 화면 밖으로 밀리지 않게 목록형 */}
-        <p className="flex justify-between bg-ivory px-4 py-2 text-[0.74rem] font-bold text-ink-faint md:hidden"><span>현장 · 월 계약 · 실제/예정 작업</span><span>기여마진</span></p>
+        <div className="flex items-center justify-between gap-2 bg-ivory px-4 py-2 text-[0.74rem] font-bold text-ink-faint md:hidden">
+          <span>현장 · 월 계약 · 실제/예정 작업</span>
+          <label className="flex items-center gap-1">
+            <span className="sr-only">정렬</span>
+            <select
+              value={`${sort.key}:${sort.dir}`}
+              onChange={(e) => { const [key, dir] = e.target.value.split(':') as [SortKey, 'asc' | 'desc']; setSort({ key, dir }) }}
+              className="rounded-md border border-line bg-card px-1.5 py-1 text-[0.76rem] font-bold text-ink"
+            >
+              <option value="contributionMarginPct:asc">기여마진 낮은 순</option>
+              <option value="contributionMarginPct:desc">기여마진 높은 순</option>
+              <option value="contractAmt:desc">월 계약 큰 순</option>
+              <option value="workOver:desc">작업시간 초과 큰 순</option>
+              <option value="urgentVisits:desc">긴급방문 많은 순</option>
+            </select>
+          </label>
+        </div>
         <ul className="divide-y divide-line/60 md:hidden">
           {rows.map((r) => {
             const over = r.avgWorkMin > r.plannedMin
@@ -87,7 +129,7 @@ export default function Profitability() {
                     </span>
                   </span>
                   <span className="flex shrink-0 flex-col items-end gap-1">
-                    <span className={cx('tnum text-[1.05rem] font-extrabold leading-none', r.contributionMarginPct < 20 ? 'text-danger' : r.contributionMarginPct >= 28 ? 'text-success' : 'text-ink')}>{r.contributionMarginPct}%</span>
+                    <span className={cx('tnum text-[1.05rem] font-extrabold leading-none', marginTone(r.contributionMarginPct))}>{r.contributionMarginPct}%</span>
                     <StatusPill status={r.grade} />
                   </span>
                 </button>
@@ -99,26 +141,48 @@ export default function Profitability() {
           <table className="w-full text-left text-[0.84rem]">
             <thead>
               <tr className="border-b border-line bg-ivory text-[0.72rem] text-ink-faint">
-                {['고객', '월 계약', '월 방문', '평균 인원', '실제/예정 작업', '이동', '긴급방문', '표면 마진', '기여마진', 'AI 분류'].map((h) => (
-                  <th key={h} className="px-4 py-2.5 font-bold whitespace-nowrap">{h}</th>
-                ))}
+                {COLS.map((c) => {
+                  const on = sort.key === c.key
+                  return (
+                    <th key={c.key} aria-sort={on ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'} className={cx('px-2 py-1.5 font-bold whitespace-nowrap first:pl-3', c.num && 'text-right')}>
+                      <button onClick={() => toggleSort(c.key)} className={cx('inline-flex items-center gap-1 rounded-md px-1.5 py-1 hover:bg-card hover:text-ink', on && 'text-ink')}>
+                        {c.label}
+                        {on ? (sort.dir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} className="opacity-40" />}
+                      </button>
+                    </th>
+                  )
+                })}
+                <th className="px-3 py-2.5 font-bold whitespace-nowrap">AI 분류</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => {
                 const over = r.avgWorkMin > r.plannedMin
                 return (
-                  <tr key={r.customerId} onClick={() => nav(`/customers/${r.customerId}`)} className="cursor-pointer border-b border-line/60 hover:bg-mint/30">
-                    <td className="px-4 py-3 font-extrabold whitespace-nowrap">{customerById(r.customerId)?.name}</td>
-                    <td className="tnum px-4 py-3 whitespace-nowrap">{r.contractAmt}만원</td>
-                    <td className="tnum px-4 py-3">{r.visitsPerMonth}회</td>
-                    <td className="tnum px-4 py-3">{r.avgCrew}명</td>
-                    <td className={cx('tnum px-4 py-3 whitespace-nowrap font-bold', over ? 'text-danger' : 'text-success')}>{r.avgWorkMin}분 / {r.plannedMin}분</td>
-                    <td className="tnum px-4 py-3">{r.avgTravelMin}분</td>
-                    <td className={cx('tnum px-4 py-3 font-bold', r.urgentVisits >= 2 ? 'text-danger' : '')}>{r.urgentVisits}회</td>
-                    <td className="tnum px-4 py-3 font-bold">{r.surfaceMarginPct}%</td>
-                    <td className={cx('tnum px-4 py-3 font-extrabold', r.contributionMarginPct < 20 ? 'text-danger' : r.contributionMarginPct >= 28 ? 'text-success' : 'text-ink')}>{r.contributionMarginPct}%</td>
-                    <td className="px-4 py-3"><StatusPill status={r.grade} /></td>
+                  <tr key={r.customerId} onClick={() => nav(`/customers/${r.customerId}`)} className="group cursor-pointer border-b border-line/60 hover:bg-mint/30">
+                    {/* 행 전체를 눌러도 되지만, 키보드로는 고객 이름 단추로 연다 */}
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <button onClick={(e) => { e.stopPropagation(); nav(`/customers/${r.customerId}`) }} className="font-extrabold group-hover:text-primary">{customerById(r.customerId)?.name}</button>
+                    </td>
+                    <td className="tnum px-3 py-3 text-right whitespace-nowrap">{r.contractAmt}만원</td>
+                    <td className="tnum px-3 py-3 text-right">{r.visitsPerMonth}회</td>
+                    <td className="tnum px-3 py-3 text-right">{r.avgCrew}명</td>
+                    <td className={cx('tnum px-3 py-3 text-right whitespace-nowrap font-bold', over ? 'text-danger' : 'text-success')}>
+                      {r.avgWorkMin}분 / {r.plannedMin}분
+                      <span className="block text-[0.7rem] font-semibold">{over ? '+' : ''}{Math.round((r.avgWorkMin / r.plannedMin - 1) * 100)}%</span>
+                    </td>
+                    <td className="tnum px-3 py-3 text-right">{r.avgTravelMin}분</td>
+                    <td className={cx('tnum px-3 py-3 text-right font-bold', r.urgentVisits >= 2 ? 'text-danger' : '')}>{r.urgentVisits}회</td>
+                    <td className="tnum px-3 py-3 text-right font-bold">{r.surfaceMarginPct}%</td>
+                    <td className="px-3 py-3">
+                      <span className="flex items-center justify-end gap-2">
+                        <span className="hidden h-1.5 w-12 overflow-hidden rounded-full bg-ivory 2xl:block" aria-hidden="true">
+                          <span className={cx('block h-full rounded-full', marginBar(r.contributionMarginPct))} style={{ width: `${Math.min(100, (r.contributionMarginPct / 40) * 100)}%` }} />
+                        </span>
+                        <span className={cx('tnum font-extrabold', marginTone(r.contributionMarginPct))}>{r.contributionMarginPct}%</span>
+                      </span>
+                    </td>
+                    <td className="px-3 py-3"><StatusPill status={r.grade} /></td>
                   </tr>
                 )
               })}

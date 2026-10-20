@@ -3,7 +3,8 @@ import { matchesQuery, normalizeQuery } from './search'
 import { statusLabel, statusTone } from './status'
 import { photoSrcSet } from './photoSrcSet'
 import { titleFor } from './routeTitles'
-import { fmtManwon, fmtWon } from './utils'
+import { fmtManwon, fmtWon, pastDayLabel } from './utils'
+import { nowIndex } from './ops/geo'
 
 describe('검색', () => {
   it('공백 · 대소문자를 무시한다', () => {
@@ -58,3 +59,18 @@ describe('금액 표기', () => {
     expect(fmtManwon(85)).toContain('85')
   })
 })
+
+describe('시간 표기', () => {
+  it('지난 날은 D-n 대신 오늘 · 어제 · n일 전으로 읽는다', () => {
+    expect(pastDayLabel('TODAY')).toBe('오늘')
+    expect(pastDayLabel('D-1')).toBe('어제')
+    expect(pastDayLabel('D-7')).toBe('7일 전')
+    expect(pastDayLabel('지난주')).toBe('지난주')
+  })
+  it("'지금' 줄은 지금 이후 첫 일정 앞, 모두 지났으면 끝", () => {
+    expect(nowIndex(['08:00', '13:30', '14:30', '16:00'])).toBe(2)
+    expect(nowIndex(['08:00', '09:00'])).toBe(2)
+    expect(nowIndex(['15:00'])).toBe(0)
+  })
+})
+
